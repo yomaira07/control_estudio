@@ -1,0 +1,147 @@
+  <!-- Content Wrapper. Contains page content -->
+
+  <div class="content-wrapper">
+    <!-- Content Header (Page header) -->
+    <section class="content-header">
+    <!-- /.container-fluid -->
+    </section>
+
+    <!-- Main content -->
+    <section class="content">
+       <div class="card">
+          
+                    <div class="card-header">
+                      <h3 class="card-title"><strong>Bienvenidos al Sistema de Preinscripción en Línea de la Escuela Nacional de Fiscales del Ministerio Público</strong></h3>
+                    </div>
+
+                      <div class="card-body">
+                        <!-- Mensaje de Alerta-->
+                        <?php  if ($this->session->flashdata("error")): ?>
+                        <div class="alert alert-danger alert-dismissible">
+                          <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                          <p><i class="icon fa fa-ban"></i> <?php echo $this->session->flashdata("error"); ?> </p>
+                        </div>
+                      <?php endif; ?>
+                        <?php  if ($this->session->flashdata("info")): ?>
+                        <div class="alert alert-info alert-dismissible">
+                          <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                          <p><i class="icon fa fa-ban"></i> <?php echo $this->session->flashdata("info"); ?> </p>
+                        </div>
+                      <?php endif; ?>
+                        <!-- Fin Mensaje de Alerta-->
+                        <!-- Comienzo formulario -->
+            <form action="<?php echo base_url()?>admin/aspirante/crear_usuario" method="POST" name=carga >
+                <input type="hidden" name="fecha_registro" value="<?php echo date('d-m-Y H:i:s'); ?>">
+
+                    <div class="form-group">
+                       <div class="row"> 
+                            <div class="col-3">
+                              <label for="cedula"title="-Dato Obligatorio-">(*) Cédula de Identidad</label>
+                            </div>                                   
+                            <div class="col-1">
+                       <select class="form-control" name="cod_nacionalidad" required>
+                              <option value="V">V</option>
+                              <option value="E">E</option>
+				
+                            </select>
+                      </div>
+                      <div class="col-4">
+                        <input type="text" class="form-control" id="cedula" name="cedula" maxlength="8" minlength="6" onkeypress="return controltag(event)" value="" required>
+                      </div>
+                    </div>
+                </div>
+                  <div class="form-group">
+                    <div class="row">
+                    <div class="col-3">
+                    <label for="nombres"itle="-Dato Obligatorio-">(*) Primer Nombre</label>
+                    </div>
+                      <div class="col-5">
+                        <input type="text" class="form-control" id="primer_nombre" placeholder=""  name="primer_nombre" onkeyup="javascript:this.value=this.value.toUpperCase();" value="<?php echo $list_usuario->primer_nombre; ?>" required>
+                      </div>
+                      </div>
+                    </div>
+
+
+                      <div class="form-group">
+                    <div class="row">
+                    <div class="col-3">
+                    <label for="nombres"itle="-Dato Obligatorio-"> Segundo Nombre</label>
+                    </div>
+                       <div class="col-5">
+                        <input type="text" class="form-control" id="segundo_nombre" placeholder=""  name="segundo_nombre" onkeyup="javascript:this.value=this.value.toUpperCase();" value="<?php echo $list_usuario->segundo_nombre; ?>" >
+                      </div>
+                    </div>
+                  </div>
+                  <div class="form-group">
+                    <div class="row">
+                    <div class="col-3">
+                    <label for="apellidos"itle="-Dato Obligatorio-">(*) Primer Apellido</label>
+                    </div>
+                      <div class="col-5">
+                        <input type="text" class="form-control" id="primer_apellido" placeholder=""  name="primer_apellido" onkeyup="javascript:this.value=this.value.toUpperCase();" value="<?php echo $list_usuario->apellidos; ?>" required>
+                      </div>
+                    </div>
+                  </div>
+                 <div class="form-group">
+                    <div class="row">
+                    <div class="col-3">
+                    <label for="apellidos"itle="-Dato Obligatorio-"> Segundo Apellido</label>
+                    </div>
+                      <div class="col-5">
+                        <input type="text" class="form-control" id="segundo_apellido" placeholder=""  name="segundo_apellido" onkeyup="javascript:this.value=this.value.toUpperCase();" value="<?php echo $list_usuario->apellidos; ?>" >
+                      </div>
+                    </div>
+                  </div>
+                  <div class="form-group">
+                    <div class="row">
+                    <div class="col-3">
+                    <label for="correo"title="-Dato Obligatorio-">(*) Correo Electrónico</label>
+                    </div>
+                      <div class="col-5">
+                        <input type="email" class="form-control" id="correo" placeholder="Debe indicar un correo 'Gmail' " name="correo" onkeyup="javascript:this.value=this.value.toUpperCase();" value="<?php echo $list_usuario->email; ?>" required>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="form-group" >
+                    <div class="row">
+                      <div class="col-3">
+                     <label for="programa" >Programa de Postgrado que desea particpar</label>
+                     </div>
+                     <div class="col-8"   >
+                     <?Php foreach ($list_programa as $list_programa){
+                        echo '<div >
+                        <td align="center" id="programas"><input type="checkbox" name="checks[]" value="'.$list_programa->id.'" >  '.$list_programa->nombre.'  </td></div>';
+                     }
+                        ?>   
+                     </div>   
+                  </div>
+                 </div>
+                 <p></p>
+                  <hr style="color;grey;">
+                   <div class="form-group" >
+                    <div class="row">
+                      <div class="col-12" style="border: 1;color: grey;">                   
+                      <div align="center" >
+                          <td align="center" id="termino"><input type="checkbox" id="acepto"name="acepto" value="1" required> <strong>Todos los datos a suministrar estarán sujetos a verificación. La falsedad de cualquiera de ellos acarreará la nulidad inmediata del procedimiento respectivo, además de posibles sanciones administrativas, civiles y penales.</strong>
+                          </td>
+                        </div>                    
+                     </div>   
+                  </div>
+                 </div>
+
+
+                 <p></p>                  
+                 <hr style="color;grey;">
+            <!-- fin formulario-->           
+                  
+                  <div align="center"><button type="submit" class="btn btn-primary">Crear Cuenta</button>
+                  </div>
+                  <input type="hidden" name="str" id="str">                 
+          </div>
+                </div><!-- /.card -->
+
+
+    </section>
+    <!-- /.content -->
+  </div>
+  <!-- /.content-wrapper -->

@@ -1,0 +1,515 @@
+<!-- Content Wrapper. Contains page content -->
+<div class="content-wrapper" style="background: #f4f6f9;">
+    <!-- Content Header (Page header) -->
+    <section class="content-header">
+        <div class="container-fluid">
+            <div class="row mb-2">
+                <div class="col-sm-6">
+                    <h1 class="m-0" style="font-weight: 300; color: #003366;">
+                        <i class="fas fa-file-alt" style="color: #003366; margin-right: 8px;"></i>
+                        <span style="color: #003366; font-weight: 600;">SCE-ENFMP</span>
+                        <span style="color: #2c3e50; font-weight: 300;"> - Retiro Voluntario</span>
+                    </h1>
+                </div>
+                <div class="col-sm-6">
+                    <ol class="breadcrumb float-sm-right" style="background: transparent;">
+                        <li class="breadcrumb-item"><a href="<?php echo base_url(); ?>dashboard04/home" style="color: #6c757d;">Inicio</a></li>
+                        <li class="breadcrumb-item"><a href="#" style="color: #6c757d;">Trámites</a></li>
+                        <li class="breadcrumb-item"><a href="#" style="color: #6c757d;">Académicos</a></li>
+                        <li class="breadcrumb-item active" style="color: #003366; font-weight: 600;">Retiro Voluntario</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Main content -->
+    <section class="content">
+
+        <?php if(!empty($alumno_list)): ?>
+        <!-- Card Principal -->
+        <div class="card card-primary card-outline shadow-sm" style="border-radius: 10px; border-top: 4px solid #003366;">
+            <div class="card-body p-0">
+                <div class="card" style="border: none; border-radius: 10px;">
+                    
+                    <!-- Header -->
+                    <div class="card-header py-3" style="border-bottom: 1px solid #e8e8e8; border-radius: 10px 10px 0 0; background: #fafafa;">
+                        <div class="d-flex align-items-center justify-content-between flex-wrap">
+                            <div class="d-flex align-items-center">
+                                <div class="mr-3" style="width: 42px; height: 42px; background: #003366; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                                    <i class="fas fa-user-slash text-white" style="font-size: 1.1rem;"></i>
+                                </div>
+                                <div>
+                                    <h5 class="mb-0" style="font-weight: 600; color: #2c3e50;">
+                                        <strong>Trámites Académicos</strong>
+                                    </h5>
+                                    <small class="text-muted" style="font-size: 0.75rem;">
+                                        <i class="fas fa-calendar-alt mr-1"></i>
+                                        Retiro Voluntario de Unidades Curriculares
+                                    </small>
+                                </div>
+                            </div>
+                            <div>
+                                <span class="badge" style="font-size: 0.8rem; padding: 5px 16px; border-radius: 20px; font-weight: 500; background: #dc3545; color: white;">
+                                    <i class="fas fa-exclamation-triangle mr-1"></i>
+                                    Retiro Voluntario
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Body -->
+                    <div class="card-body p-4">
+
+                        <!-- Mensajes de Alerta -->
+                        <?php if ($this->session->flashdata("error")): ?>
+                            <div class="alert alert-danger alert-dismissible" style="border-radius: 8px; border-left: 4px solid #dc3545;">
+                                <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                                <i class="icon fa fa-ban mr-2"></i> <?php echo $this->session->flashdata("error"); ?>
+                            </div>
+                        <?php endif; ?>
+
+                        <?php if ($this->session->flashdata("success")): ?>
+                            <div class="alert alert-success alert-dismissible" style="border-radius: 8px; border-left: 4px solid #28a745;">
+                                <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                                <i class="icon fa fa-check mr-2"></i> <?php echo $this->session->flashdata("success"); ?>
+                            </div>
+                        <?php endif; ?>
+
+                        <?php if ($this->session->flashdata("warning")): ?>
+                            <div class="alert alert-warning alert-dismissible" style="border-radius: 8px; border-left: 4px solid #ffc107;">
+                                <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                                <i class="icon fa fa-exclamation-triangle mr-2"></i> <?php echo $this->session->flashdata("warning"); ?>
+                            </div>
+                        <?php endif; ?>
+
+                        <!-- Información del Alumno -->
+                        <div class="card card-info card-outline" style="border-radius: 8px; border-left: 4px solid #003366; border-top: none; margin-bottom: 20px;">
+                            <div class="card-header" style="background: #e8f0fe; border-bottom: 1px solid #e8e8e8; padding: 10px 18px; border-radius: 8px 8px 0 0;">
+                                <h6 class="mb-0" style="font-weight: 600; color: #003366; text-align: center;">
+                                    <i class="fas fa-user-graduate" style="color: #003366; margin-right: 8px;"></i>
+                                    INFORMACIÓN DEL ALUMNO
+                                </h6>
+                            </div>
+                            <div class="card-body p-3">
+                                <div class="table-responsive">
+                                    <table class="table" style="margin-bottom: 0;">
+                                        <tbody>
+                                            <tr>
+                                                <td style="padding: 6px 12px; font-weight: 500; color: #2c3e50; width: 30%;">
+                                                    <i class="fas fa-id-card" style="color: #003366; width: 20px;"></i> Cédula de Identidad:
+                                                </td>
+                                                <td style="padding: 6px 12px; color: #2c3e50; width: 70%;">
+                                                    <strong><?php echo $alumno_list->nacionalidad . '-' . $alumno_list->cedula; ?></strong>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td style="padding: 6px 12px; font-weight: 500; color: #2c3e50;">
+                                                    <i class="fas fa-user" style="color: #003366; width: 20px;"></i> Nombre(s) y Apellido(s):
+                                                </td>
+                                                <td style="padding: 6px 12px; color: #2c3e50;">
+                                                    <strong><?php echo $alumno_list->nombre_primer . ' ' . $alumno_list->nombre_segundo . ' ' . $alumno_list->apellido_primer . ' ' . $alumno_list->apellido_segundo; ?></strong>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td style="padding: 6px 12px; font-weight: 500; color: #2c3e50;">
+                                                    <i class="fas fa-envelope" style="color: #003366; width: 20px;"></i> Correo Electrónico:
+                                                </td>
+                                                <td style="padding: 6px 12px; color: #2c3e50;">
+                                                    <strong><?php echo $alumno_list->correo; ?></strong>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td style="padding: 6px 12px; font-weight: 500; color: #2c3e50;">
+                                                    <i class="fas fa-phone" style="color: #003366; width: 20px;"></i> Teléfono(s):
+                                                </td>
+                                                <td style="padding: 6px 12px; color: #2c3e50;">
+                                                    <strong><?php echo $alumno_list->telefono_cel; echo " -- " . $alumno_list->telefono_hab; ?></strong>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td style="padding: 6px 12px; font-weight: 500; color: #2c3e50;">
+                                                    <i class="fas fa-map-marker-alt" style="color: #003366; width: 20px;"></i> Estado Residencia:
+                                                </td>
+                                                <td style="padding: 6px 12px; color: #2c3e50;">
+                                                    <strong><?php echo strtoupper($alumno_list->residencia); ?></strong>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td style="padding: 6px 12px; font-weight: 500; color: #2c3e50;">
+                                                    <i class="fas fa-briefcase" style="color: #003366; width: 20px;"></i> Lugar de Trabajo:
+                                                </td>
+                                                <td style="padding: 6px 12px; color: #2c3e50;">
+                                                    <strong><?php echo $alumno_list->lugar_trabajo; ?></strong>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Formulario de Solicitud -->
+                        <div class="card card-success card-outline" style="border-radius: 8px; border-left: 4px solid #28a745; border-top: none;">
+                            <div class="card-header" style="background: #e8f5e9; border-bottom: 1px solid #e8e8e8; padding: 10px 18px; border-radius: 8px 8px 0 0;">
+                                <h6 class="mb-0" style="font-weight: 600; color: #1e7e34;">
+                                    <i class="fas fa-plus-circle" style="color: #28a745; margin-right: 8px;"></i>
+                                    Solicitud de Retiro Voluntario
+                                </h6>
+                            </div>
+                            <div class="card-body p-3">
+
+                                <form action="<?php echo base_url(); ?>dashboard09/actualizar_archivo/" method="POST" enctype="multipart/form-data">
+
+                                    <!-- Input oculto -->
+                                    <input type="hidden" name="id_solicitud" value="<?php echo $solicitud->id_solicitud; ?>">
+
+                                    <!-- Tabla de información de la solicitud -->
+                                    <div class="table-responsive">
+                                        <table class="table table-bordered" style="border-radius: 8px; overflow: hidden;">
+                                            <tbody>
+                                                <tr style="border-bottom: 1px solid #f0f0f0;">
+                                                    <td style="padding: 12px 15px; font-weight: 500; color: #2c3e50; width: 35%; background: #f8f9fa; vertical-align: middle;">
+                                                        <i class="fas fa-file-signature" style="color: #003366; margin-right: 8px;"></i>
+                                                        Programa de Postgrado o Especialización:
+                                                    </td>
+                                                    <td style="padding: 12px 15px;">
+                                                        <select class="form-control" name="comboprograma" id="comboprograma" required readonly style="border-radius: 0px; border: 1px solid #ced4da; width: 80%; background: #e9ecef;">
+                                                            <option value="">- Seleccione -</option>                                       
+                                                            <?php foreach($programa as $programa): ?>
+                                                                <?php if($solicitud->id_programa == $programa->id): ?>
+                                                                    <option value="<?php echo $programa->id; ?>" selected><?php echo $programa->nombre; ?></option>
+                                                                <?php else: ?>
+                                                                    <option value="<?php echo $programa->id; ?>"><?php echo $programa->nombre; ?></option>
+                                                                <?php endif; ?>
+                                                            <?php endforeach; ?>
+                                                        </select>
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td style="padding: 12px 15px; font-weight: 500; color: #2c3e50; background: #f8f9fa; vertical-align: middle;">
+                                                        <i class="fas fa-clipboard-list" style="color: #003366; margin-right: 8px;"></i>
+                                                        Trámite Administrativo a Solicitar:
+                                                    </td>
+                                                    <td style="padding: 12px 15px;">
+                                                        <select class="form-control" name="combotramite" id="combotramite" required readonly style="border-radius: 0px; border: 1px solid #ced4da; width: 80%; background: #e9ecef;">
+                                                            <option value="">- Seleccione -</option>                                       
+                                                            <?php foreach($combotramite as $combotramite): ?>
+                                                                <?php if($solicitud->id_tramite == $combotramite->id): ?>
+                                                                    <option value="<?php echo $combotramite->id; ?>" selected><?php echo $combotramite->nombre; ?></option>
+                                                                <?php else: ?>
+                                                                    <option value="<?php echo $combotramite->id; ?>"><?php echo $combotramite->nombre; ?></option>
+                                                                <?php endif; ?>
+                                                            <?php endforeach; ?>
+                                                        </select>
+                                                    </td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+
+                                   <!-- Archivo Cargado (Visualización) -->
+<?php 
+// Determinar la ruta correcta del archivo
+$archivo_nombre = $solicitud->id_usuario . '_retiro_voluntario.pdf';
+
+// Usar el período guardado en la solicitud o el período activo como fallback
+if (!empty($solicitud->periodo_solicitud_retiro)) {
+  $periodo_activo = $this->Periodo_model->PeriodoActivo();
+   
+   
+    $periodo_carpeta = 'periodo_' . $periodo_activo->id . '_' . str_replace('/', '_', $periodo_activo->nombre);
+}
+
+ $ruta_archivo = 'assets/tramites/retiro_voluntario/' . $periodo_carpeta . '/' . $archivo_nombre;
+
+// Verificar si el archivo existe
+$archivo_existe = file_exists(FCPATH . $ruta_archivo);
+
+if($archivo_existe): 
+?>
+<div class="card card-info card-outline" style="border-radius: 8px; border-left: 4px solid #17a2b8; border-top: none; margin-top: 15px;">
+    <div class="card-header" style="background: #e8f4f8; border-bottom: 1px solid #e8e8e8; padding: 8px 15px; border-radius: 8px 8px 0 0;">
+        <h6 class="mb-0" style="font-weight: 600; color: #0c5460;">
+            <i class="fas fa-file-upload text-info mr-2"></i>
+            Archivo Adjunto Actual
+        </h6>
+    </div>
+    <div class="card-body p-3">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <div class="d-flex align-items-center">
+                    <div style="width: 45px; height: 45px; background: #dc3545; border-radius: 8px; display: flex; align-items: center; justify-content: center; margin-right: 12px;">
+                        <i class="fas fa-file-pdf text-white" style="font-size: 1.3rem;"></i>
+                    </div>
+                    <div>
+                        <strong style="color: #2c3e50; font-size: 0.9rem;"><?php echo $archivo_nombre; ?></strong>
+                        <br>
+                        <small style="color: #6c757d; font-size: 0.7rem;">
+                            <i class="fas fa-folder mr-1"></i>
+                            Período: <?php echo str_replace('_', ' ', str_replace('periodo_', '', $periodo_carpeta)); ?>
+                        </small>
+                        <br>
+                        <small style="color: #6c757d; font-size: 0.7rem;">
+                            <i class="fas fa-clock mr-1"></i>
+                            Documento cargado anteriormente
+                        </small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 text-right">
+                <a href="<?php echo base_url() . $ruta_archivo; ?>" target="_blank" class="btn btn-sm btn-info" style="border-radius: 10px; padding: 6px 20px;">
+                    <i class="fas fa-eye mr-1"></i> Ver
+                </a>
+                <a href="<?php echo base_url() . $ruta_archivo; ?>" download class="btn btn-sm btn-success" style="border-radius: 10px; padding: 6px 20px;">
+                    <i class="fas fa-download mr-1"></i> Descargar
+                </a>
+            </div>
+        </div>
+        <div class="row mt-2">
+            <div class="col-md-12">
+                <small style="color: #6c757d; font-size: 0.7rem;">
+                    <i class="fas fa-info-circle mr-1"></i>
+                    Si desea reemplazar este archivo, seleccione uno nuevo en el campo de abajo.
+                </small>
+            </div>
+        </div>
+    </div>
+</div>
+<?php else: ?>
+<div class="card card-secondary card-outline" style="border-radius: 8px; border-left: 4px solid #6c757d; border-top: none; margin-top: 15px;">
+    <div class="card-header" style="background: #f8f9fa; border-bottom: 1px solid #e8e8e8; padding: 8px 15px; border-radius: 8px 8px 0 0;">
+        <h6 class="mb-0" style="font-weight: 600; color: #6c757d;">
+            <i class="fas fa-file-upload text-secondary mr-2"></i>
+            Archivo Adjunto
+        </h6>
+    </div>
+    <div class="card-body p-3">
+        <div class="row">
+            <div class="col-md-12 text-center" style="padding: 15px 0;">
+                <i class="fas fa-file-pdf" style="font-size: 3rem; color: #d1d1d1;"></i>
+                <p style="color: #6c757d; font-size: 0.85rem; margin-top: 8px;">
+                    <i class="fas fa-info-circle mr-1"></i>
+                    No hay archivo cargado. Adjunte el documento en el campo de abajo.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+<?php endif; ?>
+
+                                    <!-- Adjuntar Carta -->
+                                    <div class="card card-secondary card-outline" style="border-radius: 8px; border-left: 4px solid #6c757d; border-top: none; margin-top: 15px;">
+                                        <div class="card-header" style="background: #f8f9fa; border-bottom: 1px solid #e8e8e8; padding: 10px 18px; border-radius: 8px 8px 0 0;">
+                                            <h6 class="mb-0" style="font-weight: 600; color: #2c3e50; text-align: center;">
+                                                <i class="fas fa-paperclip text-secondary mr-2"></i>
+                                                <?php echo (!empty($archivo_cargado)) ? 'Reemplazar Carta de Retiro Voluntario' : 'Adjuntar Carta de Retiro Voluntario'; ?>
+                                            </h6>
+                                        </div>
+                                        <div class="card-body p-3">
+                                            <div class="row">
+                                                <div class="col-md-12">
+                                                    <div class="custom-file">
+                                                        <input type="file" name="userfile" class="custom-file-input" id="customFile" <?php echo (empty($archivo_cargado)) ? 'required' : ''; ?> style="border-radius: 0px;">
+                                                        <label class="custom-file-label" for="customFile" style="border-radius: 0px; border: 1px solid #ced4da; overflow: hidden;">
+                                                            <?php echo (!empty($archivo_cargado)) ? 'Seleccionar nuevo archivo' : 'Seleccionar archivo'; ?>
+                                                        </label>
+                                                    </div>
+                                                    <small style="font-size: 0.7rem; color: #6c757d; display: block; margin-top: 5px;">
+                                                        <i class="fas fa-info-circle mr-1"></i> 
+                                                        Para poder enviarnos su documento, el archivo debe estar en formato <strong>*.PDF</strong>
+                                                    </small>
+                                                    <small style="font-size: 0.7rem; color: #6c757d; display: block;">
+                                                        <i class="fas fa-info-circle mr-1"></i> 
+                                                        El tamaño máximo permitido del archivo es de <strong>1 MB (1024KB)</strong>
+                                                    </small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Botón de Envío -->
+                                    <div class="row mt-4">
+                                        <div class="col-md-12 text-center">
+                                            <button type="submit" class="btn btn-primary" style="border-radius: 10px; padding: 10px 40px; font-weight: 500; transition: all 0.3s;">
+                                                <i class="fas fa-save mr-2"></i>
+                                                <?php echo (!empty($archivo_cargado)) ? 'Actualizar Requisito' : 'Registrar Requisito'; ?>
+                                            </button>
+                                            <button type="button" name="btnSeguiente" value="Regresar" class="btn btn-default" style="border-radius: 10px; padding: 10px 40px; font-weight: 500; transition: all 0.3s; margin-left: 10px;" onClick="anterior();">
+                                                <i class="fas fa-arrow-left mr-2"></i>
+                                                Volver
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                </form>
+                            </div>
+                        </div>
+
+                    </div><!-- /.card-body -->
+                </div><!-- /.card -->
+            </div><!-- /.card-body -->
+        </div><!-- /.card -->
+
+        <?php else: ?>
+        <!-- Mensaje de error si no hay datos del alumno -->
+        <div class="card card-primary card-outline shadow-sm" style="border-radius: 10px; border-top: 4px solid #dc3545;">
+            <div class="card-body p-4">
+                <div class="alert alert-danger" style="border-radius: 8px; border-left: 4px solid #dc3545; text-align: center;">
+                    <h4 style="color: #721c24; font-weight: 600;">
+                        <i class="fas fa-exclamation-circle" style="color: #dc3545; margin-right: 10px;"></i>
+                        DEBE CARGAR LOS DATOS DE INFORMACIÓN DEL ESTUDIANTE
+                    </h4>
+                    <p style="color: #2c3e50; font-size: 1rem;">
+                        Ir al menú: <strong style="color: #003366;">Inicio → Control de Estudios → Información del Estudiante → Datos Personales</strong>
+                    </p>
+                </div>
+            </div>
+        </div>
+        <?php endif; ?>
+
+    </section>
+    <!-- /.content -->
+</div>
+<!-- /.content-wrapper -->
+
+<!-- Estilos adicionales -->
+<style>
+    /* Efectos hover en filas de tabla */
+    .table-hover tbody tr:hover {
+        background-color: #e8f0fe !important;
+        transition: background 0.2s ease;
+        cursor: pointer;
+    }
+    
+    /* Sombras y bordes redondeados */
+    .card {
+        border-radius: 10px !important;
+        overflow: hidden;
+    }
+    
+    /* Efecto hover en botones */
+    .btn-primary {
+        background-color: #007bff;
+        border-color: #007bff;
+        color: #fff;
+        transition: all 0.2s ease;
+    }
+    
+    .btn-primary:hover {
+        background-color: #0069d9;
+        border-color: #0062cc;
+        box-shadow: 0 2px 8px rgba(0, 123, 255, 0.3);
+        transform: translateY(-2px);
+    }
+    
+    .btn-info {
+        background-color: #17a2b8;
+        border-color: #17a2b8;
+        color: #fff;
+        transition: all 0.2s ease;
+    }
+    
+    .btn-info:hover {
+        background-color: #138496;
+        border-color: #117a8b;
+        box-shadow: 0 2px 8px rgba(23, 162, 184, 0.3);
+        transform: translateY(-2px);
+    }
+    
+    /* Estilo para checkboxes personalizados */
+    .custom-control-input:checked ~ .custom-control-label::before {
+        background-color: #003366;
+        border-color: #003366;
+    }
+    
+    .custom-control-input:focus ~ .custom-control-label::before {
+        box-shadow: 0 0 0 0.2rem rgba(0, 51, 102, 0.25);
+    }
+    
+    /* Estilo para campos de formulario */
+    .form-control:focus {
+        border-color: #003366;
+        box-shadow: 0 0 0 0.2rem rgba(0, 51, 102, 0.25);
+    }
+    
+    .custom-file-input:focus ~ .custom-file-label {
+        border-color: #003366;
+        box-shadow: 0 0 0 0.2rem rgba(0, 51, 102, 0.25);
+    }
+    
+    .form-control[readonly] {
+        background-color: #e9ecef;
+        opacity: 1;
+        cursor: not-allowed;
+    }
+    
+    /* Ajuste para móviles */
+    @media (max-width: 768px) {
+        .card-title {
+            font-size: 1rem !important;
+        }
+        .btn {
+            padding: 8px 16px !important;
+            font-size: 0.8rem !important;
+            width: 100%;
+            margin-bottom: 5px;
+        }
+        .table td, .table th {
+            padding: 8px 10px !important;
+            font-size: 0.75rem !important;
+        }
+        .form-control {
+            width: 100% !important;
+        }
+        .table tbody td img {
+            width: 20px !important;
+            height: 20px !important;
+        }
+        .custom-file-label {
+            font-size: 0.8rem !important;
+        }
+        .btn-info {
+            margin-left: 0 !important;
+        }
+        .col-md-4.text-right {
+            text-align: left !important;
+            margin-top: 10px;
+        }
+    }
+    
+    @media (max-width: 576px) {
+        .table td, .table th {
+            padding: 6px 8px !important;
+            font-size: 0.7rem !important;
+        }
+        .badge {
+            font-size: 0.6rem !important;
+            padding: 2px 8px !important;
+        }
+        .form-control {
+            font-size: 0.8rem !important;
+            width: 100% !important;
+        }
+        .table-responsive {
+            border: none;
+        }
+        .table tbody td img {
+            width: 18px !important;
+            height: 18px !important;
+        }
+    }
+</style>
+
+<!-- Script para mostrar nombre del archivo -->
+<script>
+    document.querySelector('.custom-file-input')?.addEventListener('change', function(e) {
+        var fileName = e.target.files[0]?.name || 'Seleccionar archivo';
+        var label = e.target.nextElementSibling;
+        label.innerHTML = fileName;
+    });
+
+    function anterior() {
+        location.href = "<?php echo base_url(); ?>dashboard09/index/1";
+    }
+</script>
