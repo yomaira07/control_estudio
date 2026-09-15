@@ -14,8 +14,8 @@
                 <div class="col-sm-6">
                     <ol class="breadcrumb float-sm-right" style="background: transparent;">
                         <li class="breadcrumb-item"><a href="<?php echo base_url(); ?>dashboard04/home" style="color: #6c757d;">Inicio</a></li>
-                        <li class="breadcrumb-item"><a href="#" style="color: #6c757d;">Trámites</a></li>
-                        <li class="breadcrumb-item"><a href="#" style="color: #6c757d;">RUC</a></li>
+                        <li class="breadcrumb-item"  style="color: #6c757d;">Trámites Administrativos </li>
+                        <li class="breadcrumb-item"  style="color: #6c757d;"> - RUC </li>
                         <li class="breadcrumb-item active" style="color: #003366; font-weight: 600;">Actualizar Documentos</li>
                     </ol>
                 </div>
@@ -46,7 +46,7 @@
                                 </div>
                                 <div>
                                     <h5 class="mb-0" style="font-weight: 600; color: #2c3e50;">
-                                        <strong>Trámites Académicos</strong>
+                                        <strong>Trámites Admiistrativos</strong>
                                     </h5>
                                     <small class="text-muted" style="font-size: 0.75rem;">
                                         <i class="fas fa-calendar-alt mr-1"></i>
@@ -258,7 +258,7 @@
                                                             <?php 
                                                             $ruta_solicitud = base_url().'assets/tramites/ruc/'.$solicitud->id.'_'.$solicitud->id_usuario.'_ruc.pdf';
                                                             if(file_exists('assets/tramites/ruc/'.$solicitud->id.'_'.$solicitud->id_usuario.'_ruc.pdf')): ?>
-                                                                <a href="<?php echo $ruta_solicitud; ?>" target="_blank" class="btn" style="border-radius: 0px; padding: 4px 16px; background: #ffc107; color: #856404; margin-bottom: 8px; display: inline-block;">
+                                                                <a href="<?php echo $ruta_solicitud; ?>" target="_blank" class="btn" style="border-radius: 10px; padding: 4px 16px; background: #ffc107; color: #856404; margin-bottom: 8px; display: inline-block;">
                                                                     <i class="fas fa-file-pdf mr-1"></i> Ver Carta de Solicitud Cargada
                                                                 </a>
                                                             <?php else: ?>
@@ -283,7 +283,7 @@
                                                         Unidades Curriculares del programa que cursa:
                                                     </td>
                                                     <td style="padding: 12px 15px;">
-                                                        <button type="button" class="btn btn-info" onclick="verUnidadesCurriculares()" style="border-radius: 0px; padding: 6px 20px;">
+                                                        <button type="button" class="btn btn-info" onclick="verUnidadesCurriculares()" style="border-radius: 10px; padding: 6px 20px;">
                                                             <i class="fas fa-eye mr-1"></i> Ver Unidades Curriculares Solicitadas
                                                         </button>
                                                     </td>
@@ -362,7 +362,7 @@
                                                                             <td class="text-center" style="padding: 6px 12px;"><?php echo $tamaño_kb; ?> KB</td>
                                                                             <td class="text-center" style="padding: 6px 12px;">
                                                                                 <a href="<?php echo base_url(); ?>dashboard09/eliminar_archivo_directorio/tit/<?php echo $solicitud->id_programa.'/'.$alumno_list->cedula.'/'.$archivo.'/'.$solicitud->id; ?>" 
-                                                                                   class="btn btn-sm btn-danger" style="border-radius: 0px; padding: 2px 12px;" 
+                                                                                   class="btn btn-sm btn-danger" style="border-radius: 10px; padding: 2px 12px;" 
                                                                                    onclick="return confirm('¿Está seguro de eliminar este archivo?')">
                                                                                     <i class="fas fa-trash-alt"></i> Eliminar
                                                                                 </a>
@@ -457,7 +457,7 @@
                                                                             <td class="text-center" style="padding: 6px 12px;"><?php echo $tamaño_kb; ?> KB</td>
                                                                             <td class="text-center" style="padding: 6px 12px;">
                                                                                 <a href="<?php echo base_url(); ?>dashboard09/eliminar_archivo_directorio/pro/<?php echo $solicitud->id_programa.'/'.$alumno_list->cedula.'/'.$archivo.'/'.$solicitud->id; ?>" 
-                                                                                   class="btn btn-sm btn-danger" style="border-radius: 0px; padding: 2px 12px;" 
+                                                                                   class="btn btn-sm btn-danger" style="border-radius: 10px; padding: 2px 12px;" 
                                                                                    onclick="return confirm('¿Está seguro de eliminar este archivo?')">
                                                                                     <i class="fas fa-trash-alt"></i> Eliminar
                                                                                 </a>
@@ -552,7 +552,7 @@
                                                                             <td class="text-center" style="padding: 6px 12px;"><?php echo $tamaño_kb; ?> KB</td>
                                                                             <td class="text-center" style="padding: 6px 12px;">
                                                                                 <a href="<?php echo base_url(); ?>dashboard09/eliminar_archivo_directorio/lab/<?php echo $solicitud->id_programa.'/'.$alumno_list->cedula.'/'.$archivo.'/'.$solicitud->id; ?>" 
-                                                                                   class="btn btn-sm btn-danger" style="border-radius: 0px; padding: 2px 12px;" 
+                                                                                   class="btn btn-sm btn-danger" style="border-radius: 10px; padding: 2px 12px;" 
                                                                                    onclick="return confirm('¿Está seguro de eliminar este archivo?')">
                                                                                     <i class="fas fa-trash-alt"></i> Eliminar
                                                                                 </a>
@@ -580,11 +580,11 @@
                                     <!-- Botones de Acción -->
                                     <div class="row mt-4">
                                         <div class="col-md-12 text-center">
-                                            <button type="submit" class="btn btn-primary" style="border-radius: 0px; padding: 10px 40px; font-weight: 500; transition: all 0.3s;">
+                                            <button type="submit" class="btn btn-primary" style="border-radius: 10px; padding: 10px 40px; font-weight: 500; transition: all 0.3s;">
                                                 <i class="fas fa-save mr-2"></i>
                                                 Actualizar Documentos
                                             </button>
-                                            <button type="button" name="btnSeguiente" class="btn btn-default" style="border-radius: 0px; padding: 10px 30px; font-weight: 500; margin-left: 8px; transition: all 0.3s;" onClick="anterior();">
+                                            <button type="button" name="btnSeguiente" class="btn btn-default" style="border-radius: 10px; padding: 10px 30px; font-weight: 500; margin-left: 8px; transition: all 0.3s;" onClick="anterior();">
                                                 <i class="fas fa-arrow-left mr-2"></i>
                                                 Regresar
                                             </button>
@@ -685,7 +685,7 @@
                         </div>
                     </div>
                     <div class="modal-footer" style="border-top: 1px solid #e8e8e8;">
-                        <button type="button" class="btn btn-default" data-dismiss="modal" style="border-radius: 0px; padding: 8px 25px;">
+                        <button type="button" class="btn btn-default" data-dismiss="modal" style="border-radius: 10px; padding: 8px 25px;">
                             <i class="fas fa-times mr-1"></i> Cerrar
                         </button>
                     </div>

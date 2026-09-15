@@ -17,6 +17,19 @@
                         <li class="breadcrumb-item"><a href="<?php echo base_url(); ?>dashboard04/inscripcion" style="color: #6c757d;">Inscripciones Posgrado</a></li>
                         <li class="breadcrumb-item active" style="color: #003366; font-weight: 600;">Registro de Pago</li>
                     </ol>
+                     <!-- Mensaje de Alerta-->
+                     <?php  if ($this->session->flashdata("error")): ?>
+                            <div class="alert alert-danger alert-dismissible">
+                            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                            <p><i class="icon fa fa-ban"></i> <?php echo $this->session->flashdata("error"); ?> </p>
+                            </div>
+                     <?php endif; ?>
+                     <?php  if ($this->session->flashdata("warning")): ?>
+                            <div class="alert alert-warning">
+                            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                            <p><i class="icon fa fa-check-square"></i> <?php echo $this->session->flashdata("warning"); ?> </p>
+                            </div>
+                        <?php endif; ?>
                 </div>
             </div>
         </div>
@@ -273,7 +286,7 @@
                         <!-- ============================================================ -->
                         <!-- Formulario de Pago                                          -->
                         <!-- ============================================================ -->
-                        <form action="<?php echo base_url(); ?>dashboard04/registropago_store" method="POST" enctype="multipart/form-data">
+                        <form action="#" method="POST" enctype="multipart/form-data">
                             
                             <!-- Mensajes de Alerta -->
                             <?php if ($this->session->flashdata("error")): ?>
@@ -463,6 +476,7 @@
                                                             </td>
                                                             <td style="padding: 12px 15px; text-align: right; font-weight: 700; color: #28a745; font-size: 1.2rem;">
                                                                 <?php echo number_format($total_final, 2, ',', '.') . ' Ref.'; ?>
+                                                                <input type="hidden" name="total_pagar_final" value="<?php echo number_format($total_pagar, 2, ',', '.') ?>">
                                                             </td>
                                                         </tr>
                                                     </tbody>
@@ -533,13 +547,17 @@
                                     <div class="d-flex justify-content-center flex-wrap" style="gap: 12px;">
                                         
                                         <!-- BOTÓN PAGO BDV - NUEVO -->
-                                        <a href="<?php echo base_url(); ?>pagos/iniciar" 
+                                        <a href="javascript:void(0);" 
                                         class="btn btn-success" 
                                         id="btnPagoBDV" 
+                                        data-url="<?php echo base_url(); ?>pagos/iniciar"
+                                        data-uc="<?php echo $total_uc; ?>"
+                                        data-monto="<?php echo $total_final; ?>"
                                         style="border-radius: 10px; padding: 12px 45px; font-weight: 600; transition: all 0.3s; min-width: 220px; font-size: 16px; background: #1a8a3f; border-color: #1a8a3f;">
                                             <i class="fas fa-credit-card mr-2"></i>
                                             Pagar con BDV
-                                        </a>       
+                                        </a>
+      
                                         <!-- BOTÓN CANCELAR -->
                                         <a href="<?php echo base_url(); ?>dashboard04/index" 
                                         class="btn btn-default" 
@@ -732,31 +750,7 @@
             });
         }
     });
-    // Manejar el botón de pago BDV
-document.addEventListener('DOMContentLoaded', function() {
-    var btnPagoBDV = document.getElementById('btnPagoBDV');
-    if (btnPagoBDV) {
-        btnPagoBDV.addEventListener('click', function(e) {
-            e.preventDefault();
-            
-            var monto = '<?php echo number_format($total_final, 2, ",", "."); ?>';
-            var mensaje = "💳 ¿Deseas pagar con el Banco de Venezuela?\n\n" +
-                          "Serás redirigido a la pasarela de pago BDV.\n\n" +
-                          "Monto a pagar: Ref. " + monto + "\n\n" +
-                          "⚠️ Asegúrate de tener:\n" +
-                          "✅ Saldo suficiente en tu cuenta BDV\n" +
-                          "✅ Datos de tu tarjeta a la mano\n" +
-                          "✅ Conexión estable a internet\n\n" +
-                          "¿Continuar con el pago?";
-            
-            if (confirm(mensaje)) {
-                this.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Redirigiendo...';
-                this.disabled = true;
-                window.location.href = this.href;
-            }
-        });
-    }
-});
+   
 
 // Si hay un pago BDV pendiente, mostrar alerta
 <?php if ($this->session->userdata('pago_bdv_token')): ?>
@@ -791,7 +785,31 @@ document.addEventListener('DOMContentLoaded', function() {
             if (confirm(mensaje)) {
                 this.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Redirigiendo...';
                 this.disabled = true;
-                window.location.href = this.href;
+                // 1. Crear un formulario temporal de manera oculta
+                var form = document.createElement('form');
+                form.method = 'POST';
+                form.action = "<?php echo base_url(); ?>pagos/iniciar";
+
+                // 2. Definir las variables que quieres enviar por POST
+                // Puedes duplicar este bloque para enviar más variables si lo necesitas
+                var total_final = document.createElement('input');
+                total_final.type = 'hidden';
+                total_final.name = 'total_final'; // Nombre con el que se recibirá en PHP ($_POST['monto'])
+                total_final.value = '<?php echo $total_final; ?>'; // Es mejor enviar el número limpio sin formato para procesarlo en BDV
+                form.appendChild(total_final);
+
+                // Ejemplo de variable extra (opcional, por si necesitas enviar un ID de orden)
+              
+                var total_uc = document.createElement('input');
+                total_uc.type = 'hidden';
+                total_uc.name = 'total_uc';
+                total_uc.value = '<?php echo $total_uc; ?>';
+                form.appendChild(total_uc);
+                
+
+                // 3. Añadir el formulario al documento y enviarlo
+                document.body.appendChild(form);
+                form.submit();
             }
         });
     }

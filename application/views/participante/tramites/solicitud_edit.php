@@ -210,7 +210,7 @@
                             <!-- Botones de Acción -->
                             <div class="row mt-4">
                                 <div class="col-md-12 text-center">
-                                    <button type="submit" class="btn btn-primary" style="border-radius: 0px; padding: 10px 40px; font-weight: 500; transition: all 0.3s;">
+                                    <button type="submit" class="btn btn-primary" style="border-radius: 10px; padding: 10px 40px; font-weight: 500; transition: all 0.3s;">
                                         <i class="fas fa-save mr-2"></i>
                                         Actualizar Solicitud de Trámite
                                     </button>

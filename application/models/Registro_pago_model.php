@@ -16,7 +16,7 @@ class Registro_pago_model extends CI_Model {
 		$this->db->where("r.tramite", 0);
 		
 		$resultados = $this->db->get();
-		//var_dump($this->db->queries);
+		
 			if ($resultados->num_rows() > 0){
 			return true;
 		}
@@ -492,16 +492,18 @@ $this->db->query("SET sql_mode=(SELECT REPLACE(@@sql_mode, 'ONLY_FULL_GROUP_BY',
 	
 	}
 
-
 	public function save($data){
-		return	 $this->db->insert("registro_pago",$data);
-
-	/*$this->db->insert("registro_pago",$data);
-		var_dump($this->db->queries);
-		return	 1;*/
-
+		$result = $this->db->insert("registro_pago", $data);
+		
+		// ✅ Logs de diagnóstico (solo para depurar)
+		log_message('error', '===> save() result=' . var_export($result, true));
+		log_message('error', '===> save() insert_id=' . $this->db->insert_id());
+		log_message('error', '===> save() affected_rows=' . $this->db->affected_rows());
+		log_message('error', '===> save() error=' . print_r($this->db->error(), true));
+		log_message('error', '===> save() last_query=' . $this->db->last_query());
+		
+		return $result;
 	}
-
 	public function RegistradoPago($id_usuario,$id_periodo){
 
 		$this->db->where("id_usuario",$id_usuario);
@@ -549,11 +551,12 @@ $conc=array(0, 1);
 			return false;
 		}
 	}
-	public function VerificarRegistro_validado($id_usuario,$id_periodo){
+	public function VerificarRegistro_validado($id_usuario,$id_periodo){ //inscripciones
 		
 		$this->db->where("id_usuario",$id_usuario);
 		$this->db->where("id_periodo",$id_periodo);
 		$this->db->where("conciliado",1);
+		$this->db->where("tramite",0);
 		
 		$resultados = $this->db->get("registro_pago");
 	
@@ -565,6 +568,7 @@ $conc=array(0, 1);
 			return false;
 		}
 	}
+	
 	
 	
 	public function VerificarRegistro_pago($id_usuario,$id_periodo){
@@ -617,21 +621,21 @@ $conc=array(0, 1);
 
 		$this->db->where("id_usuario",$id);
 		$this->db->where("id_periodo",$id_periodo);
-		
-		//var_dump($this->db->queries);
-		return $this->db->update("registro_pago",$data);
+	
+    // ✅ Logs de diagnóstico (solo para depurar)
+    log_message('error', '===> save() result=' . var_export($result, true));
+    log_message('error', '===> save() insert_id=' . $this->db->insert_id());
+    log_message('error', '===> save() affected_rows=' . $this->db->affected_rows());
+    log_message('error', '===> save() error=' . print_r($this->db->error(), true));
+    log_message('error', '===> save() last_query=' . $this->db->last_query());
+	return $this->db->update("registro_pago",$data);
 
 		
 	}
 	public function save_conciliacion_tramite($id_solicitud,$data){
-
+	
 		$this->db->where("id_solicitud_tramite",$id_solicitud);		
-		
-		
 		return $this->db->update("registro_pago",$data);
-	//	return var_dump($this->db->queries);
-		
-		
 	}
 	
 
@@ -702,6 +706,7 @@ $conc=array(0, 1);
 		$this->db->where("r.conciliado", 1);
 		$this->db->where("r.academico", 0);
 		$this->db->where("r.status", 1);
+		$this->db->where("r.tramite", 0);
 		$this->db->where("r.id_usuario", $id);
 		$this->db->where("pe.status_aspirante", $aspirante);	
 		$this->db->order_by("r.id", "ASC");
@@ -720,6 +725,7 @@ $conc=array(0, 1);
 		$this->db->join("estado est","r.id_estado_estudio = est.id");
 		$this->db->join("periodo pe","r.id_periodo = pe.id");
 		$this->db->where("r.conciliado", 1);	
+		$this->db->where("r.tramite", 0);
 $this->db->where("r.aspirante", 0);	
 		$this->db->where("r.status", 1);
 		$this->db->where("r.id_usuario", $id);
@@ -1326,12 +1332,24 @@ public function getRegistro_Pago_nuevo_proceso($id_periodo){
 					$this->db->where('id_usuario', $id_usuario);
 					$this->db->where('id_periodo', $id_periodo);
 					$this->db->where('metodo_pago', 'bdv');
-					$this->db->where('status', 0);
+					$this->db->where('conciliado', 0);
 					$this->db->order_by('id', 'DESC');
 					$query = $this->db->get('registro_pago');
 					return $query->row();
 					}
 
+					//actualizacion 09-09-2026 pasarela baco de venezuela
+					/**
+					 * Obtener pago pendiente por token BDV
+					 */
+					public function get_pago_pendiente_bdv_tramite($id_solicitud) {
+						$this->db->where('id_solicitud_tramite', $id_solicitud);						
+						$this->db->where('metodo_pago', 'bdv');
+						$this->db->where('conciliado', 0);
+						$this->db->order_by('id', 'DESC');
+						$query = $this->db->get('registro_pago');
+						return $query->row();
+						}
 					/**
  * Actualizar pago por token
  * Versión mejorada: verifica existencia antes de actualizar

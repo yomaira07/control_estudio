@@ -178,7 +178,7 @@
                                                 <th style="padding: 10px 15px; font-weight: 500; font-size: 0.8rem; letter-spacing: 0.5px;">
                                                     <i class="fas fa-info-circle mr-2"></i>Estado Solicitud
                                                 </th>
-                                                <th style="padding: 10px 15px; text-align: center; font-weight: 500; font-size: 0.8rem; letter-spacing: 0.5px;">
+                                                <th style="padding: 10px 15px; text-align: center; font-weight: 500; font-size: 0.8rem; letter-spacing: 0.5px; min-width: 180px;">
                                                     <i class="fas fa-cogs mr-2"></i>Opción
                                                 </th>
                                             </tr>
@@ -246,69 +246,95 @@
                                                         <?php endif; ?>
                                                     </td>
                                                     <td style="padding: 10px 15px; text-align: center; vertical-align: middle;">
-                                                        <div class="d-flex flex-column align-items-center gap-1">
-                                                            <?php if($solicitudes->requisitos == 1 and $solicitudes->id_tramite == 3 and $solicitudes->rev_academica == 0): ?>
-                                                                <a href="<?php echo base_url(); ?>dashboard09/retiros_edit/<?php echo $solicitudes->id_solicitud . '/' . $solicitudes->id_tipo_tramite; ?>" class="btn btn-primary btn-sm" style="border-radius: 6px; padding: 4px 14px; font-size: 0.7rem; font-weight: 500; border: none; box-shadow: 0 2px 6px rgba(0, 51, 102, 0.3); transition: all 0.25s ease; width: 100%;">
+                                                        <div class="d-flex flex-column align-items-center" style="gap: 8px;">
+                                                            
+                                                            <?php if($solicitudes->requisitos == 1 && $solicitudes->id_tramite == 3 && $solicitudes->rev_academica == 0): ?>
+                                                                <a href="<?php echo base_url(); ?>dashboard09/retiros_edit/<?php echo $solicitudes->id_solicitud . '/' . $solicitudes->id_tipo_tramite; ?>" 
+                                                                   class="btn btn-primary btn-sm" 
+                                                                   style="border-radius: 6px; padding: 5px 14px; font-size: 0.7rem; font-weight: 500; border: none; box-shadow: 0 2px 6px rgba(0, 51, 102, 0.3); transition: all 0.25s ease; width: 100%;">
                                                                     <i class="fas fa-edit mr-1"></i> Editar
                                                                 </a>
-                                                                <div class="mt-1">
-                                                                    <span style="font-size: 0.65rem; font-weight: 700; color: #003366; text-transform: uppercase; letter-spacing: 0.5px;">REQUISITOS</span>
+                                                                <div>
+                                                                    <span style="font-size: 0.6rem; font-weight: 700; color: #003366; text-transform: uppercase; letter-spacing: 0.5px;">REQUISITOS</span>
                                                                 </div>
                                                                 <?php if($solicitudes->rev_academica == 0): ?>
-                                                                    <a href="<?php echo base_url(); ?>dashboard09/retiros_archivo_edit/<?php echo $solicitudes->id_solicitud . '/' . $solicitudes->id_tipo_tramite; ?>" class="btn btn-warning btn-sm" style="border-radius: 6px; padding: 4px 12px; font-size: 0.65rem; font-weight: 500; color: #856404; border: none; box-shadow: 0 2px 6px rgba(255, 193, 7, 0.3); transition: all 0.25s ease; width: 100%;">
+                                                                    <a href="<?php echo base_url(); ?>dashboard09/retiros_archivo_edit/<?php echo $solicitudes->id_solicitud . '/' . $solicitudes->id_tipo_tramite; ?>" 
+                                                                       class="btn btn-warning btn-sm" 
+                                                                       style="border-radius: 6px; padding: 5px 12px; font-size: 0.65rem; font-weight: 500; color: #856404; border: none; box-shadow: 0 2px 6px rgba(255, 193, 7, 0.3); transition: all 0.25s ease; width: 100%;">
                                                                         <i class="fas fa-upload mr-1"></i> Actualizar
                                                                     </a>
                                                                 <?php endif; ?>
                                                             <?php endif; ?>
                                                             
                                                             <?php 
-// Determinar la ruta correcta del archivo según el período de la solicitud
-$ruta_archivo_retiro = '';
-$archivo_retiro_existe = false;
+                                                            // Determinar la ruta correcta del archivo
+                                                            $archivo_nombre_retiro = $solicitudes->id_usuario . '_retiro_voluntario.pdf';
+                                                            $ruta_archivo_retiro = '';
+                                                            $archivo_retiro_existe = false;
+                                                            $periodo_carpeta = '';
 
-if (!empty($solicitudes->periodo_solicitud_retiro)) {
-    // Usar el período guardado en la solicitud
-    $ruta_archivo_retiro = 'assets/tramites/retiro_voluntario/' . $solicitudes->periodo_solicitud_retiro . '/' . $solicitudes->id_usuario . '_retiro_voluntario.pdf';
-    $archivo_retiro_existe = file_exists(FCPATH . $ruta_archivo_retiro);
-} else {
-    // Fallback: buscar en todas las carpetas de período
-    $ruta_base = 'assets/tramites/retiro_voluntario/';
-    $nombre_archivo = $solicitudes->id_usuario . '_retiro_voluntario.pdf';
-    
-    if (is_dir($ruta_base)) {
-        $carpetas = scandir($ruta_base);
-        foreach ($carpetas as $carpeta) {
-            if ($carpeta != '.' && $carpeta != '..' && is_dir($ruta_base . $carpeta)) {
-                $ruta_temp = $ruta_base . $carpeta . '/' . $nombre_archivo;
-                if (file_exists(FCPATH . $ruta_temp)) {
-                    $ruta_archivo_retiro = $ruta_temp;
-                    $archivo_retiro_existe = true;
-                    break;
-                }
-            }
-        }
-    }
-}
-?>
+                                                            if (!empty($solicitudes->periodo_solicitud_retiro)) {
+                                                                $periodo_carpeta = $solicitudes->periodo_solicitud_retiro;
+                                                           
+                                                                $periodo_activo = $this->Periodo_model->getIdperiodo_($periodo_carpeta);
+                                                                if ($periodo_activo) {
+                                                                    $periodo_carpeta = 'periodo_' . $periodo_activo->id . '_' . str_replace('/', '_', $periodo_activo->nombre);
+                                                                } else {
+                                                                    $ruta_base = 'assets/tramites/retiro_voluntario/';
+                                                                    $nombre_archivo_buscar = $solicitudes->id_usuario . '_retiro_voluntario.pdf';
+                                                                    
+                                                                    if (is_dir($ruta_base)) {
+                                                                        $carpetas = scandir($ruta_base);
+                                                                        foreach ($carpetas as $carpeta) {
+                                                                            if ($carpeta != '.' && $carpeta != '..' && is_dir($ruta_base . $carpeta) && strpos($carpeta, 'periodo_') === 0) {
+                                                                                $ruta_temp = $ruta_base . $carpeta . '/' . $nombre_archivo_buscar;
+                                                                                if (file_exists(FCPATH . $ruta_temp)) {
+                                                                                    $periodo_carpeta = $carpeta;
+                                                                                    break;
+                                                                                }
+                                                                            }
+                                                                        }
+                                                                    }
+                                                                }
+                                                            }
 
-<?php if ($archivo_retiro_existe && !empty($ruta_archivo_retiro)): ?>
-    <a href="<?php echo base_url() . $ruta_archivo_retiro; ?>" target="_blank" class="btn btn-secondary btn-sm" style="border-radius: 6px; padding: 4px 14px; font-size: 0.7rem; font-weight: 500; border: none; box-shadow: 0 2px 6px rgba(108, 117, 125, 0.3); transition: all 0.25s ease; width: 100%;">
-        <i class="fas fa-file-pdf mr-1"></i> Ver
-    </a>
-<?php else: ?>
-    <button class="btn btn-secondary btn-sm" disabled style="border-radius: 6px; padding: 4px 14px; font-size: 0.7rem; font-weight: 500; width: 100%; opacity: 0.6; cursor: not-allowed;">
-        <i class="fas fa-file-pdf mr-1"></i> No disponible
-    </button>
-<?php endif; ?>
-                                               
+                                                            if (!empty($periodo_carpeta)) {
+                                                                $ruta_archivo_retiro = 'assets/tramites/retiro_voluntario/' . $periodo_carpeta . '/' . $archivo_nombre_retiro;
+                                                                $archivo_retiro_existe = file_exists(FCPATH . $ruta_archivo_retiro);
+                                                            }
+
+                                                            $periodo_formateado = !empty($periodo_carpeta) ? str_replace('_', ' ', str_replace('periodo_', '', $periodo_carpeta)) : '';
+                                                            ?>
+
+                                                            <?php if ($archivo_retiro_existe && !empty($ruta_archivo_retiro)): ?>
+                                                                <a href="<?php echo base_url() . $ruta_archivo_retiro; ?>" 
+                                                                   target="_blank" 
+                                                                   class="btn btn-secondary btn-sm" 
+                                                                   title="Período: <?php echo $periodo_formateado; ?>"
+                                                                   style="border-radius: 6px; padding: 5px 14px; font-size: 0.7rem; font-weight: 500; border: none; box-shadow: 0 2px 6px rgba(108, 117, 125, 0.3); transition: all 0.25s ease; width: 100%;">
+                                                                    <i class="fas fa-file-pdf mr-1"></i> Ver
+                                                                    <?php if (!empty($periodo_formateado)): ?>
+                                                                        <small style="font-size: 0.5rem; opacity: 0.8; display: block; line-height: 1.2;">
+                                                                            <?php echo $periodo_formateado; ?>
+                                                                        </small>
+                                                                    <?php endif; ?>
+                                                                </a>
+                                                            <?php else: ?>
+                                                                <button class="btn btn-secondary btn-sm" disabled style="border-radius: 6px; padding: 5px 14px; font-size: 0.7rem; font-weight: 500; width: 100%; opacity: 0.5; cursor: not-allowed;">
+                                                                    <i class="fas fa-file-pdf mr-1"></i> No disponible
+                                                                </button>
+                                                            <?php endif; ?>                          
+                                                            
                                                             <button onclick="verUnidadesRetiro('<?php echo $solicitudes->id_solicitud; ?>')" 
-                                                                 class="btn btn-info btn-sm" 
-                                                                 style="border-radius: 6px; padding: 4px 14px; font-size: 0.7rem; font-weight: 500; border: none; box-shadow: 0 2px 6px rgba(23, 162, 184, 0.3); transition: all 0.25s ease; width: 100%;">
+                                                                    class="btn btn-info btn-sm" 
+                                                                    style="border-radius: 6px; padding: 5px 14px; font-size: 0.7rem; font-weight: 500; border: none; box-shadow: 0 2px 6px rgba(23, 162, 184, 0.3); transition: all 0.25s ease; width: 100%;">
                                                                 <i class="fas fa-eye mr-1"></i> Ver Unidades Aprobadas
                                                             </button>
 
-                                                            <?php if($solicitudes->reg_pago == 0 and ($solicitudes->id_tramite <> 3)): ?>
-                                                                <a href="<?php echo base_url(); ?>dashboard09/registro_pago/<?php echo $solicitudes->id_solicitud . '/' . $solicitudes->id_tipo_tramite; ?>" class="btn btn-success btn-sm" style="border-radius: 6px; padding: 5px 16px; font-size: 0.75rem; font-weight: 600; border: none; box-shadow: 0 2px 8px rgba(40, 167, 69, 0.3); transition: all 0.25s ease; width: 100%;">
+                                                            <?php if($solicitudes->reg_pago == 0 && ($solicitudes->id_tramite != 3)): ?>
+                                                                <a href="<?php echo base_url(); ?>dashboard09/registro_pago/<?php echo $solicitudes->id_solicitud . '/' . $solicitudes->id_tipo_tramite; ?>" 
+                                                                   class="btn btn-success btn-sm" 
+                                                                   style="border-radius: 6px; padding: 6px 16px; font-size: 0.75rem; font-weight: 600; border: none; box-shadow: 0 2px 8px rgba(40, 167, 69, 0.3); transition: all 0.25s ease; width: 100%;">
                                                                     <i class="fas fa-money-bill-wave mr-1"></i> Pagar
                                                                 </a>
                                                             <?php endif; ?>
@@ -362,7 +388,12 @@ if (!empty($solicitudes->periodo_solicitud_retiro)) {
 
     </section>
     <!-- /.content -->
-    <!-- Modal para visualizar Unidades Aprobadas de Retiro -->
+</div>
+<!-- /.content-wrapper -->
+
+<!-- ============================================================ -->
+<!-- MODAL: Unidades Aprobadas de Retiro (FUERA del content-wrapper) -->
+<!-- ============================================================ -->
 <div class="modal fade" id="modalUnidadesRetiro" tabindex="-1" role="dialog" aria-labelledby="modalUnidadesRetiroLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content" style="border-radius: 12px; border-top: 4px solid #003366;">
@@ -377,319 +408,8 @@ if (!empty($solicitudes->periodo_solicitud_retiro)) {
             </div>
             <div class="modal-body" style="padding: 20px;">
                 <div id="contenido-unidades-retiro">
-                    <!-- Contenido cargado vía AJAX -->
                     <div class="text-center" style="padding: 40px 0;">
                         <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
                             <span class="sr-only">Cargando...</span>
                         </div>
-                        <p class="mt-3" style="color: #6c757d; font-weight: 500;">Cargando unidades aprobadas...</p>
-                    </div>
-                </div>
-            </div>
-            <div class="modal-footer" style="border-top: 1px solid #e8e8e8; background: #f8f9fa; border-radius: 0 0 8px 8px;">
-                <button type="button" class="btn btn-secondary" data-dismiss="modal" style="border-radius: 8px; padding: 8px 30px; font-weight: 500;">
-                    <i class="fas fa-times mr-2"></i>Cerrar
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
-</div>
-<!-- /.content-wrapper -->
-<script>
-function verUnidadesRetiro(id_solicitud) {
-    // Mostrar el modal
-    $('#modalUnidadesRetiro').modal('show');
-    
-    // Mostrar indicador de carga
-    var contenido = document.getElementById('contenido-unidades-retiro');
-    contenido.innerHTML = `
-        <div class="text-center" style="padding: 40px 0;">
-            <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
-                <span class="sr-only">Cargando...</span>
-            </div>
-            <p class="mt-3" style="color: #6c757d; font-weight: 500;">Cargando unidades aprobadas...</p>
-        </div>
-    `;
-    
-    // Construir la URL para CodeIgniter
-    var base_url = '<?php echo base_url(); ?>';
-    var url = base_url + 'dashboard09/get_unidades_retiro/' + id_solicitud;
-    
-    // Realizar petición AJAX
-    $.ajax({
-        url: url,
-        type: 'GET',
-        dataType: 'json',
-        success: function(response) {
-            if (response.success) {
-                var html = '';
-                
-                if (response.data && response.data.length > 0) {
-                    html += `
-                        <div style="background: #e8f0fe; padding: 10px 15px; border-radius: 8px; margin-bottom: 15px;">
-                            <div style="display: flex; flex-wrap: wrap; gap: 15px; font-size: 0.85rem; color: #2c3e50;">
-                                <div><strong style="color: #003366;">Trámite:</strong> ${response.info?.tramite || 'N/A'}</div>
-                                <div><strong style="color: #003366;">Programa:</strong> ${response.info?.programa || 'N/A'}</div>
-                                <div><strong style="color: #003366;">Período:</strong> ${response.info?.periodo || 'N/A'}</div>
-                                <div><strong style="color: #003366;">Total UC Retiradas:</strong> 
-                                    <span style="background: #dc3545; color: white; padding: 2px 12px; border-radius: 20px; font-weight: 600;">${response.total_uc || 0}</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div style="max-height: 400px; overflow-y: auto;">
-                            <table class="table table-hover" style="border-radius: 8px; overflow: hidden;">
-                                <thead style="background: linear-gradient(135deg, #003366 0%, #1a5276 100%); color: white;">
-                                    <tr>
-                                        <th style="padding: 8px 12px; font-size: 0.8rem; font-weight: 500;">Código</th>
-                                        <th style="padding: 8px 12px; font-size: 0.8rem; font-weight: 500;">Unidad Curricular</th>
-                                        <th style="padding: 8px 12px; text-align: center; font-size: 0.8rem; font-weight: 500;">UC</th>
-                                        <th style="padding: 8px 12px; text-align: center; font-size: 0.8rem; font-weight: 500;">Trimestre</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                    `;
-                    
-                    response.data.forEach(function(item) {
-                        var es_linea = (item.trimestre == 'LÍNEA DE INVESTIGACIÓN');
-                        
-                        html += `
-                            <tr style="border-bottom: 1px solid #f0f0f0; ${es_linea ? 'background: #fce4e4;' : ''}">
-                                <td style="padding: 8px 12px; font-size: 0.85rem;">
-                                    <span class="badge" style="background: #e9ecef; color: #495057; padding: 2px 10px; border-radius: 15px;">
-                                        ${item.codigo || 'N/A'}
-                                    </span>
-                                </td>
-                                <td style="padding: 8px 12px; font-size: 0.85rem; color: #2c3e50;">
-                                    ${es_linea ? '<span style="background: #dc3545; color: white; padding: 2px 10px; border-radius: 20px; font-size: 0.6rem; font-weight: 700; margin-right: 6px;">TEG</span>' : ''}
-                                    ${item.unidad_curricular || 'N/A'}
-                                </td>
-                                <td style="padding: 8px 12px; text-align: center; font-size: 0.85rem;">
-                                    <span class="badge" style="background: ${es_linea ? '#dc3545' : '#003366'}; color: white; padding: 3px 12px; border-radius: 20px;">
-                                        ${item.uc || '0'}
-                                    </span>
-                                </td>
-                                <td style="padding: 8px 12px; text-align: center; font-size: 0.85rem;">
-                                    <span class="badge" style="background: #e9ecef; color: #495057; padding: 3px 12px; border-radius: 20px;">
-                                        ${item.trimestre || 'N/A'}
-                                    </span>
-                                </td>
-                            </tr>
-                        `;
-                    });
-                    
-                    html += `
-                                </tbody>
-                                <tfoot style="background: #f8f9fa; border-top: 2px solid #003366;">
-                                    <tr>
-                                        <th colspan="4" style="padding: 8px 15px; font-size: 0.75rem; color: #6c757d; text-align: center;">
-                                            <i class="fas fa-info-circle" style="color: #003366; margin-right: 4px;"></i>
-                                            Los registros en <span style="color: #dc3545; font-weight: 600;">rojo</span> corresponden a la Línea de Investigación
-                                        </th>
-                                    </tr>
-                                </tfoot>
-                            </table>
-                        </div>
-                    `;
-                } else {
-                    html = `
-                        <div style="padding: 40px 20px; text-align: center;">
-                            <i class="fas fa-check-circle" style="font-size: 3rem; color: #28a745; margin-bottom: 15px; display: block;"></i>
-                            <h6 style="color: #2c3e50; font-weight: 600;">No hay unidades con retiro aprobado</h6>
-                            <p style="color: #6c757d; font-size: 0.9rem;">Este trámite no tiene unidades curriculares retiradas registradas.</p>
-                        </div>
-                    `;
-                }
-                
-                document.getElementById('contenido-unidades-retiro').innerHTML = html;
-            } else {
-                document.getElementById('contenido-unidades-retiro').innerHTML = `
-                    <div class="alert alert-danger" style="border-radius: 8px; border-left: 4px solid #dc3545;">
-                        <i class="fas fa-exclamation-circle mr-2"></i>
-                        <strong>Error:</strong> ${response.message || 'No se pudieron cargar los datos.'}
-                    </div>
-                `;
-            }
-        },
-        error: function(xhr, status, error) {
-            document.getElementById('contenido-unidades-retiro').innerHTML = `
-                <div class="alert alert-danger" style="border-radius: 8px; border-left: 4px solid #dc3545;">
-                    <i class="fas fa-exclamation-circle mr-2"></i>
-                    <strong>Error:</strong> Ocurrió un problema al cargar los datos.<br>
-                    <small>${xhr.responseText || 'Intente nuevamente.'}</small>
-                </div>
-            `;
-        }
-    });
-}
-</script>
-<!-- Estilos adicionales -->
-<style>
-    /* Efectos hover en filas de tabla */
-    .table-hover tbody tr:hover {
-        background-color: #e8f0fe !important;
-        transition: background 0.2s ease;
-        cursor: pointer;
-    }
-    
-    /* Sombras y bordes redondeados */
-    .card {
-        border-radius: 10px !important;
-        overflow: hidden;
-    }
-    
-    /* Efecto hover en botones */
-    .btn-sm {
-        transition: all 0.25s ease !important;
-    }
-    
-    .btn-sm:hover {
-        transform: translateY(-2px) scale(1.02);
-        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2) !important;
-    }
-    
-    /* Badges de estado */
-    .badge {
-        font-weight: 600;
-        padding: 5px 14px;
-        border-radius: 20px;
-        font-size: 0.75rem;
-        letter-spacing: 0.3px;
-    }
-    
-    .badge-success {
-        background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
-        color: white;
-        box-shadow: 0 2px 8px rgba(40, 167, 69, 0.25);
-    }
-    
-    .badge-secondary {
-        background: linear-gradient(135deg, #6c757d 0%, #8a929a 100%);
-        color: white;
-        box-shadow: 0 2px 8px rgba(108, 117, 125, 0.25);
-    }
-    
-    .badge-warning {
-        background: linear-gradient(135deg, #ffc107 0%, #ffca2c 100%);
-        color: #856404;
-        box-shadow: 0 2px 8px rgba(255, 193, 7, 0.25);
-    }
-    
-    .badge-info {
-        background: linear-gradient(135deg, #17a2b8 0%, #20c997 100%);
-        color: white;
-        box-shadow: 0 2px 8px rgba(23, 162, 184, 0.25);
-    }
-    
-    /* Contenedor de estado */
-    .status-badge {
-        display: inline-flex;
-        align-items: center;
-        font-size: 0.8rem;
-        padding: 2px 0;
-    }
-    
-    /* Estilo para imágenes de estado */
-    .status-img {
-        width: 24px;
-        height: 24px;
-        border-radius: 50%;
-        border: 2px solid transparent;
-        transition: all 0.3s ease;
-        object-fit: cover;
-        flex-shrink: 0;
-        margin-right: 8px;
-    }
-    
-    .status-img:hover {
-        transform: scale(1.2) rotate(5deg);
-        border-color: #003366 !important;
-        box-shadow: 0 0 20px rgba(0, 51, 102, 0.4) !important;
-    }
-    
-    /* Alertas mejoradas */
-    .alert {
-        border-radius: 10px !important;
-        padding: 15px 20px !important;
-    }
-    
-    .alert-dismissible .close {
-        padding: 12px 20px !important;
-        opacity: 0.7;
-        transition: opacity 0.2s ease;
-    }
-    
-    .alert-dismissible .close:hover {
-        opacity: 1;
-    }
-    
-    /* Ajuste para móviles */
-    @media (max-width: 768px) {
-        .card-title {
-            font-size: 1rem !important;
-        }
-        .btn-sm {
-            padding: 4px 10px !important;
-            font-size: 0.6rem !important;
-            width: 100% !important;
-        }
-        .table td, .table th {
-            padding: 10px 12px !important;
-            font-size: 0.75rem !important;
-        }
-        .status-img {
-            width: 20px !important;
-            height: 20px !important;
-            margin-right: 5px !important;
-        }
-        .badge {
-            font-size: 0.6rem !important;
-            padding: 3px 10px !important;
-        }
-        .status-badge {
-            font-size: 0.7rem !important;
-        }
-        .alert .fa-3x {
-            font-size: 2rem !important;
-        }
-        .alert .d-flex {
-            flex-direction: column !important;
-            text-align: center !important;
-        }
-        .alert .fa-3x {
-            margin-right: 0 !important;
-            margin-bottom: 15px !important;
-        }
-    }
-    
-    @media (max-width: 576px) {
-        .table td, .table th {
-            padding: 8px 10px !important;
-            font-size: 0.7rem !important;
-        }
-        .table-responsive {
-            border: none;
-        }
-        .status-img {
-            width: 16px !important;
-            height: 16px !important;
-            margin-right: 4px !important;
-        }
-        .btn-sm {
-            font-size: 0.55rem !important;
-            padding: 3px 8px !important;
-        }
-        .badge {
-            font-size: 0.55rem !important;
-            padding: 2px 8px !important;
-        }
-        .status-badge {
-            font-size: 0.65rem !important;
-        }
-        .alert {
-            padding: 12px 15px !important;
-            font-size: 0.85rem !important;
-        }
-    }
-</style>
-
+                        <p class="mt-3" style="color:
