@@ -365,7 +365,9 @@ if($egresado==1 and (DATE('Y-m-d',$fecha_apertura->desde)<=$fecha_hoy and $fecha
 									if( !$this->Solictudtramite_model->VerificarSolicitud($id_usuario,$id_tramite,$id_programa)){
 										if ($this->Solictudtramite_model->save($data)){
 											?>
-												<script> alert ("Solicitud Registrada.");
+												<script> alert ("✅ Solicitud Registrada con Éxito.\n\n" +
+    "📌 Para realizar el pago, diríjase al botón 'PAGAR' ubicado en la solicitud generada.\n\n" +
+    "⚠️ Recuerde cancelar los aranceles del trámite solicitado para completar el proceso.");
 												location.assign("<?php echo base_url(); ?>dashboard09/index/2");   
 												</script>
 											<?php 
@@ -407,7 +409,9 @@ if($egresado==1 and (DATE('Y-m-d',$fecha_apertura->desde)<=$fecha_hoy and $fecha
 												
 														if ($this->Solictudtramite_model->save($data)){
 															?>
-																<script> alert ("Solicitud Registrada.");
+																<script> alert ("    ✅ Solicitud Registrada con Éxito.\n\n" +
+    "📌 Para realizar el pago, diríjase al botón 'PAGAR' ubicado en la solicitud generada.\n\n" +
+    "⚠️ Recuerde cancelar los aranceles del trámite solicitado para completar el proceso.");
 																location.assign("<?php echo base_url(); ?>dashboard09/index/2");   
 																</script>
 															<?php 
@@ -452,7 +456,9 @@ if($egresado==1 and (DATE('Y-m-d',$fecha_apertura->desde)<=$fecha_hoy and $fecha
 								if (!$this->Solictudtramite_model->VerificarSolicitud($id_usuario,$id_tramite,$id_programa)){
 									if ($this->Solictudtramite_model->save($data)){
 										?>
-											<script> alert ("Solicitud Registrada.");
+											<script> alert ("✅ Solicitud Registrada con Éxito.\n\n" +
+    "📌 Para realizar el pago, diríjase al botón 'PAGAR' ubicado en la solicitud generada.\n\n" +
+    "⚠️ Recuerde cancelar los aranceles del trámite solicitado para completar el proceso.");
 											location.assign("<?php echo base_url(); ?>dashboard09/index/2");   
 											</script>
 										<?php 
@@ -489,7 +495,9 @@ if($egresado==1 and (DATE('Y-m-d',$fecha_apertura->desde)<=$fecha_hoy and $fecha
 									if( !$this->Solictudtramite_model->VerificarSolicitud($id_usuario,$id_tramite,$id_programa)){
 										if ($this->Solictudtramite_model->save($data)){
 											?>
-												<script> alert ("Solicitud Registrada.");
+												<script> alert ("✅ Solicitud Registrada con Éxito.\n\n" +
+    "📌 Para realizar el pago, diríjase al botón 'PAGAR' ubicado en la solicitud generada.\n\n" +
+    "⚠️ Recuerde cancelar los aranceles del trámite solicitado para completar el proceso.");
 												location.assign("<?php echo base_url(); ?>dashboard09/solicitud_egreso/2");   
 												</script>
 											<?php 
@@ -514,7 +522,9 @@ if($egresado==1 and (DATE('Y-m-d',$fecha_apertura->desde)<=$fecha_hoy and $fecha
 							if (!$this->Solictudtramite_model->VerificarSolicitud($id_usuario,$id_tramite,$id_programa)){
 								if ($this->Solictudtramite_model->save($data)){
 									?>
-										<script> alert ("Solicitud Registrada.");
+										<script> alert ("✅ Solicitud Registrada con Éxito.\n\n" +
+    "📌 Para realizar el pago, diríjase al botón 'PAGAR' ubicado en la solicitud generada.\n\n" +
+    "⚠️ Recuerde cancelar los aranceles del trámite solicitado para completar el proceso.");
 										location.assign("<?php echo base_url(); ?>dashboard09/index/2");   
 										</script>
 									<?php 
@@ -1228,7 +1238,9 @@ if ($mensaje=="") {
 				if ($this->Solictudtramite_model->save($data)){
 					?>
 					
-						<script> alert ("Solicitud Registrada.");
+						<script> alert ("✅ Solicitud Registrada con Éxito.\n\n" +
+    "📌 Para realizar el pago, diríjase al botón 'PAGAR' ubicado en la solicitud generada.\n\n" +
+    "⚠️ Recuerde cancelar los aranceles del trámite solicitado para completar el proceso.");
 						location.assign("<?php echo base_url(); ?>dashboard09/solicitud_ruc/2");   
 						</script>
 					<?php 
@@ -1314,7 +1326,9 @@ if ($mensaje=="") {
 							if ($this->Solictudtramite_model->save($data)){
 							?>
 							
-								<script> alert ("Solicitud Registrada.");
+								<script> alert ("✅ Solicitud Registrada con Éxito.\n\n" +
+    "📌 Para realizar el pago, diríjase al botón 'PAGAR' ubicado en la solicitud generada.\n\n" +
+    "⚠️ Recuerde cancelar los aranceles del trámite solicitado para completar el proceso.");
 								location.assign("<?php echo base_url(); ?>dashboard09/solicitud_egreso/2");   
 								</script>
 							<?php 
@@ -1373,7 +1387,9 @@ public function registrotramiteReincorporacion_store($id){
 				if ($this->Solictudtramite_model->save($data)){
 					?>
 					
-						<script> alert ("Solicitud Registrada con exito.");
+						<script> alert ("✅ Solicitud Registrada con Éxito.\n\n" +
+    "📌 Para realizar el pago, diríjase al botón 'PAGAR' ubicado en la solicitud generada.\n\n" +
+    "⚠️ Recuerde cancelar los aranceles del trámite solicitado para completar el proceso.");
 						location.assign("<?php echo base_url(); ?>dashboard09/solicitud_reincorporacion/2");   
 						</script>
 					<?php 

@@ -1,8 +1,8 @@
 <footer class="main-footer">
     <div class="float-right d-none d-sm-block">
-      <b>Version</b> 1.0
+      <b>Versión</b> 2.0
     </div>
-    <strong>Copyright &copy; 2019-2020 <a href="https://adminlte.io">CEENFMP</a>.</strong> All rights
+    <strong>Copyright &copy; 2019-2026 SCE-ENFMP.</strong> All rights
     reserved.
  <div aling ="center">Sugerimos utilizar para mejor funcionamiento el navegador Mozilla Firefox <img src="<?php echo base_url(); ?>assets/img/firefox.jpeg" width="25px"> </div>
   </footer>

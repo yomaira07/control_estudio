@@ -236,12 +236,37 @@
                                         <i class="fas fa-credit-card mr-2"></i>
                                         Pagar con BDV
                                     </button>
+                                    <?php
+                                        // Obtenemos el tipo de solicitud (id_tramite) de la solicitud principal
+                                        $tipo_solicitud = $solicitud_principal->id_tramite;
 
-                                    <a href="<?php echo base_url(); ?>dashboard04/index" 
-                                       class="btn btn-default" 
-                                       style="border-radius: 10px; padding: 12px 30px; font-weight: 500; transition: all 0.3s; min-width: 150px;">
-                                        <i class="fas fa-times mr-2"></i>
-                                        Cancelar
+                                        // Definimos la URL de redirección según el tipo de trámite
+                                        switch ($tipo_solicitud) {
+                                        case 16:
+                                            $url_cancelar = base_url() . 'dashboard09/solicitud_reincorporacion/2';
+                                            break;
+                                        case 17:
+                                        case 19:
+                                            $url_cancelar = base_url() . 'dashboard09/solicitud_ruc/2';
+                                            break;
+                                        case 18:
+                                            $url_cancelar = base_url() . 'dashboard09/solicitud_egreso/2';
+                                            break;
+                                        case 28:
+                                            $url_cancelar = base_url() . 'dashboard09/solicitud_ruc_requisitos/2';
+                                            break;
+                                        default:
+                                            $url_cancelar = base_url() . 'dashboard09/index/2';
+                                            break;
+                                        }
+                                    ?>
+
+                                    <!-- Botón Cancelar con redirección dinámica -->
+                                    <a href="<?php echo $url_cancelar; ?>" 
+                                    class="btn btn-default" 
+                                    style="border-radius: 10px; padding: 12px 30px; font-weight: 500; transition: all 0.3s; min-width: 150px;">
+                                    <i class="fas fa-times mr-2"></i>
+                                    Cancelar
                                     </a>
                                 </div>
                             </div>
