@@ -326,7 +326,7 @@
                                             <td style="padding: 10px 15px; text-align: center; vertical-align: middle;">
                                                 <div class="d-flex flex-column align-items-center" style="gap: 8px;">
                                                     <?php if($solicitudes->reg_pago == 0): ?>
-                                                        <a href="<?php echo base_url(); ?>dashboard09/registro_pago_ruc/<?php echo $solicitudes->id_solicitud . '/' . $solicitudes->id_tipo_tramite; ?>" 
+                                                        <a href="<?php echo base_url(); ?>dashboard09/registro_pago/<?php echo $solicitudes->id_solicitud . '/' . $solicitudes->id_tipo_tramite; ?>" 
                                                         class="btn btn-success btn-sm btn-accion" 
                                                         style="border-radius: 6px; padding: 6px 14px; font-size: 0.75rem; font-weight: 600; border: none; box-shadow: 0 2px 8px rgba(40, 167, 69, 0.3); transition: all 0.25s ease; width: 100%; display: inline-flex; align-items: center; justify-content: center;">
                                                             <i class="fas fa-money-bill-wave mr-2"></i> Pagar

@@ -741,7 +741,10 @@ private function actualizar_pago_exitoso($id_usuario, $id_periodo, $response, $t
                 'quien_actualizo'     => $id_usuario,
             );
             $data2 = array(
-                'rev_academica' => 0
+                'reg_pago'      => 1,
+                'rev_academica' => 0,
+                'fecha_actualizacion' => $fecha,
+                'quien_actualizo'     => $id_usuario
             );
         } else {
             // No requiere revisión académica (academico=1)
@@ -756,6 +759,7 @@ private function actualizar_pago_exitoso($id_usuario, $id_periodo, $response, $t
                 'quien_actualizo'     => $id_usuario,
             );
             $data2 = array(
+                'reg_pago'      => 1,
                 'rev_academica'       => 1,
                 'fecha_actualizacion' => $fecha,
                 'quien_actualizo'     => $id_usuario,
@@ -846,7 +850,7 @@ private function actualizar_pago_exitoso($id_usuario, $id_periodo, $response, $t
      * Actualiza el estado de las materias a pagadas
      */
     private function actualizar_tramites($id_sol,$id_usuario) {
-        echo $id_sol.' '.$id_usuario;
+    
         $data = array(
             'reg_pago'            => 1,
             'quien_actualizo'     => $id_usuario,
@@ -1001,7 +1005,7 @@ private function obtener_nombre_tramite($tramite) {
             case 18:
                 return base_url() . 'dashboard09/solicitud_egreso/2';
             case 28:
-                return base_url() . 'dashboard09/solicitud_ruc_requisitos/2';
+                return base_url() . 'dashboard09/solicitud_ruc_requisitos/2';            
             default:
                 return base_url() . 'dashboard09/index/2';
         }

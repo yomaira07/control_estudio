@@ -412,4 +412,196 @@
                         <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
                             <span class="sr-only">Cargando...</span>
                         </div>
-                        <p class="mt-3" style="color:
+                        <p class="mt-3" style="color: #6c757d; font-weight: 500;">Cargando unidades aprobadas...</p>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer" style="border-top: 1px solid #e8e8e8; background: #f8f9fa; border-radius: 0 0 8px 8px;">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal" style="border-radius: 8px; padding: 8px 30px; font-weight: 500;">
+                    <i class="fas fa-times mr-2"></i>Cerrar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SCRIPT: verUnidadesRetiro en JavaScript puro (sin jQuery)    -->
+<!-- ============================================================ -->
+<script>
+// ✅ Definición global directa - NO depende de jQuery
+function verUnidadesRetiro(id_solicitud) {
+    console.log('[verUnidadesRetiro] INICIO. id_solicitud =', id_solicitud, '| tipo =', typeof id_solicitud);
+    
+    if (!id_solicitud || id_solicitud === '' || id_solicitud === '0') {
+        alert('No se pudo identificar la solicitud. Contacte a soporte.');
+        return;
+    }
+    
+    // ✅ Abrir modal: intentar con jQuery/Bootstrap, sino con JS puro
+    var modalEl = document.getElementById('modalUnidadesRetiro');
+    if (!modalEl) {
+        console.error('[verUnidadesRetiro] No se encontró #modalUnidadesRetiro');
+        alert('Error: modal no encontrado.');
+        return;
+    }
+    
+    if (typeof jQuery !== 'undefined' && typeof jQuery.fn.modal !== 'undefined') {
+        // Bootstrap 4 vía jQuery
+        jQuery('#modalUnidadesRetiro').modal('show');
+    } else if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+        // Bootstrap 5 vía API
+        var modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+        modal.show();
+    } else {
+        // Fallback: mostrar manualmente
+        modalEl.style.display = 'block';
+        modalEl.classList.add('show');
+        modalEl.style.backgroundColor = 'rgba(0,0,0,0.5)';
+        modalEl.style.overflow = 'auto';
+        document.body.classList.add('modal-open');
+    }
+    
+    // Indicador de carga
+    var contenedor = document.getElementById('contenido-unidades-retiro');
+    if (contenedor) {
+        contenedor.innerHTML = 
+            '<div class="text-center" style="padding: 40px 0;">' +
+            '<div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;"></div>' +
+            '<p class="mt-3" style="color: #6c757d; font-weight: 500;">Cargando unidades aprobadas...</p></div>';
+    }
+    
+    // ✅ URL del AJAX
+    var base_url = '<?php echo base_url(); ?>';
+    var url = base_url + 'dashboard09/get_unidades_retiro/' + id_solicitud;
+    
+    console.log('[verUnidadesRetiro] URL =', url);
+    
+    // ✅ AJAX con XMLHttpRequest (JS puro)
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', url, true);
+    xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+    xhr.withCredentials = true;
+    
+    xhr.onreadystatechange = function() {
+        if (xhr.readyState !== 4) return;
+        
+        console.log('[verUnidadesRetiro] HTTP status =', xhr.status);
+        console.log('[verUnidadesRetiro] RAW responseText (primeros 500 chars) =', xhr.responseText.substring(0, 500));
+        
+        if (xhr.status !== 200) {
+            var mensaje = 'Error al conectar con el servidor.';
+            if (xhr.status === 401 || xhr.status === 403) {
+                mensaje = 'Sesión expirada. Por favor, recargue la página.';
+            } else if (xhr.status === 404) {
+                mensaje = 'El recurso no existe (404).';
+            } else if (xhr.status === 500) {
+                mensaje = 'Error interno del servidor (500).';
+            }
+            
+            if (contenedor) {
+                contenedor.innerHTML = 
+                    '<div class="alert alert-danger" style="text-align: center; padding: 30px;">' +
+                    '<i class="fas fa-exclamation-triangle fa-2x d-block mb-2"></i>' + mensaje +
+                    '<br><small>Código: ' + xhr.status + '</small></div>';
+            }
+            return;
+        }
+        
+        var response;
+        try {
+            response = JSON.parse(xhr.responseText);
+        } catch (e) {
+            console.error('[verUnidadesRetiro] Respuesta no es JSON válido');
+            if (contenedor) {
+                contenedor.innerHTML = 
+                    '<div class="alert alert-danger" style="padding: 20px;">' +
+                    '<strong>Error:</strong> La respuesta del servidor no es JSON válido.<br>' +
+                    '<small style="word-break: break-all;">' + xhr.responseText.substring(0, 500) + '</small></div>';
+            }
+            return;
+        }
+        
+        console.log('[verUnidadesRetiro] Response parseada =', response);
+        
+        if (!response || response.success !== true) {
+            var msg = (response && response.message) ? response.message : 'Error al cargar las unidades.';
+            if (contenedor) {
+                contenedor.innerHTML = 
+                    '<div class="alert alert-danger" style="text-align: center; padding: 30px;">' +
+                    '<i class="fas fa-exclamation-circle fa-2x d-block mb-2"></i>' + msg + '</div>';
+            }
+            return;
+        }
+        
+        var html = '';
+        
+        if (response.data && response.data.length > 0) {
+            
+            var tramite  = (response.info && response.info.tramite)  ? response.info.tramite  : 'N/A';
+            var programa = (response.info && response.info.programa) ? response.info.programa : 'N/A';
+            var periodo  = (response.info && response.info.periodo)  ? response.info.periodo  : 'N/A';
+            
+            html += '<div style="background: #e8f0fe; padding: 10px 15px; border-radius: 8px; margin-bottom: 15px;">' +
+                    '<div style="display: flex; flex-wrap: wrap; gap: 15px; font-size: 0.85rem; color: #2c3e50;">' +
+                    '<div><strong style="color: #003366;">Trámite:</strong> ' + tramite + '</div>' +
+                    '<div><strong style="color: #003366;">Programa:</strong> ' + programa + '</div>' +
+                    '<div><strong style="color: #003366;">Período:</strong> ' + periodo + '</div>' +
+                    '<div><strong style="color: #003366;">Total UC Retiradas:</strong> ' +
+                    '<span style="background: #dc3545; color: white; padding: 2px 12px; border-radius: 20px; font-weight: 600;">' +
+                    (response.total_uc || 0) + '</span></div>' +
+                    '</div></div>' +
+                    '<div style="max-height: 400px; overflow-y: auto;">' +
+                    '<table class="table table-hover" style="border-radius: 8px; overflow: hidden;">' +
+                    '<thead style="background: linear-gradient(135deg, #003366 0%, #1a5276 100%); color: white;">' +
+                    '<tr>' +
+                    '<th style="padding: 8px 12px; font-size: 0.8rem;">Código</th>' +
+                    '<th style="padding: 8px 12px; font-size: 0.8rem;">Unidad Curricular</th>' +
+                    '<th style="padding: 8px 12px; text-align: center; font-size: 0.8rem;">UC</th>' +
+                    '<th style="padding: 8px 12px; text-align: center; font-size: 0.8rem;">Trimestre</th>' +
+                    '</tr></thead><tbody>';
+            
+            response.data.forEach(function(item) {
+                var es_linea = (item.trimestre == 'LÍNEA DE INVESTIGACIÓN');
+                html += '<tr style="border-bottom: 1px solid #f0f0f0;' + (es_linea ? 'background: #fce4e4;' : '') + '">' +
+                        '<td style="padding: 8px 12px; font-size: 0.85rem;">' +
+                        '<span class="badge" style="background: #e9ecef; color: #495057; padding: 2px 10px; border-radius: 15px;">' +
+                        (item.codigo || 'N/A') + '</span></td>' +
+                        '<td style="padding: 8px 12px; font-size: 0.85rem; color: #2c3e50;">' +
+                        (item.unidad_curricular || 'N/A') + '</td>' +
+                        '<td style="padding: 8px 12px; text-align: center; font-size: 0.85rem;">' +
+                        '<strong>' + (item.uc || 0) + '</strong></td>' +
+                        '<td style="padding: 8px 12px; text-align: center; font-size: 0.8rem;">' +
+                        '<span class="badge" style="background: ' + (es_linea ? '#dc3545' : '#003366') + '; color: white; padding: 2px 10px; border-radius: 15px;">' +
+                        (item.trimestre || 'N/A') + '</span></td></tr>';
+            });
+            
+            html += '</tbody></table></div>';
+            
+        } else {
+            html = '<div class="alert alert-info" style="text-align: center; padding: 30px;">' +
+                   '<i class="fas fa-info-circle fa-2x d-block mb-2"></i>' +
+                   'No hay unidades aprobadas para mostrar.</div>';
+        }
+        
+        if (contenedor) {
+            contenedor.innerHTML = html;
+        }
+    };
+    
+    xhr.onerror = function() {
+        console.error('[verUnidadesRetiro] Error de red');
+        if (contenedor) {
+            contenedor.innerHTML = 
+                '<div class="alert alert-danger" style="text-align: center; padding: 30px;">' +
+                '<i class="fas fa-exclamation-triangle fa-2x d-block mb-2"></i>' +
+                'Error de conexión. Verifique su red.</div>';
+        }
+    };
+    
+    xhr.send();
+}
+
+// ✅ Log de confirmación al cargar
+console.log('[verUnidadesRetiro] Script cargado correctamente. Función disponible globalmente.');
+</script>

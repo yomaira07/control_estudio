@@ -436,7 +436,7 @@
                                                     <img width="25px" height="25px" src="<?php echo base_url(); ?>/assets/img/button_green.png" title="Pago Registrado">
                                                     <?php echo "Pago Registrado"; 
                                                     echo "<br>";
-                                                    if($solicitud->reg_pago == 1 && $solicitud->conciliado == 1 && $solicitud->academico == 1 && $solicitud->rev_academica == 1): ?>
+                                                    if($solicitud->reg_pago == 1 && $solicitud->conciliado == 1 ): ?>
                                                         <img width="25px" height="25px" src="<?php echo base_url(); ?>/assets/img/button_green.png" title="Aprobado">
                                                         <?php echo "Aprobado por Administración ENFMP";  
                                                     else: ?>
@@ -449,12 +449,25 @@
                                                             <?php echo "Pendiente por Aprobar Administración ENFMP";  
                                                         endif; 
                                                     endif; 
+                                                        if($solicitud->reg_pago == 1 && $solicitud->conciliado == 1 && $solicitud->rev_academica == 1 && $solicitud->academico == 1 ): ?>
+                                                            <img width="25px" height="25px" src="<?php echo base_url(); ?>/assets/img/button_green.png" title="Aprobado">
+                                                            <?php echo "Aprobado por Secretaría General ENFMP";  
+                                                         else: ?>
+                                                            <br>
+                                                            <?php if($solicitud->rev_academica == 2 && $solicitud->academico == 2): ?>
+                                                                <img width="25px" height="25px" src="<?php echo base_url(); ?>/assets/img/button_red.jpeg" title="Rechazado">
+                                                                <?php echo "Rechazado por Secretaría General ENFMP";  
+                                                            else: ?>
+                                                                <img width="25px" height="25px" src="<?php echo base_url(); ?>/assets/img/button_gray.png" title="Pendiente">
+                                                                <?php echo "Pendiente por Revisión  Secretaría General ENFMP";  
+                                                            endif; 
+                                                        endif;                                                     
                                                 endif; ?>
                                             </td>
                                             <td style="padding: 10px 15px; text-align: center; vertical-align: middle;">
                                                 <div class="d-flex flex-column align-items-center" style="gap: 8px;">
                                                     <?php if($solicitud->reg_pago == 0 && $this->session->userdata("ruc") == 1): ?>
-                                                        <a href="<?php echo base_url(); ?>dashboard09/registro_pago_ruc/<?php echo $solicitud->id_solicitud . '/' . $solicitud->id_tipo_tramite; ?>" 
+                                                        <a href="<?php echo base_url(); ?>dashboard09/registro_pago/<?php echo $solicitud->id_solicitud . '/' . $solicitud->id_tipo_tramite; ?>" 
                                                         class="btn btn-success btn-sm btn-accion" 
                                                         style="border-radius: 6px; padding: 6px 14px; font-size: 0.75rem; font-weight: 600; border: none; box-shadow: 0 2px 8px rgba(40, 167, 69, 0.3); transition: all 0.25s ease; width: 100%; display: inline-flex; align-items: center; justify-content: center;">
                                                             <i class="fas fa-money-bill-wave mr-2"></i> Pagar

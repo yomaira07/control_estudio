@@ -3590,7 +3590,7 @@ $mpdf->SetProtection(array('copy','print'), '', 't3n0l0g143n7m9');
 			'combotramite'=> $this->Tramites_model->getListaTramites(2),			
 			);
 
-		var_dump($data);
+	
 		$this->load->view('layouts/header');
 		$this->load->view('layouts/sidebar_tramites');
 
