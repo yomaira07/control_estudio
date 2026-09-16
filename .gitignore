@@ -86,3 +86,14 @@ assets/*
 !assets/favicon.ico
 !assets/.gitkeep
 !assets/img
+# Documentos de estudiantes - NO subir a Git
+assets/cedulas/
+assets/titulo/
+assets/clausula/
+assets/carta/
+assets/fotos/
+assets/carnet/
+assets/colegiatura/
+assets/calificaciones/
+assets/impres/
+assets/fotos_docente/
