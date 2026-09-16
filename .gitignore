@@ -47,3 +47,42 @@ vmlinuz*
 *.tar.gz
 *.rar
 *.7z
+
+# Dependencias
+node_modules/
+jspm_packages/
+
+# Variables de entorno
+.env
+.env.local
+.env.*.local
+
+# Builds
+dist/
+build/
+.next/
+out/
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Sistema operativo
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# Ignorar todo en assets
+assets/*
+
+# Pero NO ignorar estos (las excepciones van DESPUÉS)
+!assets/logo.png
+!assets/favicon.ico
+!assets/.gitkeep
+!assets/img
