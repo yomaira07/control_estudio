@@ -1,0 +1,847 @@
+/* ============================================================
+   SCE-ENFMP - ESTILOS INSTITUCIONALES UNIFICADOS
+   Referencia principal: edit.php
+   Paleta: #003366 (azul), #c9a84c (dorado), #f4f6f9 (fondo)
+   ============================================================ */
+
+/* ===== VARIABLES GLOBALES ===== */
+:root {
+    --azul-institucional: #003366;
+    --azul-claro: #1a4b7a;
+    --azul-oscuro: #0a2a4a;
+    --dorado-institucional: #c9a84c;
+    --dorado-claro: #e8d9a0;
+    --gris-fondo: #f4f6f9;
+    --gris-borde: #e8e8e8;
+    --gris-texto: #2c3e50;
+    --gris-suave: #6c757d;
+    --blanco: #ffffff;
+    --sombra-suave: 0 2px 8px rgba(0, 0, 0, 0.08);
+    --sombra-media: 0 4px 16px rgba(0, 0, 0, 0.12);
+    --radio: 10px;
+    --transicion: all 0.25s ease;
+}
+
+/* ===== BASE ===== */
+body {
+    font-family: 'Montserrat', 'Segoe UI', sans-serif;
+    background: var(--gris-fondo);
+    color: var(--gris-texto);
+}
+
+/* ============================================================
+   HEADER / NAVBAR
+   ============================================================ */
+.main-header.navbar {
+    background: var(--blanco) !important;
+    border-bottom: 1px solid var(--gris-borde) !important;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+    padding: 0.5rem 1rem;
+}
+
+.main-header .nav-link {
+    color: var(--gris-texto) !important;
+    transition: var(--transicion);
+}
+
+.main-header .nav-link:hover {
+    color: var(--azul-institucional) !important;
+}
+
+/* Botón de toggle del sidebar (AdminLTE pushmenu) */
+.main-header [data-widget="pushmenu"] {
+    color: #003366 !important;
+    font-size: 1.15rem;
+    padding: 8px 12px;
+    border-radius: 8px;
+    transition: all 0.25s ease;
+}
+
+.main-header [data-widget="pushmenu"]:hover {
+    background: rgba(0, 51, 102, 0.08);
+    color: #c9a84c !important;
+}
+
+.main-header [data-widget="pushmenu"] i {
+    transition: transform 0.3s ease;
+}
+
+/* User dropdown en header */
+.main-header .user-menu > a {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 10px;
+    border-radius: var(--radio);
+    transition: var(--transicion);
+}
+
+.main-header .user-menu > a:hover {
+    background: rgba(0, 51, 102, 0.05);
+}
+
+.main-header .user-image {
+    width: 34px;
+    height: 34px;
+    object-fit: cover;
+    border: 2px solid var(--dorado-institucional);
+    padding: 1px;
+    background: var(--blanco);
+    box-shadow: 0 2px 6px rgba(201, 168, 76, 0.3);
+}
+
+.main-header .user-menu .hidden-xs {
+    color: var(--azul-institucional);
+    font-weight: 500;
+    font-size: 0.88rem;
+}
+
+.main-header .dropdown-menu {
+    border: none;
+    border-radius: var(--radio);
+    box-shadow: var(--sombra-media);
+    padding: 8px 0;
+}
+
+.main-header .dropdown-menu .user-body {
+    padding: 0;
+}
+
+.main-header .dropdown-menu a {
+    color: var(--gris-texto);
+    font-weight: 500;
+    padding: 10px;
+    display: block;
+    transition: var(--transicion);
+}
+
+.main-header .dropdown-menu a:hover {
+    background: rgba(0, 51, 102, 0.05);
+    color: var(--azul-institucional);
+    text-decoration: none;
+}
+
+/* ============================================================
+   SIDEBAR INSTITUCIONAL
+   ============================================================ */
+.main-sidebar.sidebar-institucional {
+    background: linear-gradient(180deg, var(--azul-oscuro) 0%, #0d3556 60%, var(--azul-oscuro) 100%) !important;
+    border-right: 1px solid rgba(201, 168, 76, 0.2);
+    font-family: 'Montserrat', 'Segoe UI', sans-serif;
+    /* NO usar min-width ni width fijos: AdminLTE controla el ancho */
+    transition: margin-left 0.3s ease-in-out, width 0.3s ease-in-out !important;
+}
+
+/* ===== LOGO / BRAND ===== */
+.brand-institucional {
+    border-bottom: 1px solid rgba(201, 168, 76, 0.35) !important;
+    padding: 16px 18px !important;
+    background: rgba(26, 75, 122, 0.25);
+    transition: var(--transicion);
+    display: flex !important;
+    align-items: center;
+    gap: 10px;
+}
+
+.brand-institucional:hover {
+    background: rgba(201, 168, 76, 0.08);
+}
+
+.brand-institucional .brand-text {
+    color: var(--blanco) !important;
+    font-weight: 700 !important;
+    letter-spacing: 1.5px;
+    font-size: 1.1rem;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+    transition: opacity 0.2s ease, width 0.2s ease;
+}
+
+.brand-institucional .brand-image {
+    border: 2px solid var(--dorado-institucional);
+    padding: 2px;
+    background: var(--blanco);
+    box-shadow: 0 2px 8px rgba(201, 168, 76, 0.3);
+    flex-shrink: 0;
+}
+
+/* ===== USER PANEL ===== */
+.user-panel-institucional {
+    display: flex !important;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 16px !important;
+    margin: 0 !important;
+    border-bottom: 1px solid rgba(201, 168, 76, 0.15);
+    background: rgba(26, 75, 122, 0.15);
+    overflow: hidden;
+    transition: padding 0.25s ease;
+}
+
+/* Contenedor del avatar */
+.user-panel-avatar {
+    flex-shrink: 0;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    overflow: hidden;
+    border: 2px solid #c9a84c;
+    background: #fff;
+    padding: 2px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+    transition: all 0.25s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.user-panel-avatar:hover {
+    transform: scale(1.05);
+    box-shadow: 0 0 14px rgba(201, 168, 76, 0.55);
+}
+
+/* Imagen dentro del avatar */
+.img-user-institucional {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+    border-radius: 50%;
+    display: block;
+}
+
+/* Cuando es el logo institucional (fallback), se ve más pequeño y centrado */
+.user-panel-avatar img[src*="Logo.png"] {
+    object-fit: contain;
+    padding: 4px;
+    background: #fff;
+}
+
+/* Contenedor del texto */
+.user-panel-info {
+    flex: 1 1 auto;
+    min-width: 0; /* CLAVE para que el texto haga wrap en flex */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    transition: opacity 0.2s ease;
+}
+
+/* Nombre del usuario */
+.nombre-usuario {
+    color: #ffffff !important;
+    font-weight: 600 !important;
+    font-size: 0.85rem;
+    line-height: 1.25;
+    letter-spacing: 0.2px;
+    transition: color 0.25s ease;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: normal !important;
+    overflow-wrap: break-word !important;
+    word-wrap: break-word !important;
+    word-break: break-word !important;
+    text-decoration: none;
+}
+
+.nombre-usuario:hover {
+    color: #c9a84c !important;
+    text-decoration: none;
+}
+
+/* Rol del usuario */
+.rol-usuario {
+    display: -webkit-box;
+    color: #e8d9a0;
+    font-size: 0.68rem;
+    font-weight: 500;
+    letter-spacing: 0.4px;
+    margin-top: 3px;
+    text-transform: uppercase;
+    line-height: 1.2;
+    white-space: normal !important;
+    overflow-wrap: break-word !important;
+    word-wrap: break-word !important;
+    word-break: break-word !important;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+}
+
+/* ===== HEADERS DE SECCIÓN ===== */
+.header-institucional {
+    color: var(--dorado-claro) !important;
+    font-size: 0.7rem !important;
+    font-weight: 700 !important;
+    letter-spacing: 1.3px !important;
+    text-transform: uppercase;
+    padding: 16px 18px 8px !important;
+    border-bottom: 1px solid rgba(201, 168, 76, 0.12);
+    margin-bottom: 6px;
+    white-space: normal !important;
+    line-height: 1.4 !important;
+}
+
+/* ===== LINKS PRINCIPALES ===== */
+.sidebar-institucional .nav-sidebar > .nav-item > .nav-link {
+    color: rgba(255, 255, 255, 0.85) !important;
+    border-radius: 8px;
+    margin: 3px 12px;
+    padding: 10px 14px;
+    transition: var(--transicion);
+    font-size: 0.88rem;
+    font-weight: 500;
+    letter-spacing: 0.2px;
+    display: flex !important;
+    align-items: flex-start !important;
+    gap: 8px;
+    white-space: normal !important;
+    overflow: visible !important;
+    text-overflow: clip !important;
+    word-wrap: break-word !important;
+    overflow-wrap: break-word !important;
+}
+
+.sidebar-institucional .nav-sidebar > .nav-item > .nav-link:hover {
+    background: rgba(26, 75, 122, 0.5) !important;
+    color: var(--blanco) !important;
+    transform: translateX(4px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.sidebar-institucional .nav-sidebar > .nav-item > .nav-link.active {
+    background: linear-gradient(90deg, rgba(201, 168, 76, 0.25) 0%, rgba(26, 75, 122, 0.3) 100%) !important;
+    color: var(--blanco) !important;
+    border-left: 3px solid var(--dorado-institucional);
+    font-weight: 600;
+    box-shadow: 0 2px 10px rgba(201, 168, 76, 0.2);
+}
+
+/* ===== SUBMENÚS ===== */
+.sidebar-institucional .nav-treeview > .nav-item > .nav-link {
+    color: rgba(255, 255, 255, 0.7) !important;
+    font-size: 0.82rem;
+    padding: 7px 14px 7px 28px;
+    border-radius: 6px;
+    margin: 1px 12px;
+    transition: var(--transicion);
+    font-weight: 400;
+    display: flex !important;
+    align-items: flex-start !important;
+    white-space: normal !important;
+    overflow: visible !important;
+    text-overflow: clip !important;
+    word-wrap: break-word !important;
+    overflow-wrap: break-word !important;
+    padding-top: 8px !important;
+    padding-bottom: 8px !important;
+}
+
+.sidebar-institucional .nav-treeview > .nav-item > .nav-link:hover {
+    color: var(--blanco) !important;
+    background: rgba(26, 75, 122, 0.4) !important;
+    padding-left: 34px;
+}
+
+.sidebar-institucional .nav-treeview > .nav-item > .nav-link.active {
+    color: var(--dorado-institucional) !important;
+    background: rgba(201, 168, 76, 0.1) !important;
+    font-weight: 600;
+}
+
+/* ===== ICONOS ===== */
+.sidebar-institucional .nav-icon {
+    font-size: 0.95rem;
+    margin-right: 8px;
+    transition: var(--transicion);
+    color: rgba(255, 255, 255, 0.7);
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.sidebar-institucional .nav-link:hover .nav-icon {
+    color: var(--dorado-institucional) !important;
+    transform: scale(1.1);
+}
+
+.sidebar-institucional .nav-link.active .nav-icon {
+    color: var(--dorado-institucional) !important;
+}
+
+/* ===== DIVISOR DORADO ===== */
+.divisor-dorado {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(201, 168, 76, 0.5), transparent);
+    margin: 14px 18px;
+}
+
+/* ===== BOTÓN SALIR ===== */
+.nav-link-salir {
+    color: rgba(255, 180, 180, 0.9) !important;
+    font-weight: 600 !important;
+}
+
+.nav-link-salir:hover {
+    background: rgba(220, 53, 69, 0.15) !important;
+    color: #ff8a8a !important;
+}
+
+.nav-link-salir .nav-icon {
+    color: rgba(255, 180, 180, 0.9) !important;
+}
+
+/* ===== SCROLLBAR PERSONALIZADO ===== */
+.sidebar-institucional .sidebar {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(201, 168, 76, 0.6) transparent;
+}
+
+.sidebar-institucional .sidebar::-webkit-scrollbar {
+    width: 6px;
+}
+
+.sidebar-institucional .sidebar::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.1);
+}
+
+.sidebar-institucional .sidebar::-webkit-scrollbar-thumb {
+    background: rgba(201, 168, 76, 0.5);
+    border-radius: 3px;
+}
+
+.sidebar-institucional .sidebar::-webkit-scrollbar-thumb:hover {
+    background: rgba(201, 168, 76, 0.8);
+}
+
+/* ===== AJUSTES GENERALES SIDEBAR ===== */
+.sidebar-institucional .nav-sidebar .nav-link p {
+    margin: 0 !important;
+    line-height: 1.4 !important;
+    white-space: normal !important;
+    overflow: visible !important;
+    text-overflow: clip !important;
+    word-wrap: break-word !important;
+    overflow-wrap: break-word !important;
+    display: block !important;
+    width: 100% !important;
+}
+
+.sidebar-institucional .nav-sidebar .nav-header {
+    background: transparent !important;
+}
+
+.sidebar-institucional .nav-sidebar .nav-link p br {
+    display: block;
+    content: "";
+    margin-top: 2px;
+}
+
+.sidebar-institucional * {
+    transition-property: background-color, color, border-color, box-shadow, transform;
+    transition-duration: 0.25s;
+    transition-timing-function: ease;
+}
+
+/* ============================================================
+   COMPORTAMIENTO COLAPSADO (AdminLTE sidebar-mini)
+   ============================================================ */
+
+/* Ocultar textos y headers al colapsar */
+.sidebar-collapse .sidebar-institucional .nav-sidebar > .nav-item > .nav-link p,
+.sidebar-collapse .sidebar-institucional .nav-sidebar .user-panel-info,
+.sidebar-collapse .sidebar-institucional .nav-sidebar .nav-header,
+.sidebar-collapse .sidebar-institucional .divisor-dorado,
+.sidebar-collapse .sidebar-institucional .brand-institucional .brand-text {
+    opacity: 0;
+    visibility: hidden;
+    height: 0;
+    overflow: hidden;
+    transition: opacity 0.2s ease;
+}
+
+/* Centrar íconos al colapsar */
+.sidebar-collapse .sidebar-institucional .nav-sidebar > .nav-item > .nav-link {
+    justify-content: center;
+    padding: 10px 0 !important;
+    margin: 3px 8px;
+    gap: 0;
+}
+
+.sidebar-collapse .sidebar-institucional .nav-sidebar > .nav-item > .nav-link .nav-icon {
+    margin-right: 0 !important;
+    font-size: 1.2rem;
+}
+
+/* Ocultar flecha de submenús al colapsar */
+.sidebar-collapse .sidebar-institucional .nav-sidebar > .nav-item > .nav-link .right {
+    display: none;
+}
+
+/* User panel colapsado: solo avatar */
+.sidebar-collapse .sidebar-institucional .user-panel-institucional {
+    justify-content: center;
+    padding: 14px 8px !important;
+}
+
+.sidebar-collapse .sidebar-institucional .user-panel-avatar {
+    margin: 0 auto;
+}
+
+/* Brand colapsado */
+.sidebar-collapse .sidebar-institucional .brand-institucional {
+    justify-content: center;
+    padding: 16px 10px !important;
+}
+
+.sidebar-collapse .sidebar-institucional .brand-institucional .brand-image {
+    margin-right: 0 !important;
+    margin-left: 0 !important;
+}
+
+/* Transición del contenido al colapsar */
+.content-wrapper,
+.main-footer {
+    transition: margin-left 0.3s ease-in-out !important;
+}
+
+/* ============================================================
+   FOOTER INSTITUCIONAL
+   ============================================================ */
+.main-footer {
+    background: var(--blanco);
+    border-top: 1px solid var(--gris-borde);
+    color: var(--gris-suave);
+    font-size: 0.82rem;
+    padding: 14px 20px;
+    box-shadow: 0 -1px 4px rgba(0, 0, 0, 0.04);
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.main-footer strong {
+    color: var(--azul-institucional);
+    font-weight: 600;
+}
+
+.main-footer .float-right {
+    color: var(--gris-suave);
+    font-size: 0.8rem;
+}
+
+.main-footer .float-right b {
+    color: var(--azul-institucional);
+}
+
+.footer-navegador {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    color: var(--gris-suave);
+    font-size: 0.78rem;
+    width: 100%;
+    margin-top: 6px;
+    padding-top: 8px;
+    border-top: 1px solid var(--gris-borde);
+}
+
+.footer-navegador img {
+    width: 22px;
+    height: 22px;
+    object-fit: contain;
+    border-radius: 4px;
+    border: 1px solid var(--gris-borde);
+    padding: 1px;
+    background: var(--blanco);
+}
+
+/* ============================================================
+   CONTENT WRAPPER (referencia edit.php)
+   ============================================================ */
+.content-wrapper {
+    background: var(--gris-fondo) !important;
+}
+
+.content-header h1 {
+    font-weight: 300;
+    color: var(--azul-institucional);
+}
+
+.breadcrumb {
+    background: transparent;
+}
+
+.breadcrumb-item a {
+    color: var(--gris-suave);
+    transition: var(--transicion);
+}
+
+.breadcrumb-item a:hover {
+    color: var(--azul-institucional);
+}
+
+.breadcrumb-item.active {
+    color: var(--azul-institucional);
+    font-weight: 600;
+}
+
+/* ============================================================
+   TARJETAS (referencia edit.php)
+   ============================================================ */
+.card {
+    border-radius: var(--radio) !important;
+    overflow: hidden;
+    border: none;
+}
+
+.card-primary.card-outline {
+    border-top: 4px solid var(--azul-institucional) !important;
+    box-shadow: var(--sombra-suave);
+}
+
+.card-header {
+    background: #fafafa;
+    border-bottom: 1px solid var(--gris-borde);
+    border-radius: var(--radio) var(--radio) 0 0;
+    padding: 14px 18px;
+}
+
+/* ============================================================
+   BOTONES (referencia edit.php)
+   ============================================================ */
+.btn {
+    border-radius: var(--radio);
+    font-weight: 500;
+    transition: var(--transicion);
+}
+
+.btn-primary {
+    background-color: var(--azul-institucional);
+    border-color: var(--azul-institucional);
+    color: var(--blanco);
+}
+
+.btn-primary:hover {
+    background-color: #002a52;
+    border-color: #002a52;
+    box-shadow: 0 2px 8px rgba(0, 51, 102, 0.3);
+    transform: translateY(-2px);
+}
+
+.btn-default {
+    background-color: var(--blanco);
+    border: 1px solid #ced4da;
+    color: var(--gris-suave);
+}
+
+.btn-default:hover {
+    background-color: #e9ecef;
+    border-color: #ced4da;
+    color: #343a40;
+    transform: translateY(-2px);
+}
+
+/* ============================================================
+   FORMULARIOS (referencia edit.php)
+   ============================================================ */
+.form-control {
+    border-radius: 0 !important;
+    border: 1px solid #ced4da;
+    transition: var(--transicion);
+}
+
+.form-control:focus {
+    border-color: var(--azul-institucional);
+    box-shadow: 0 0 0 0.2rem rgba(0, 51, 102, 0.25);
+}
+
+.form-group label {
+    font-weight: 500;
+    color: var(--gris-texto);
+}
+
+/* ============================================================
+   BADGES (referencia edit.php)
+   ============================================================ */
+.badge-institucional {
+    font-size: 0.8rem;
+    padding: 5px 16px;
+    border-radius: var(--radio);
+    font-weight: 500;
+    background: var(--azul-institucional);
+    color: var(--blanco);
+}
+
+/* ============================================================
+   ALERTAS (referencia edit.php)
+   ============================================================ */
+.alert {
+    border-radius: 8px;
+    border: none;
+}
+
+.alert-danger {
+    border-left: 4px solid #dc3545;
+}
+
+.alert-info {
+    border-left: 4px solid #17a2b8;
+}
+
+.alert-success {
+    border-left: 4px solid #28a745;
+}
+
+.alert-warning {
+    border-left: 4px solid #ffc107;
+}
+
+/* ============================================================
+   DATATABLES
+   ============================================================ */
+.dataTables_wrapper .dataTables_filter input {
+    border-radius: var(--radio);
+    border: 1px solid #ced4da;
+    padding: 5px 10px;
+    transition: var(--transicion);
+}
+
+.dataTables_wrapper .dataTables_filter input:focus {
+    border-color: var(--azul-institucional);
+    box-shadow: 0 0 0 0.2rem rgba(0, 51, 102, 0.15);
+    outline: none;
+}
+
+.dataTables_wrapper .dataTables_paginate .paginate_button.current {
+    background: var(--azul-institucional) !important;
+    border-color: var(--azul-institucional) !important;
+    color: var(--blanco) !important;
+    border-radius: 6px;
+}
+
+.dataTables_wrapper .dataTables_paginate .paginate_button:hover {
+    background: rgba(0, 51, 102, 0.1) !important;
+    border-color: var(--azul-institucional) !important;
+    color: var(--azul-institucional) !important;
+    border-radius: 6px;
+}
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+@media (max-width: 768px) {
+    .main-header .user-menu .hidden-xs {
+        display: none;
+    }
+
+    .main-footer {
+        flex-direction: column;
+        text-align: center;
+        font-size: 0.75rem;
+    }
+
+    .main-footer .float-right {
+        float: none !important;
+    }
+
+    .btn {
+        padding: 8px 20px !important;
+        font-size: 0.85rem !important;
+        width: 100%;
+        margin-bottom: 5px;
+    }
+
+    .btn-default {
+        margin-left: 0 !important;
+    }
+
+    .form-group label {
+        font-size: 0.85rem !important;
+    }
+}
+
+@media (max-width: 576px) {
+    .form-group label {
+        font-size: 0.8rem !important;
+    }
+
+    .form-control {
+        font-size: 0.8rem !important;
+    }
+
+    .badge-institucional {
+        font-size: 0.65rem !important;
+    }
+
+    /* ============================================================
+   WIDGET ALERTAS CRON BDV
+   ============================================================ */
+#widget-cron-bdv .nav-link {
+    position: relative;
+}
+
+#widget-cron-bdv .navbar-badge {
+    position: absolute;
+    top: 8px;
+    right: 5px;
+    padding: 2px 6px;
+    font-size: 10px;
+    font-weight: 600;
+    border-radius: 10px;
+    animation: pulse-badge 2s infinite;
+}
+
+@keyframes pulse-badge {
+    0%   { box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.7); }
+    70%  { box-shadow: 0 0 0 8px rgba(220, 53, 69, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(220, 53, 69, 0); }
+}
+
+#dropdown-alertas-cron {
+    width: 360px;
+    max-height: 480px;
+    overflow-y: auto;
+    padding: 0;
+}
+
+#dropdown-alertas-cron .dropdown-header {
+    background: #f8f9fa;
+    font-weight: 600;
+    padding: 10px 15px;
+    border-bottom: 1px solid #e9ecef;
+}
+
+#dropdown-alertas-cron .dropdown-item {
+    padding: 12px 15px;
+    border-bottom: 1px solid #f1f3f5;
+}
+
+#dropdown-alertas-cron .dropdown-item:last-child {
+    border-bottom: none;
+}
+
+#dropdown-alertas-cron .dropdown-footer {
+    text-align: center;
+    font-weight: 500;
+    color: #007bff;
+    background: #f8f9fa;
+}
+
+#dropdown-alertas-cron .dropdown-footer:hover {
+    background: #e9ecef;
+    color: #0056b3;
+}
+
+/* Responsive */
+@media (max-width: 576px) {
+    #dropdown-alertas-cron {
+        width: 300px;
+    }
+}
+}
