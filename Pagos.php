@@ -28,7 +28,6 @@ class Pagos extends CI_Controller {
         $this->load->model('Tiempo_preinscripcion_model');
         $this->load->model("Solictudtramite_model");
         $this->load->model("Tramites_model");
-        $this->load->model('Logs_pago_bdv_model'); // ✅ NUEVO
         
         // Cargar librería BDV
         require_once(APPPATH . 'libraries/ipg2-bdv.php');
@@ -112,7 +111,7 @@ class Pagos extends CI_Controller {
             $Payment->rifLetter   = '';
             $Payment->rifNumber   = '';
             
-            $request_data = array(
+            log_message('debug', '=== BDV iniciar() Payment ===' . print_r(array(
                 'idLetter'    => $Payment->idLetter,
                 'idNumber'    => $Payment->idNumber,
                 'amount'      => $Payment->amount,
@@ -123,26 +122,11 @@ class Pagos extends CI_Controller {
                 'email'       => $Payment->email,
                 'cellphone'   => $Payment->cellphone,
                 'urlToReturn' => $Payment->urlToReturn,
-            );
-            
-            log_message('debug', '=== BDV iniciar() Payment ===' . print_r($request_data, true));
+            ), true));
             
             $response = $PaymentProcess->createPayment($Payment);
             
             log_message('debug', '=== BDV iniciar() Response ===' . print_r($response, true));
-            
-            // ✅ NUEVO: Registrar log de la transacción
-            $accion_log = (isset($response->success) && $response->success == true) 
-                ? 'createPayment_inscripcion_ok' 
-                : 'createPayment_inscripcion_error';
-            
-            $this->log_pago_bdv(
-                $accion_log,
-                isset($response->paymentId) ? $response->paymentId : null,
-                $request_data,
-                $response,
-                $id_usuario
-            );
             
             if ($response->success == true) {
                 // ✅ SOLO guardar en sesión. El registro en BD se creará en confirmacion()
@@ -171,20 +155,6 @@ class Pagos extends CI_Controller {
             
         } catch (Exception $e) {
             log_message('error', 'Excepción en pago BDV: ' . $e->getMessage());
-            
-            // ✅ NUEVO: Registrar excepción en log BDV
-            $this->log_pago_bdv(
-                'exception_createPayment_inscripcion',
-                null,
-                array('total_final' => isset($total_final) ? $total_final : null),
-                array(
-                    'error' => $e->getMessage(),
-                    'file'  => $e->getFile(),
-                    'line'  => $e->getLine()
-                ),
-                $id_usuario
-            );
-            
             $this->session->set_flashdata('error', 'Error al procesar el pago. Intente nuevamente más tarde.');
             redirect(base_url() . 'dashboard04/registro_pago/' . $id_usuario);
         }
@@ -261,7 +231,7 @@ class Pagos extends CI_Controller {
             $Payment->rifLetter   = '';
             $Payment->rifNumber   = '';
             
-            $request_data = array(
+            log_message('debug', '=== BDV iniciar_tramite_adm() Payment ===' . print_r(array(
                 'idLetter'    => $Payment->idLetter,
                 'idNumber'    => $Payment->idNumber,
                 'amount'      => $Payment->amount,
@@ -272,28 +242,11 @@ class Pagos extends CI_Controller {
                 'email'       => $Payment->email,
                 'cellphone'   => $Payment->cellphone,
                 'urlToReturn' => $Payment->urlToReturn,
-                'tramite'     => $tramite,
-                'id_solicitud'=> $id_solicitud_tramite,
-            );
-            
-            log_message('debug', '=== BDV iniciar_tramite_adm() Payment ===' . print_r($request_data, true));
+            ), true));
             
             $response = $PaymentProcess->createPayment($Payment);
             
             log_message('debug', '=== BDV iniciar_tramite_adm() Response ===' . print_r($response, true));
-            
-            // ✅ NUEVO: Registrar log de la transacción
-            $accion_log = (isset($response->success) && $response->success == true) 
-                ? 'createPayment_tramite_ok' 
-                : 'createPayment_tramite_error';
-            
-            $this->log_pago_bdv(
-                $accion_log,
-                isset($response->paymentId) ? $response->paymentId : null,
-                $request_data,
-                $response,
-                $id_usuario
-            );
             
             if ($response->success == true) {
                 // ✅ SOLO guardar en sesión
@@ -322,24 +275,6 @@ class Pagos extends CI_Controller {
             
         } catch (Exception $e) {
             log_message('error', 'Excepción en pago BDV: ' . $e->getMessage());
-            
-            // ✅ NUEVO: Registrar excepción en log BDV
-            $this->log_pago_bdv(
-                'exception_createPayment_tramite',
-                null,
-                array(
-                    'tramite'      => isset($tramite) ? $tramite : null,
-                    'id_solicitud' => isset($id_solicitud_tramite) ? $id_solicitud_tramite : null,
-                    'total_final'  => isset($total_final) ? $total_final : null,
-                ),
-                array(
-                    'error' => $e->getMessage(),
-                    'file'  => $e->getFile(),
-                    'line'  => $e->getLine()
-                ),
-                $id_usuario
-            );
-            
             $this->session->set_flashdata('error', 'Error al procesar el pago. Intente nuevamente más tarde.');
             $this->redirigir_por_tramite($tramite);
             return;
@@ -415,29 +350,6 @@ class Pagos extends CI_Controller {
             log_message('debug', 'BDV checkPayment: ' . print_r($response, true));
             log_message('debug', '>>> status=' . var_export(isset($response->status) ? $response->status : 'NULL', true));
             
-            // ✅ NUEVO: Registrar log de la verificación
-            $accion_log = 'checkPayment_confirmacion_error';
-            if (isset($response->success) && $response->success == true && isset($response->status)) {
-                if ((int)$response->status === 1) {
-                    $accion_log = 'checkPayment_confirmacion_exitoso';
-                } else {
-                    $accion_log = 'checkPayment_confirmacion_pendiente';
-                }
-            }
-            
-            $this->log_pago_bdv(
-                $accion_log,
-                $paymentToken,
-                array(
-                    'referencia'   => $referencia,
-                    'id_periodo'   => $id_periodo,
-                    'tipo_pago'    => $tipo_pago,
-                    'id_solicitud' => $id_solicitud_sesion,
-                ),
-                $response,
-                $id_usuario
-            );
-            
             // ============================================================
             // PAGO EXITOSO
             // ============================================================
@@ -494,11 +406,11 @@ class Pagos extends CI_Controller {
                 }
                 
                 // ✅ PASO 2: Actualizar el registro a exitoso (ahora SÍ existe)
-                $id_solicitud_actual = ($registro && $registro->id_solicitud_tramite) 
+                    $id_solicitud_actual = ($registro && $registro->id_solicitud_tramite) 
                     ? $registro->id_solicitud_tramite 
                     : $id_solicitud_sesion;
 
-                $actualizado = $this->actualizar_pago_exitoso(
+                    $actualizado = $this->actualizar_pago_exitoso(
                     $id_usuario, 
                     $id_periodo, 
                     $response, 
@@ -506,7 +418,7 @@ class Pagos extends CI_Controller {
                     $referencia,
                     $id_solicitud_actual,
                     $tipo_pago
-                );
+                    );
                 
                 log_message('debug', 'confirmacion: actualizar_pago_exitoso result=' . var_export($actualizado, true));
                 
@@ -523,7 +435,8 @@ class Pagos extends CI_Controller {
                     $this->actualizar_materias_pagadas($id_usuario, $id_periodo);
                 }
                 if ($tipo_pago == 1) {
-                    $this->actualizar_tramites($id_solicitud_sesion, $id_usuario);
+                   
+                    $this->actualizar_tramites($id_solicitud_sesion,$id_usuario);
                 }
                 
                 // ✅ PASO 4: Limpiar sesión
@@ -577,20 +490,6 @@ class Pagos extends CI_Controller {
         } catch (Exception $e) {
             log_message('error', 'Excepción confirmacion: ' . $e->getMessage()
                 . ' en ' . $e->getFile() . ':' . $e->getLine());
-            
-            // ✅ NUEVO: Registrar excepción en log BDV
-            $this->log_pago_bdv(
-                'exception_checkPayment_confirmacion',
-                isset($paymentToken) ? $paymentToken : null,
-                array('referencia' => isset($referencia) ? $referencia : null),
-                array(
-                    'error' => $e->getMessage(),
-                    'file'  => $e->getFile(),
-                    'line'  => $e->getLine()
-                ),
-                $id_usuario
-            );
-            
             $this->session->set_flashdata('error', 'Error al verificar el pago. Contacte a soporte.');
             $this->limpiar_sesion_pago();
             
@@ -637,22 +536,6 @@ class Pagos extends CI_Controller {
             $PaymentProcess = new IpgBdv2($this->bdv_afiliado, $this->bdv_clave);
             $response = $PaymentProcess->checkPayment($token);
             
-            // ✅ NUEVO: Registrar log de la verificación AJAX
-            $accion_log = 'checkPayment_ajax_error';
-            if (isset($response->success) && $response->success == true) {
-                $accion_log = ((int)$response->status === 1) 
-                    ? 'checkPayment_ajax_exitoso' 
-                    : 'checkPayment_ajax_pendiente';
-            }
-            
-            $this->log_pago_bdv(
-                $accion_log,
-                $token,
-                array('referencia' => $referencia),
-                $response,
-                $id_usuario
-            );
-            
             $tipo_pago = $registro ? (int)$registro->tramite : (int)$this->session->userdata('pago_bdv_tipo');
             $id_sol    = $registro ? $registro->id_solicitud_tramite : $this->session->userdata('pago_bdv_id_solicitud');
             
@@ -687,20 +570,6 @@ class Pagos extends CI_Controller {
             }
         } catch (Exception $e) {
             log_message('error', 'Excepción verificar_estado: ' . $e->getMessage());
-            
-            // ✅ NUEVO: Registrar excepción en log BDV
-            $this->log_pago_bdv(
-                'exception_checkPayment_ajax',
-                isset($token) ? $token : null,
-                array('referencia' => isset($referencia) ? $referencia : null),
-                array(
-                    'error' => $e->getMessage(),
-                    'file'  => $e->getFile(),
-                    'line'  => $e->getLine()
-                ),
-                $id_usuario
-            );
-            
             echo json_encode(array(
                 'estado'  => 'error',
                 'mensaje' => 'Error al verificar el pago'
@@ -723,18 +592,6 @@ class Pagos extends CI_Controller {
             $registro = $this->Registro_pago_model->get_pago_pendiente_por_referencia($referencia);
         }
         
-        // ✅ NUEVO: Registrar cancelación
-        $this->log_pago_bdv(
-            'cancelacion_usuario',
-            $this->session->userdata('pago_bdv_token'),
-            array(
-                'referencia' => $referencia,
-                'tipo_pago'  => $tipo_pago
-            ),
-            array('mensaje' => 'Usuario canceló el proceso de pago'),
-            $id_usuario
-        );
-        
         $this->limpiar_sesion_pago();
         
         $this->session->set_flashdata('info', 'Has cancelado el proceso de pago.');
@@ -743,7 +600,7 @@ class Pagos extends CI_Controller {
         if ($tipo_pago == 1) {
             $id_sol = ($registro && $registro->id_solicitud_tramite) ? $registro->id_solicitud_tramite : $id_sol_ses;
             if (!empty($id_sol)) {
-                $this->redirigir_por_tramite($id_sol);
+                $this->redirigir_por_tramite($tramite);
                 return;
             }
         }
@@ -764,75 +621,6 @@ class Pagos extends CI_Controller {
     // ================================================================
     // ==================== FUNCIONES AUXILIARES ======================
     // ================================================================
-
-    /**
-     * ✅ NUEVO: Registra un log de la transacción con la pasarela BDV.
-     *
-     * @param string      $accion     Acción realizada ('createPayment_*', 'checkPayment_*', 'exception_*', etc.)
-     * @param string|null $token      Token/paymentId de BDV
-     * @param mixed       $request    Datos enviados a BDV (array, objeto o string)
-     * @param mixed       $response   Respuesta recibida de BDV (array, objeto o string)
-     * @param int|null    $id_usuario ID del usuario (si no se pasa, se toma de sesión)
-     * @return bool
-     */
-    private function log_pago_bdv($accion, $token = null, $request = null, $response = null, $id_usuario = null) {
-        
-        // Resolver id_usuario (la columna es NOT NULL)
-        if (empty($id_usuario)) {
-            $id_usuario = (int) $this->session->userdata('id');
-        }
-        if (empty($id_usuario)) {
-            $id_usuario = 0; // Fallback para evitar error de NOT NULL
-        }
-        
-        // Normalizar token
-        if (is_array($token) && isset($token['paymentId'])) {
-            $token = $token['paymentId'];
-        }
-        $token = !empty($token) ? substr((string) $token, 0, 100) : null;
-        
-        $data = array(
-            'id_usuario' => (int) $id_usuario,
-            'token'      => $token,
-            'metodo'     => 'bdv',
-            'accion'     => substr((string) $accion, 0, 50),
-            'request'    => $this->normalizar_dato_log($request),
-            'response'   => $this->normalizar_dato_log($response),
-        );
-        
-        $result = $this->Logs_pago_bdv_model->save($data);
-        
-        if ($result === false) {
-            log_message('error', 'log_pago_bdv: fallo al insertar log. Acción=' . $accion);
-            return false;
-        }
-        
-        log_message('debug', 'log_pago_bdv: insertado id=' . $result . ' | Acción=' . $accion . ' | Token=' . $token);
-        return true;
-    }
-
-    /**
-     * ✅ NUEVO: Normaliza cualquier dato (array, objeto, string) a un string para el log.
-     */
-    private function normalizar_dato_log($dato) {
-        if ($dato === null) {
-            return null;
-        }
-        
-        if (is_string($dato)) {
-            return $dato;
-        }
-        
-        if (is_object($dato)) {
-            $dato = json_decode(json_encode($dato), true);
-        }
-        
-        if (is_array($dato)) {
-            return json_encode($dato, JSON_UNESCAPED_UNICODE | JSON_PARTIAL_OUTPUT_ON_ERROR);
-        }
-        
-        return (string) $dato;
-    }
 
     /**
      * Registra el pago como pendiente en la base de datos.
@@ -894,154 +682,154 @@ class Pagos extends CI_Controller {
         return $existe ? true : false;
     }
 
-    /**
-     * Actualiza el pago a exitoso (fecha y transaction_id corregidos).
-     * Para trámites, aplica la lógica de conciliación + revisión académica
-     * según el tipo de solicitud.
-     */
-    private function actualizar_pago_exitoso($id_usuario, $id_periodo, $response, $token = null, $referencia = null, $id_solicitud = null, $tipo_pago = 0) {
-        
-        $fecha = date('Y-m-d H:i:s');
-        $fecha_transferencia = $fecha;
-        if (!empty($response->paymentDate)) {
-            $dt = DateTime::createFromFormat('d/m/Y H:i:s', $response->paymentDate);
-            if ($dt === false) {
-                $timestamp = strtotime($response->paymentDate);
-                if ($timestamp !== false && $timestamp > 0) {
-                    $fecha_transferencia = date('Y-m-d H:i:s', $timestamp);
-                }
-            } else {
-                $fecha_transferencia = $dt->format('Y-m-d H:i:s');
+   /**
+ * Actualiza el pago a exitoso (fecha y transaction_id corregidos).
+ * Para trámites, aplica la lógica de conciliación + revisión académica
+ * según el tipo de solicitud.
+ */
+private function actualizar_pago_exitoso($id_usuario, $id_periodo, $response, $token = null, $referencia = null, $id_solicitud = null, $tipo_pago = 0) {
+    
+    $fecha = date('Y-m-d H:i:s');
+    $fecha_transferencia = $fecha;
+    if (!empty($response->paymentDate)) {
+        $dt = DateTime::createFromFormat('d/m/Y H:i:s', $response->paymentDate);
+        if ($dt === false) {
+            $timestamp = strtotime($response->paymentDate);
+            if ($timestamp !== false && $timestamp > 0) {
+                $fecha_transferencia = date('Y-m-d H:i:s', $timestamp);
             }
+        } else {
+            $fecha_transferencia = $dt->format('Y-m-d H:i:s');
+        }
+    }
+    
+    $transaction_id = '';
+    if (!empty($response->transactionId)) {
+        $transaction_id = $response->transactionId;
+    } elseif (!empty($response->token)) {
+        $transaction_id = $response->token;
+    } elseif (!empty($token)) {
+        $transaction_id = $token;
+    }
+    
+    // ================================================================
+    // CASO 1: TRÁMITE ADMINISTRATIVO (tipo_pago == 1)
+    // ================================================================
+    if ($tipo_pago == 1 && !empty($id_solicitud)) {
+        
+        // Obtener la solicitud para conocer el id_tramite
+        $solicitud = $this->Solictudtramite_model->getSolicitud($id_solicitud);
+        
+        if (!$solicitud) {
+            log_message('error', 'actualizar_pago_exitoso: no se encontró solicitud ' . $id_solicitud);
+            return false;
         }
         
-        $transaction_id = '';
-        if (!empty($response->transactionId)) {
-            $transaction_id = $response->transactionId;
-        } elseif (!empty($response->token)) {
-            $transaction_id = $response->token;
-        } elseif (!empty($token)) {
-            $transaction_id = $token;
+        $tramites = array(18,16,23,25,28,20,38,39,40,41,42,44,45,46,56,57,58,59,60,62,63,64,43,61);
+        
+        // Determinar si requiere revisión académica o no
+        if (in_array((int)$solicitud->id_tramite, $tramites)) {
+            // Requiere revisión académica posterior (academico=0)
+            $data = array(
+                'transaction_id_bdv'  => $transaction_id,
+                'fecha_transferencia' => $fecha_transferencia,
+                'metodo_pago'         => 'bdv',
+                'conciliado'          => 1,
+                'academico'           => 0,
+                'status'              => 1,
+                'dactualizo'          => $fecha,
+                'quien_actualizo'     => $id_usuario,
+            );
+            $data2 = array(
+                'reg_pago'      => 1,
+                'rev_academica' => 0,
+                'fecha_actualizacion' => $fecha,
+                'quien_actualizo'     => $id_usuario
+            );
+        } else {
+            // No requiere revisión académica (academico=1)
+            $data = array(
+                'transaction_id_bdv'  => $transaction_id,
+                'fecha_transferencia' => $fecha_transferencia,
+                'metodo_pago'         => 'bdv',
+                'conciliado'          => 1,
+                'academico'           => 1,
+                'status'              => 1,
+                'dactualizo'          => $fecha,
+                'quien_actualizo'     => $id_usuario,
+            );
+            $data2 = array(
+                'reg_pago'      => 1,
+                'rev_academica'       => 1,
+                'fecha_actualizacion' => $fecha,
+                'quien_actualizo'     => $id_usuario,
+            );
         }
         
-        // ================================================================
-        // CASO 1: TRÁMITE ADMINISTRATIVO (tipo_pago == 1)
-        // ================================================================
-        if ($tipo_pago == 1 && !empty($id_solicitud)) {
-            
-            // Obtener la solicitud para conocer el id_tramite
-            $solicitud = $this->Solictudtramite_model->getSolicitud($id_solicitud);
-            
-            if (!$solicitud) {
-                log_message('error', 'actualizar_pago_exitoso: no se encontró solicitud ' . $id_solicitud);
-                return false;
-            }
-            
-            $tramites = array(18,16,23,25,28,20,38,39,40,41,42,44,45,46,56,57,58,59,60,62,63,64,43,61);
-            
-            // Determinar si requiere revisión académica o no
-            if (in_array((int)$solicitud->id_tramite, $tramites)) {
-                // Requiere revisión académica posterior (academico=0)
-                $data = array(
-                    'transaction_id_bdv'  => $transaction_id,
-                    'fecha_transferencia' => $fecha_transferencia,
-                    'metodo_pago'         => 'bdv',
-                    'conciliado'          => 1,
-                    'academico'           => 0,
-                    'status'              => 1,
-                    'dactualizo'          => $fecha,
-                    'quien_actualizo'     => $id_usuario,
-                );
-                $data2 = array(
-                    'reg_pago'      => 1,
-                    'rev_academica' => 0,
-                    'fecha_actualizacion' => $fecha,
-                    'quien_actualizo'     => $id_usuario
-                );
-            } else {
-                // No requiere revisión académica (academico=1)
-                $data = array(
-                    'transaction_id_bdv'  => $transaction_id,
-                    'fecha_transferencia' => $fecha_transferencia,
-                    'metodo_pago'         => 'bdv',
-                    'conciliado'          => 1,
-                    'academico'           => 1,
-                    'status'              => 1,
-                    'dactualizo'          => $fecha,
-                    'quien_actualizo'     => $id_usuario,
-                );
-                $data2 = array(
-                    'reg_pago'            => 1,
-                    'rev_academica'       => 1,
-                    'fecha_actualizacion' => $fecha,
-                    'quien_actualizo'     => $id_usuario,
-                );
-            }
-            
-            log_message('debug', 'actualizar_pago_exitoso (trámite) DATA: ' . print_r($data, true));
-            
-            // Actualizar el registro de pago del trámite
-            $ok_pago = $this->Registro_pago_model->save_conciliacion_error_tramite($id_solicitud, $data);
-            log_message('debug', 'save_conciliacion_error_tramite result: ' . var_export($ok_pago, true));
-            
-            if (!$ok_pago) {
-                return false;
-            }
-            
-            // Actualizar la solicitud del trámite
-            $ok_sol = $this->Solictudtramite_model->update($id_solicitud, $data2);
-            log_message('debug', 'Solictudtramite_model->update result: ' . var_export($ok_sol, true));
-            
+        log_message('debug', 'actualizar_pago_exitoso (trámite) DATA: ' . print_r($data, true));
+        
+        // Actualizar el registro de pago del trámite
+        $ok_pago = $this->Registro_pago_model->save_conciliacion_error_tramite($id_solicitud, $data);
+        log_message('debug', 'save_conciliacion_error_tramite result: ' . var_export($ok_pago, true));
+        
+        if (!$ok_pago) {
+            return false;
+        }
+        
+        // Actualizar la solicitud del trámite
+        $ok_sol = $this->Solictudtramite_model->update($id_solicitud, $data2);
+        log_message('debug', 'Solictudtramite_model->update result: ' . var_export($ok_sol, true));
+        
+        return true;
+    }
+    
+    // ================================================================
+    // CASO 2: INSCRIPCIÓN (tipo_pago == 0)
+    // ================================================================
+    $data = array(
+        'transaction_id_bdv'  => $transaction_id,
+        'fecha_transferencia' => $fecha_transferencia,
+        'quien_actualizo'     => $id_usuario,
+        'metodo_pago'         => 'bdv',
+        'conciliado'          => 1,
+        'status'              => 1,
+    );
+    
+    log_message('debug', 'actualizar_pago_exitoso (inscripción) DATA: ' . print_r($data, true));
+    
+    // PRIORIDAD 1: por referencia
+    if (!empty($referencia)) {
+        log_message('debug', 'update_by_referencia: buscando ref=' . $referencia);
+        $result = $this->Registro_pago_model->update_by_referencia($referencia, $data);
+        log_message('debug', 'update_by_referencia result: ' . var_export($result, true));
+        if ($result) {
             return true;
         }
-        
-        // ================================================================
-        // CASO 2: INSCRIPCIÓN (tipo_pago == 0)
-        // ================================================================
-        $data = array(
-            'transaction_id_bdv'  => $transaction_id,
-            'fecha_transferencia' => $fecha_transferencia,
-            'quien_actualizo'     => $id_usuario,
-            'metodo_pago'         => 'bdv',
-            'conciliado'          => 1,
-            'status'              => 1,
-        );
-        
-        log_message('debug', 'actualizar_pago_exitoso (inscripción) DATA: ' . print_r($data, true));
-        
-        // PRIORIDAD 1: por referencia
-        if (!empty($referencia)) {
-            log_message('debug', 'update_by_referencia: buscando ref=' . $referencia);
-            $result = $this->Registro_pago_model->update_by_referencia($referencia, $data);
-            log_message('debug', 'update_by_referencia result: ' . var_export($result, true));
-            if ($result) {
-                return true;
-            }
-            log_message('debug', '⚠️ update_by_referencia no encontró registro. Intentando por token...');
-        }
-        
-        // PRIORIDAD 2: por token
-        $token_busqueda = '';
-        if (!empty($response->token)) {
-            $token_busqueda = $response->token;
-        } elseif (!empty($token)) {
-            $token_busqueda = $token;
-        } else {
-            $token_busqueda = $this->session->userdata('pago_bdv_token');
-        }
-        
-        if (!empty($token_busqueda)) {
-            log_message('debug', 'update_by_token: buscando token=' . $token_busqueda);
-            $result = $this->Registro_pago_model->update_by_token(
-                $id_usuario, $id_periodo, $token_busqueda, $data
-            );
-            log_message('debug', 'update_by_token result: ' . var_export($result, true));
-            return $result;
-        }
-        
-        log_message('error', 'actualizar_pago_exitoso: NO se pudo actualizar (sin ref ni token)');
-        return false;
+        log_message('debug', '⚠️ update_by_referencia no encontró registro. Intentando por token...');
     }
+    
+    // PRIORIDAD 2: por token
+    $token_busqueda = '';
+    if (!empty($response->token)) {
+        $token_busqueda = $response->token;
+    } elseif (!empty($token)) {
+        $token_busqueda = $token;
+    } else {
+        $token_busqueda = $this->session->userdata('pago_bdv_token');
+    }
+    
+    if (!empty($token_busqueda)) {
+        log_message('debug', 'update_by_token: buscando token=' . $token_busqueda);
+        $result = $this->Registro_pago_model->update_by_token(
+            $id_usuario, $id_periodo, $token_busqueda, $data
+        );
+        log_message('debug', 'update_by_token result: ' . var_export($result, true));
+        return $result;
+    }
+    
+    log_message('error', 'actualizar_pago_exitoso: NO se pudo actualizar (sin ref ni token)');
+    return false;
+}
 
     /**
      * Actualiza el estado de las materias a pagadas
@@ -1058,11 +846,10 @@ class Pagos extends CI_Controller {
         
         return $result;
     }
-
-    /**
+ /**
      * Actualiza el estado de las materias a pagadas
      */
-    private function actualizar_tramites($id_sol, $id_usuario) {
+    private function actualizar_tramites($id_sol,$id_usuario) {
     
         $data = array(
             'reg_pago'            => 1,
@@ -1075,7 +862,6 @@ class Pagos extends CI_Controller {
         
         return $result;
     }
-
     /**
      * Obtiene el nombre del postgrado
      */
@@ -1104,39 +890,42 @@ class Pagos extends CI_Controller {
 
     /**
      * Obtiene el nombre del trámite
-     * Soporta tanto objeto fila (row()) como array de filas (result())
      */
-    private function obtener_nombre_tramite($tramite) {
-        $nombre_tramite = $this->Tramites_model->getTramites($tramite);
-        
-        if (empty($nombre_tramite)) {
-            return 'Trámite Administrativo FENFMP';
-        }
-        
-        // ✅ Caso 1: es un solo objeto (row())
-        if (is_object($nombre_tramite)) {
-            if (isset($nombre_tramite->nombre) && !empty($nombre_tramite->nombre)) {
-                return $nombre_tramite->nombre;
-            }
-            return 'Trámite Administrativo FENFMP';
-        }
-        
-        // ✅ Caso 2: es un array de objetos (result())
-        if (is_array($nombre_tramite)) {
-            $nombres = array();
-            foreach ($nombre_tramite as $t) {
-                if (isset($t->nombre) && !empty($t->nombre)) {
-                    $nombres[] = $t->nombre;
-                }
-            }
-            $nombres = array_unique($nombres);
-            if (!empty($nombres)) {
-                return implode(', ', $nombres);
-            }
-        }
-        
+    /**
+ * Obtiene el nombre del trámite
+ * Soporta tanto objeto fila (row()) como array de filas (result())
+ */
+private function obtener_nombre_tramite($tramite) {
+    $nombre_tramite = $this->Tramites_model->getTramites($tramite);
+    
+    if (empty($nombre_tramite)) {
         return 'Trámite Administrativo FENFMP';
     }
+    
+    // ✅ Caso 1: es un solo objeto (row())
+    if (is_object($nombre_tramite)) {
+        if (isset($nombre_tramite->nombre) && !empty($nombre_tramite->nombre)) {
+            return $nombre_tramite->nombre;
+        }
+        return 'Trámite Administrativo FENFMP';
+    }
+    
+    // ✅ Caso 2: es un array de objetos (result())
+    if (is_array($nombre_tramite)) {
+        $nombres = array();
+        foreach ($nombre_tramite as $t) {
+            if (isset($t->nombre) && !empty($t->nombre)) {
+                $nombres[] = $t->nombre;
+            }
+        }
+        $nombres = array_unique($nombres);
+        if (!empty($nombres)) {
+            return implode(', ', $nombres);
+        }
+    }
+    
+    return 'Trámite Administrativo FENFMP';
+}
 
     /**
      * Limpia TODOS los datos de pago de la sesión

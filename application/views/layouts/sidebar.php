@@ -14,39 +14,60 @@
     <div class="sidebar">
 
         <!-- Sidebar user (optional) -->
-        <div class="user-panel mt-3 pb-3 mb-3 d-flex user-panel-institucional">
-            <div class="image">
-                <img src="<?php
-                    if ($this->session->userdata("rol")==5 || $this->session->userdata("rol")==8 || $this->session->userdata("rol")==7) {
-                        echo base_url(); ?>assets/fotos/<?php echo $this->session->userdata("id"); ?>_foto.jpg
-                    <?php } elseif ($this->session->userdata("rol")==9) {
-                        echo base_url(); ?>assets/fotos/<?php echo $this->session->userdata("id"); ?>_fotos_docente.jpg
-                    <?php } ?>"
-                     class="img-circle elevation-2 img-user-institucional" alt="User Image">
+        <?php
+            // Determinar ruta de la foto según el rol
+            $rol_actual = $this->session->userdata("rol");
+            $id_usuario = $this->session->userdata("id");
+
+            $foto_path = '';
+            if ($rol_actual == 5 || $rol_actual == 8 || $rol_actual == 7) {
+                $foto_path = 'assets/fotos/' . $id_usuario . '_foto.jpg';
+            } elseif ($rol_actual == 9) {
+                $foto_path = 'assets/fotos/' . $id_usuario . '_fotos_docente.jpg';
+            }
+
+            // Verificar si el archivo existe físicamente; si no, usar logo institucional
+            $foto_absoluta = FCPATH . $foto_path;
+            $foto_final = (!empty($foto_path) && file_exists($foto_absoluta))
+                ? base_url() . $foto_path . '?' . time()
+                : base_url() . 'assets/template/dist/img/Logo.png';
+
+            // Mapa de roles
+            $roles = [
+                1  => 'Administrador General',
+                2  => 'Supervisor - Secretaría General',
+                3  => 'Revisor',
+                4  => 'Operador - Analista',
+                5  => 'Estudiante Regular',
+                6  => 'Administración',
+                7  => 'Aspirante',
+                8  => 'Nuevo Ingreso',
+                9  => 'Docente',
+                10 => 'Supervisor Docente',
+                11 => 'RRHH - Plantilla Docente',
+                12 => 'Coordinación Inv. y Postgrado'
+            ];
+            $rol_texto = isset($roles[$rol_actual]) ? $roles[$rol_actual] : 'Usuario';
+
+            $nombre_completo = trim($this->session->userdata("nombre") . ' ' . $this->session->userdata("apellido"));
+            if (empty($nombre_completo)) {
+                $nombre_completo = 'Usuario';
+            }
+        ?>
+
+        <div class="user-panel-institucional">
+            <div class="user-panel-avatar">
+                <img src="<?php echo $foto_final; ?>"
+                     class="img-user-institucional"
+                     alt="User Image"
+                     onerror="this.onerror=null;this.src='<?php echo base_url(); ?>assets/template/dist/img/Logo.png';">
             </div>
-            <div class="info">
-                <a href="#" class="d-block nombre-usuario">
-                    <?php echo $this->session->userdata("nombre"); ?> <?php echo $this->session->userdata("apellido"); ?>
+            <div class="user-panel-info">
+                <a href="#" class="nombre-usuario" title="<?php echo htmlspecialchars($nombre_completo); ?>">
+                    <?php echo htmlspecialchars($nombre_completo); ?>
                 </a>
                 <small class="rol-usuario">
-                    <?php
-                        $roles = [
-                            1 => 'Administrador General',
-                            2 => 'Supervisor - Secretaría General',
-                            3 => 'Revisor',
-                            4 => 'Operador - Analista',
-                            5 => 'Estudiante Regular',
-                            6 => 'Administración',
-                            7 => 'Aspirante',
-                            8 => 'Nuevo Ingreso',
-                            9 => 'Docente',
-                            10 => 'Supervisor Docente',
-                            11 => 'RRHH - Plantilla Docente',
-                            12 => 'Coordinación Inv. y Postgrado'
-                        ];
-                        $rol_actual = $this->session->userdata("rol");
-                        echo isset($roles[$rol_actual]) ? $roles[$rol_actual] : 'Usuario';
-                    ?>
+                    <?php echo htmlspecialchars($rol_texto); ?>
                 </small>
             </div>
         </div>
@@ -64,11 +85,38 @@
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a href="<?php echo base_url(); ?>admin/usuario/index_regulares" class="nav-link">
+                        <a href="<?php echo base_url(); ?>admin/usuario/index_docente" class="nav-link">
                             <i class="nav-icon far fa-calendar-alt"></i>
-                            <p>Listado Usuarios Estudiantes Regulares</p>
+                            <p>Listado Usuarios Docentes Activos</p>
                         </a>
                     </li>
+                        <!-- PASARELA BDV -->
+                    <li class="nav-item has-treeview">
+                        <a href="#" class="nav-link">
+                            <i class="nav-icon fas fa-credit-card"></i>
+                            <p>
+                                PASARELA BDV
+                                <i class="right fas fa-angle-left"></i>
+                            </p>
+                        </a>
+                        <ul class="nav nav-treeview">
+                            <li class="nav-item">
+                                <a href="<?php echo base_url(); ?>admin/logs_bdv" class="nav-link">
+                                    <i class="far fa-list-alt nav-icon"></i>
+                                    <p>Logs Transacciones</p>
+                                </a>
+                            </li>
+                      
+                            <li class="nav-item">
+                                <a href="<?php echo base_url(); ?>admin/cron_dashboard" class="nav-link">
+                                    <i class="fas fa-robot nav-icon"></i>
+                                    <p>Monitoreo CRON</p>
+                                </a>
+                            </li>
+                            </ul>
+                    </li>
+
+
                 <?php } ?>
 
                 <?php if ($this->session->userdata("rol")== 2 and $this->session->userdata("estado")== 1 ){ ?>
@@ -374,9 +422,7 @@
                     </li>
                 <?php } ?>
 
-                <!-- ============================================================ -->
                 <!-- ROL 10: SUPERVISOR DOCENTE -->
-                <!-- ============================================================ -->
                 <?php if ($this->session->userdata("rol")== 10 and $this->session->userdata("estado")== 1 ){ ?>
                     <li class="nav-header header-institucional">MENU SUPERVISOR DOCENTE</li>
                     <li class="nav-item">
@@ -436,9 +482,7 @@
                     </li>
                 <?php } ?>
 
-                <!-- ============================================================ -->
                 <!-- ROL 12: COORDINACIÓN INV. Y POSTGRADO -->
-                <!-- ============================================================ -->
                 <?php if ($this->session->userdata("rol")== 12 and $this->session->userdata("estado")== 1 ){ ?>
                     <li class="nav-header header-institucional">MENU SUPERVISOR <br> Coordinación de Inv. y Postgrado</li>
                     <li class="nav-item">
@@ -484,9 +528,7 @@
                     </li>
                 <?php } ?>
 
-                <!-- ============================================================ -->
                 <!-- ROL 9: DOCENTE -->
-                <!-- ============================================================ -->
                 <?php if ($this->session->userdata("rol")== 9 and $this->session->userdata("estado")== 1 ){ ?>
                     <li class="nav-header header-institucional">MENU DOCENTE</li>
                     <li class="nav-item">
@@ -639,9 +681,7 @@
                     </li>
                 <?php } ?>
 
-                <!-- ============================================================ -->
                 <!-- ROL 4: OPERADOR - ANALISTA -->
-                <!-- ============================================================ -->
                 <?php if ($this->session->userdata("rol")== 4 and $this->session->userdata("estado")== 1 ){ ?>
                     <li class="nav-header header-institucional">MENU OPERADOR - ANALISTA</li>
                     <li class="nav-item">
@@ -808,9 +848,7 @@
                     </li>
                 <?php } ?>
 
-                <!-- ============================================================ -->
                 <!-- ROL 5 Y 8: ESTUDIANTE REGULAR / NUEVO INGRESO -->
-                <!-- ============================================================ -->
                 <?php if (($this->session->userdata("rol")== 5 or $this->session->userdata("rol")== 8) and $this->session->userdata("estado")== 1 ){ ?>
                     <li class="nav-header header-institucional">MENU PARTICIPANTE</li>
                     <div class="nav-header header-institucional">
@@ -894,9 +932,7 @@
                     <?php } ?>
                 <?php } ?>
 
-                <!-- ============================================================ -->
                 <!-- ROL 6: ADMINISTRACIÓN -->
-                <!-- ============================================================ -->
                 <?php if ($this->session->userdata("rol")== 6 and $this->session->userdata("estado")== 1 ){ ?>
                     <li class="nav-header header-institucional">MENU ADMINISTRACIÓN</li>
                     <li class="nav-item">
@@ -1006,9 +1042,7 @@
                     </li>
                 <?php } ?>
 
-                <!-- ============================================================ -->
                 <!-- ROL 7: ASPIRANTE -->
-                <!-- ============================================================ -->
                 <?php if ($this->session->userdata("rol")== 7 and $this->session->userdata("estado")== 1 ){ ?>
                     <li class="nav-header header-institucional">MENU ASPIRANTE</li>
                     <?php
@@ -1075,9 +1109,7 @@
                     </li>
                 <?php } ?>
 
-                <!-- ============================================================ -->
                 <!-- ROL 11: RRHH - PLANTILLA DOCENTE -->
-                <!-- ============================================================ -->
                 <?php if ($this->session->userdata("rol")== 11 and $this->session->userdata("estado")== 1 ){ ?>
                     <li class="nav-header header-institucional">MENU RRHH - PLANTILLA DOCENTE</li>
                     <li class="nav-item">
@@ -1088,9 +1120,7 @@
                     </li>
                 <?php } ?>
 
-                <!-- ============================================================ -->
                 <!-- ROL 3: REVISOR -->
-                <!-- ============================================================ -->
                 <?php if ($this->session->userdata("rol")== 3 and $this->session->userdata("estado")== 1 ){ ?>
                     <li class="nav-header header-institucional">MENU REVISOR</li>
                     <li class="nav-item">
@@ -1273,281 +1303,3 @@
     </div>
     <!-- /.sidebar -->
 </aside>
-
-<!-- ============================================================ -->
-<!-- ESTILOS INSTITUCIONALES DEL SIDEBAR -->
-<!-- ============================================================ -->
-<style>
-    /* ===== SIDEBAR INSTITUCIONAL - TONOS DE EDIT.PHP ===== */
-    .sidebar-institucional {
-        background: linear-gradient(180deg, #0a2a4a 0%, #0d3556 60%, #0a2a4a 100%) !important;
-        border-right: 1px solid rgba(201, 168, 76, 0.2);
-        font-family: 'Montserrat', 'Segoe UI', sans-serif;
-    }
-
-    /* ===== LOGO / BRAND ===== */
-    .brand-institucional {
-        border-bottom: 1px solid rgba(201, 168, 76, 0.35) !important;
-        padding: 16px 18px !important;
-        background: rgba(26, 75, 122, 0.25);
-        transition: all 0.3s ease;
-    }
-    .brand-institucional:hover {
-        background: rgba(201, 168, 76, 0.08);
-    }
-    .brand-institucional .brand-text {
-        color: #ffffff !important;
-        font-weight: 700 !important;
-        letter-spacing: 1.5px;
-        font-size: 1.1rem;
-        text-shadow: 0 1px 2px rgba(0,0,0,0.2);
-    }
-    .brand-institucional .brand-image {
-        border: 2px solid #c9a84c;
-        padding: 2px;
-        background: #fff;
-        box-shadow: 0 2px 8px rgba(201, 168, 76, 0.3);
-    }
-
-    /* ===== USER PANEL ===== */
-    .user-panel-institucional {
-        border-bottom: 1px solid rgba(201, 168, 76, 0.15);
-        padding: 14px 18px 16px !important;
-        background: rgba(26, 75, 122, 0.15);
-        margin: 0 !important;
-    }
-    .img-user-institucional {
-        border: 2px solid #c9a84c;
-        padding: 2px;
-        background: #fff;
-        transition: all 0.3s ease;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-    }
-    .img-user-institucional:hover {
-        transform: scale(1.05);
-        box-shadow: 0 0 14px rgba(201, 168, 76, 0.55);
-    }
-    .nombre-usuario {
-        color: #ffffff !important;
-        font-weight: 600 !important;
-        font-size: 0.92rem;
-        letter-spacing: 0.3px;
-        transition: color 0.3s ease;
-    }
-    .nombre-usuario:hover {
-        color: #c9a84c !important;
-    }
-    .rol-usuario {
-        display: block;
-        color: #e8d9a0;
-        font-size: 0.72rem;
-        font-weight: 500;
-        letter-spacing: 0.5px;
-        margin-top: 2px;
-        text-transform: uppercase;
-    }
-
-    /* ===== HEADERS DE SECCIÓN ===== */
-    .header-institucional {
-        color: #e8d9a0 !important;
-        font-size: 0.7rem !important;
-        font-weight: 700 !important;
-        letter-spacing: 1.3px !important;
-        text-transform: uppercase;
-        padding: 16px 18px 8px !important;
-        border-bottom: 1px solid rgba(201, 168, 76, 0.12);
-        margin-bottom: 6px;
-    }
-
-    /* ===== LINKS PRINCIPALES ===== */
-    .sidebar-institucional .nav-sidebar > .nav-item > .nav-link {
-        color: rgba(255, 255, 255, 0.85) !important;
-        border-radius: 8px;
-        margin: 3px 12px;
-        padding: 10px 14px;
-        transition: all 0.25s ease;
-        font-size: 0.88rem;
-        font-weight: 500;
-        letter-spacing: 0.2px;
-    }
-    .sidebar-institucional .nav-sidebar > .nav-item > .nav-link:hover {
-        background: rgba(26, 75, 122, 0.5) !important;
-        color: #ffffff !important;
-        transform: translateX(4px);
-        box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-    }
-    .sidebar-institucional .nav-sidebar > .nav-item > .nav-link.active {
-        background: linear-gradient(90deg, rgba(201, 168, 76, 0.25) 0%, rgba(26, 75, 122, 0.3) 100%) !important;
-        color: #ffffff !important;
-        border-left: 3px solid #c9a84c;
-        font-weight: 600;
-        box-shadow: 0 2px 10px rgba(201, 168, 76, 0.2);
-    }
-
-    /* ===== SUBMENÚS ===== */
-    .sidebar-institucional .nav-treeview > .nav-item > .nav-link {
-        color: rgba(255, 255, 255, 0.7) !important;
-        font-size: 0.82rem;
-        padding: 7px 14px 7px 28px;
-        border-radius: 6px;
-        margin: 1px 12px;
-        transition: all 0.25s ease;
-        font-weight: 400;
-    }
-    .sidebar-institucional .nav-treeview > .nav-item > .nav-link:hover {
-        color: #ffffff !important;
-        background: rgba(26, 75, 122, 0.4) !important;
-        padding-left: 34px;
-    }
-    .sidebar-institucional .nav-treeview > .nav-item > .nav-link.active {
-        color: #c9a84c !important;
-        background: rgba(201, 168, 76, 0.1) !important;
-        font-weight: 600;
-    }
-
-    /* ===== ICONOS ===== */
-    .sidebar-institucional .nav-icon {
-        font-size: 0.95rem;
-        margin-right: 8px;
-        transition: all 0.25s ease;
-        color: rgba(255, 255, 255, 0.7);
-    }
-    .sidebar-institucional .nav-link:hover .nav-icon {
-        color: #c9a84c !important;
-        transform: scale(1.1);
-    }
-    .sidebar-institucional .nav-link.active .nav-icon {
-        color: #c9a84c !important;
-    }
-
-    /* ===== DIVISOR DORADO ===== */
-    .divisor-dorado {
-        height: 1px;
-        background: linear-gradient(90deg, transparent, rgba(201, 168, 76, 0.5), transparent);
-        margin: 14px 18px;
-    }
-
-    /* ===== BOTÓN SALIR ===== */
-    .nav-link-salir {
-        color: rgba(255, 180, 180, 0.9) !important;
-        font-weight: 600 !important;
-    }
-    .nav-link-salir:hover {
-        background: rgba(220, 53, 69, 0.15) !important;
-        color: #ff8a8a !important;
-    }
-    .nav-link-salir .nav-icon {
-        color: rgba(255, 180, 180, 0.9) !important;
-    }
-
-    /* ===== SCROLLBAR PERSONALIZADO ===== */
-    .sidebar-institucional .sidebar {
-        scrollbar-width: thin;
-        scrollbar-color: rgba(201, 168, 76, 0.6) transparent;
-    }
-    .sidebar-institucional .sidebar::-webkit-scrollbar {
-        width: 6px;
-    }
-    .sidebar-institucional .sidebar::-webkit-scrollbar-track {
-        background: rgba(0,0,0,0.1);
-    }
-    .sidebar-institucional .sidebar::-webkit-scrollbar-thumb {
-        background: rgba(201, 168, 76, 0.5);
-        border-radius: 3px;
-    }
-    .sidebar-institucional .sidebar::-webkit-scrollbar-thumb:hover {
-        background: rgba(201, 168, 76, 0.8);
-    }
-
-    /* ===== AJUSTES GENERALES ===== */
-    .sidebar-institucional .nav-sidebar .nav-link p {
-        margin: 0;
-        line-height: 1.4;
-        white-space: normal;
-    }
-    .sidebar-institucional .nav-sidebar .nav-header {
-        background: transparent !important;
-    }
-
-    /* ===== TRANSICIONES SUAVES ===== */
-    .sidebar-institucional * {
-        transition-property: background-color, color, border-color, box-shadow, transform;
-        transition-duration: 0.25s;
-        transition-timing-function: ease;
-    }
-    /* ===== CORRECCIÓN DE TRUNCAMIENTO DE TEXTO ===== */
-
-/* Permitir que los textos largos se acomoden en varias líneas */
-.sidebar-institucional .nav-sidebar .nav-link {
-    white-space: normal !important;
-    overflow: visible !important;
-    text-overflow: clip !important;
-    word-wrap: break-word !important;
-    overflow-wrap: break-word !important;
-    word-break: normal !important;
-}
-
-/* Los párrafos dentro de los links deben poder crecer en alto */
-.sidebar-institucional .nav-sidebar .nav-link p {
-    margin: 0 !important;
-    line-height: 1.4 !important;
-    white-space: normal !important;
-    overflow: visible !important;
-    text-overflow: clip !important;
-    word-wrap: break-word !important;
-    overflow-wrap: break-word !important;
-    display: block !important;
-    width: 100% !important;
-}
-
-/* Evitar que el <i> del ícono empuje el texto hacia afuera */
-.sidebar-institucional .nav-sidebar .nav-link > .nav-icon {
-    flex-shrink: 0;
-}
-
-/* El link como flexbox para alinear ícono + texto correctamente */
-.sidebar-institucional .nav-sidebar > .nav-item > .nav-link {
-    display: flex !important;
-    align-items: flex-start !important;
-    gap: 8px;
-}
-
-/* Submenús: mismo tratamiento */
-.sidebar-institucional .nav-treeview > .nav-item > .nav-link {
-    display: flex !important;
-    align-items: flex-start !important;
-    white-space: normal !important;
-    overflow: visible !important;
-    text-overflow: clip !important;
-    word-wrap: break-word !important;
-    overflow-wrap: break-word !important;
-    padding-top: 8px !important;
-    padding-bottom: 8px !important;
-}
-
-/* Encabezados de sección: también permitir multilínea */
-.sidebar-institucional .nav-sidebar .nav-header {
-    white-space: normal !important;
-    overflow: visible !important;
-    text-overflow: clip !important;
-    word-wrap: break-word !important;
-    line-height: 1.4 !important;
-}
-
-/* Ajustar el ancho mínimo del sidebar si es necesario */
-.sidebar-institucional {
-    min-width: 260px;
-}
-
-/* Evitar que el ícono se desplace raro cuando el texto es multilínea */
-.sidebar-institucional .nav-sidebar .nav-link .nav-icon {
-    margin-top: 2px;
-}
-
-/* Corregir el <br> dentro de <p> que a veces causa problemas */
-.sidebar-institucional .nav-sidebar .nav-link p br {
-    display: block;
-    content: "";
-    margin-top: 2px;
-}
-</style>

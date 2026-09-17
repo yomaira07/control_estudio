@@ -16,46 +16,46 @@ class Auth extends CI_Controller {
 		if ($this->session->userdata("login")) {
 			if ($this->session->userdata("rol")=='1') 
 				{
-				redirect(base_url()."admin/usuario/index");
+				redirect(base_url()."admin/usuario/index"); // administrador sistema
 				}
 			if ($this->session->userdata("rol")=='2') 
 				{
-				redirect(base_url()."admin/oferta_academica");
+				redirect(base_url()."admin/oferta_academica"); // supervisor secretaria general
 				}
 			if ($this->session->userdata("rol")=='3') 
 				{
-				redirect(base_url()."dashboard02");
+				redirect(base_url()."dashboard02"); // 
 				}
 			if ($this->session->userdata("rol")=='4') 
 				{
-				redirect(base_url()."dashboard03");
+				redirect(base_url()."dashboard03"); // operador secretaria
 				}
 			if ($this->session->userdata("rol")=='5' or $this->session->userdata("rol")=='8') 
 				{
-					redirect(base_url()."dashboard04/home");	
+					redirect(base_url()."dashboard04/home");	//estudiante regular
 				}
 			if( $this->session->userdata("rol")=='7')
 			{
-				redirect(base_url()."dashboard08");	
+				redirect(base_url()."dashboard08");	// Aspirantes
 			}
 			if ($this->session->userdata("rol")=='6') 
 				{
-				redirect(base_url()."dashboard05");
+				redirect(base_url()."dashboard05");  // administracion 
 				}
 			if ($this->session->userdata("rol")=='9') 
 				{
-				redirect(base_url()."dashboard06");
+				redirect(base_url()."dashboard06"); // docente
 				}
 			if ($this->session->userdata("rol")=='10') 
 				{
-				redirect(base_url()."dashboard06/index_supervisor_docente");
+				redirect(base_url()."dashboard06/index_supervisor_docente");  // supervisor docente
 			}	
 			if ($this->session->userdata("rol")=='11') 
 				{
-				redirect(base_url()."admin/");
+				redirect(base_url()."admin/");  // RRHH plantilla docente
 			}	
 		}else{
-		$this->load->view('admin/login');
+			$this->load->view('admin/login');
 		}
 	} 
 
