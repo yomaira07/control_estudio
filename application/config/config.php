@@ -50,18 +50,30 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 | Base Site URL - Detección dinámica
 |--------------------------------------------------------------------------
 */
+// Detectar protocolo (http/https)
 $protocol = 'http://';
-if ((isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') 
-    || (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https')) {
+if (
+    (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') ||
+    (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https') ||
+    (isset($_SERVER['HTTP_X_FORWARDED_SSL']) && $_SERVER['HTTP_X_FORWARDED_SSL'] === 'on') ||
+    (isset($_SERVER['SERVER_PORT']) && $_SERVER['SERVER_PORT'] == 443)
+) {
     $protocol = 'https://';
 }
 
-$host = isset($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : 'localhost';
+// Detectar host (con validación por seguridad)
+$host = 'localhost';
+if (isset($_SERVER['HTTP_HOST']) && preg_match('/^[a-zA-Z0-9\.\-:]+$/', $_SERVER['HTTP_HOST'])) {
+    $host = $_SERVER['HTTP_HOST'];
+} elseif (isset($_SERVER['SERVER_NAME'])) {
+    $host = $_SERVER['SERVER_NAME'];
+}
 
-// ✅ Subcarpeta fija donde está tu CodeIgniter
+// Subcarpeta fija del proyecto
 $base_path = '/control_estudio/';
 
 $config['base_url'] = $protocol . $host . $base_path;
+
 
 /*
 |--------------------------------------------------------------------------
