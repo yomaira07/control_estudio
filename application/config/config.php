@@ -26,7 +26,7 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 //$config['base_url'] = 'http://app.enf.edu.ve/control_estudio/';
 //$config['base_url'] = 'http://www.enf.edu.ve/control_estudio';
 //$config['base_url'] = 'http://172.16.38.143/control_estudio/';
-//$config['base_url'] = 'http://localhost/control_estudio_boton';
+$config['base_url'] = 'http://localhost/control_estudio';
 //$config['base_url'] = 'https://agencies-classification-phrases-patch.trycloudflare.com/';
 /*
 |--------------------------------------------------------------------------
@@ -50,7 +50,7 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 | Base Site URL - Detección dinámica
 |--------------------------------------------------------------------------
 */
-$protocol = 'http://';
+/*$protocol = 'http://';
 if ((isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') 
     || (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https')) {
     $protocol = 'https://';
@@ -61,7 +61,7 @@ $host = isset($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : 'localhost';
 // ✅ Subcarpeta fija donde está tu CodeIgniter
 $base_path = '/control_estudio/';
 
-$config['base_url'] = $protocol . $host . $base_path;
+$config['base_url'] = $protocol . $host . $base_path;*/
 
 /*
 |--------------------------------------------------------------------------
