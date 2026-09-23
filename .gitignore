@@ -49,3 +49,64 @@ vmlinuz*
 *.tar.gz
 *.rar
 *.7z
+
+# Dependencias
+node_modules/
+jspm_packages/
+
+# Variables de entorno
+.env
+.env.local
+.env.*.local
+
+# Builds
+dist/
+build/
+.next/
+out/
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Sistema operativo
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# Ignorar todo en assets
+assets/*
+
+# Pero NO ignorar estos (las excepciones van DESPUÉS)
+!assets/logo.png
+!assets/favicon.ico
+!assets/.gitkeep
+!assets/img
+!assets/css
+!assets/firmas
+!assets/template
+# Documentos de estudiantes - NO subir a Git
+assets/cedulas/
+assets/titulo/
+assets/clausula/
+assets/carta/
+assets/fotos/
+assets/carnet/
+assets/colegiatura/
+assets/calificaciones/
+assets/impres/
+assets/fotos_docente/
+assets/curso_ampliacion/
+assets/especialista/
+assets/magister/
+assets/postulaciones/
+assets/rural/
+assets/seniat/
+assets/tramites/
+assets/transferencia/

@@ -1,327 +1,185 @@
-<!-- application/views/participante/inscripcion/pago_bdv_resultado.php -->
+<?php defined('BASEPATH') OR exit('No direct script access allowed'); ?>
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Resultado de Pago - BDV</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Resultado del Pago - Inscripción</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: #f4f6f9;
-            display: flex;
-            justify-content: center;
-            align-items: center;
             min-height: 100vh;
-            margin: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Segoe UI', sans-serif;
             padding: 20px;
         }
-        .resultado-container {
-            background: white;
-            border-radius: 16px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.15);
-            padding: 40px 35px;
-            max-width: 520px;
+        .resultado-card {
+            max-width: 660px;
             width: 100%;
+            border: none;
+            border-radius: 16px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.08);
+            overflow: hidden;
+        }
+        .resultado-header {
+            padding: 28px 24px;
+            color: #fff;
             text-align: center;
-            animation: fadeIn 0.6s ease;
         }
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(-30px); }
-            to { opacity: 1; transform: translateY(0); }
+        .resultado-header.exitoso    { background: linear-gradient(135deg, #28a745, #1e7e34); }
+        .resultado-header.pendiente  { background: linear-gradient(135deg, #ffc107, #d39e00); color: #212529; }
+        .resultado-header.fallido    { background: linear-gradient(135deg, #dc3545, #a71d2a); }
+        .resultado-header.advertencia { background: linear-gradient(135deg, #fd7e14, #d35400); }
+        .resultado-header .icono {
+            font-size: 48px;
+            line-height: 1;
+            margin-bottom: 8px;
         }
-        .icono { font-size: 72px; margin-bottom: 15px; }
-        .icono.exito { color: #28a745; }
-        .icono.error { color: #dc3545; }
-        .icono.pendiente { color: #ffc107; }
-        .icono.info { color: #17a2b8; }
-        .titulo { font-size: 24px; font-weight: 700; color: #2c3e50; margin-bottom: 8px; }
-        .subtitulo { color: #6c757d; font-size: 15px; margin-bottom: 25px; }
-        .mensaje { color: #495057; font-size: 15px; margin-bottom: 25px; line-height: 1.7; }
-        .detalles {
+        .resultado-body { padding: 28px 24px; background: #fff; }
+        .resultado-body p { color: #555; margin-bottom: 10px; }
+        .detalle {
             background: #f8f9fa;
             border-radius: 10px;
-            padding: 18px;
-            margin-bottom: 25px;
-            text-align: left;
-            border: 1px solid #e9ecef;
+            padding: 14px 16px;
+            font-size: 14px;
+            margin-top: 12px;
         }
-        .detalles-item {
+        .detalle .fila {
             display: flex;
             justify-content: space-between;
-            padding: 7px 0;
-            border-bottom: 1px solid #e9ecef;
-            font-size: 14px;
-        }
-        .detalles-item:last-child { border-bottom: none; }
-        .detalles-item .label { color: #6c757d; font-weight: 500; }
-        .detalles-item .valor { font-weight: 600; color: #2c3e50; }
-        .detalles-item .valor.success { color: #28a745; }
-        .detalles-item .valor.pending { color: #ffc107; }
-        .detalles-item .valor.error { color: #dc3545; }
-        .btn-group {
-            display: flex;
+            padding: 6px 0;
+            border-bottom: 1px dashed #e3e6ea;
             gap: 10px;
-            justify-content: center;
-            flex-wrap: wrap;
         }
-        .btn {
-            display: inline-block;
-            padding: 12px 30px;
+        .detalle .fila:last-child { border-bottom: none; }
+        .detalle .label { color: #6c757d; flex-shrink: 0; }
+        .detalle .valor { font-weight: 600; color: #212529; word-break: break-all; text-align: right; }
+        .acciones { margin-top: 22px; text-align: center; }
+        .acciones .btn { min-width: 200px; border-radius: 30px; padding: 10px 22px; }
+        .diagnostico-box {
+            background: #fff7e6;
+            border-left: 4px solid #fd7e14;
             border-radius: 8px;
-            text-decoration: none;
-            font-weight: 600;
-            transition: all 0.3s;
-            border: none;
-            cursor: pointer;
+            padding: 16px;
+            margin-top: 16px;
             font-size: 14px;
-            min-width: 140px;
         }
-        .btn-primary { background: #003366; color: white; }
-        .btn-primary:hover { background: #1a5276; transform: translateY(-2px); box-shadow: 0 4px 15px rgba(0,51,102,0.3); }
-        .btn-success { background: #28a745; color: white; }
-        .btn-success:hover { background: #218838; transform: translateY(-2px); box-shadow: 0 4px 15px rgba(40,167,69,0.3); }
-        .btn-warning { background: #ffc107; color: #2c3e50; }
-        .btn-warning:hover { background: #e0a800; transform: translateY(-2px); }
-        .btn-danger { background: #dc3545; color: white; }
-        .btn-danger:hover { background: #c82333; transform: translateY(-2px); }
-        .btn-outline { background: transparent; color: #6c757d; border: 2px solid #dee2e6; }
-        .btn-outline:hover { background: #f8f9fa; border-color: #adb5bd; }
-        .loader {
-            border: 4px solid #f3f3f3;
-            border-top: 4px solid #003366;
-            border-radius: 50%;
-            width: 50px;
-            height: 50px;
-            animation: spin 1s linear infinite;
-            margin: 15px auto;
-        }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        .tiempo-restante {
-            font-size: 13px;
-            color: #6c757d;
-            margin-top: 15px;
-            padding: 12px;
-            background: #e9ecef;
-            border-radius: 8px;
-        }
-        .badge-estado {
-            display: inline-block;
-            padding: 4px 16px;
-            border-radius: 20px;
-            font-size: 13px;
-            font-weight: 600;
-            margin: 5px 0 15px;
-        }
-        .badge-estado.exito { background: #d4edda; color: #155724; }
-        .badge-estado.error { background: #f8d7da; color: #721c24; }
-        .badge-estado.pendiente { background: #fff3cd; color: #856404; }
+        .diagnostico-box h6 { color: #b35a00; margin-bottom: 10px; }
+        .diagnostico-box .detalle { background: #fff; margin-top: 10px; }
     </style>
 </head>
 <body>
-    <div class="resultado-container" id="resultadoContainer">
-        <?php 
-        // ✅ Detectar estado de forma robusta
-        $esExitoso   = (isset($exitoso) && $exitoso === true);
-        $esPendiente = (isset($exitoso) && $exitoso === false && isset($response) && isset($response->status) && $response->status == 0);
-        ?>
-        
-        <?php if ($esExitoso): ?>
-            <!-- ============================================================ -->
-            <!-- PAGO EXITOSO -->
-            <!-- ============================================================ -->
-            <div class="icono exito">
-                <i class="fas fa-check-circle"></i>
-            </div>
-            <h1 class="titulo">¡Pago Confirmado!</h1>
-            <span class="badge-estado exito">✔ Pagado</span>
-            <p class="mensaje"><?php echo $mensaje ?? 'Su pago ha sido procesado exitosamente.'; ?></p>
-            
-            <div class="detalles">
-                <div class="detalles-item">
-                    <span class="label"><i class="fas fa-money-bill-wave mr-2"></i>Monto</span>
-                    <span class="valor success">Bs. <?php echo number_format($response->amount ?? 0, 2, ',', '.'); ?></span>
-                </div>
-                <div class="detalles-item">
-                    <span class="label"><i class="fas fa-hashtag mr-2"></i>Referencia</span>
-                    <span class="valor"><?php echo $response->reference ?? 'N/A'; ?></span>
-                </div>
-                <div class="detalles-item">
-                    <span class="label"><i class="fas fa-calendar-alt mr-2"></i>Fecha</span>
-                    <span class="valor"><?php 
-                        if (!empty($response->paymentDate)) {
-                            $dt = DateTime::createFromFormat('d/m/Y H:i:s', $response->paymentDate);
-                            echo $dt ? $dt->format('d/m/Y H:i') : $response->paymentDate;
-                        } else {
-                            echo date('d/m/Y H:i');
-                        }
-                    ?></span>
-                </div>
-                <div class="detalles-item">
-                    <span class="label"><i class="fas fa-id-card mr-2"></i>Identificación</span>
-                    <span class="valor"><?php echo $response->idLetter ?? 'V'; ?>-<?php echo $response->idNumber ?? ''; ?></span>
-                </div>
-                <div class="detalles-item">
-                    <span class="label"><i class="fas fa-exchange-alt mr-2"></i>Transacción</span>
-                    <span class="valor" style="font-size:12px;"><?php echo $response->transactionId ?? 'N/A'; ?></span>
-                </div>
-                <?php if (!empty($response->authorizationCode)): ?>
-                <div class="detalles-item">
-                    <span class="label"><i class="fas fa-lock mr-2"></i>Código Autorización</span>
-                    <span class="valor"><?php echo $response->authorizationCode; ?></span>
-                </div>
-                <?php endif; ?>
-                <?php if (!empty($response->paymentMethodDescription)): ?>
-                <div class="detalles-item">
-                    <span class="label"><i class="fas fa-credit-card mr-2"></i>Método de Pago</span>
-                    <span class="valor"><?php echo $response->paymentMethodDescription; ?></span>
-                </div>
-                <?php endif; ?>
-            </div>
-            
-            <div class="btn-group">
-                <a href="<?php echo base_url(); ?>dashboard04/proceso" class="btn btn-success">
-                    <i class="fas fa-arrow-right mr-2"></i> Continuar
-                </a>
-            </div>
-            
-        <?php elseif ($esPendiente): ?>
-            <!-- ============================================================ -->
-            <!-- PAGO PENDIENTE -->
-            <!-- ============================================================ -->
-            <div class="icono pendiente">
-                <i class="fas fa-clock"></i>
-            </div>
-            <h1 class="titulo">Pago en Procesamiento</h1>
-            <span class="badge-estado pendiente">⏳ Pendiente</span>
-            <p class="mensaje"><?php echo $mensaje ?? 'El pago está siendo procesado. Esto puede tomar unos minutos.'; ?></p>
-            <div class="loader"></div>
-            
-            <div class="detalles">
-                <div class="detalles-item">
-                    <span class="label">Estado</span>
-                    <span class="valor pending">Pendiente de confirmación</span>
-                </div>
-                <div class="detalles-item">
-                    <span class="label">Monto</span>
-                    <span class="valor">Bs. <?php echo number_format($response->amount ?? 0, 2, ',', '.'); ?></span>
-                </div>
-                <div class="detalles-item">
-                    <span class="label">Referencia</span>
-                    <span class="valor"><?php echo $response->reference ?? $referencia ?? 'N/A'; ?></span>
-                </div>
-                <?php if (!empty($response->token)): ?>
-                <div class="detalles-item">
-                    <span class="label">Token</span>
-                    <span class="valor" style="font-size:11px;"><?php echo substr($response->token, 0, 20) . '...'; ?></span>
-                </div>
-                <?php endif; ?>
-            </div>
-            
-            <div class="btn-group">
-                <button onclick="verificarEstado()" class="btn btn-primary" id="btnVerificar">
-                    <i class="fas fa-sync fa-spin mr-2" id="spinnerVerificar" style="display:none;"></i>
-                    Verificar Estado
-                </button>
-                <a href="<?php echo base_url(); ?>pagos/cancelar" class="btn btn-danger">
-                    <i class="fas fa-times mr-2"></i> Cancelar
-                </a>
-            </div>
-            <div class="tiempo-restante">
-                <i class="fas fa-info-circle mr-2"></i>
-                Si el pago no se confirma en 24 horas, se cancelará automáticamente.
-                <br>
-                <small>Puedes verificar el estado en cualquier momento.</small>
-            </div>
-            
-        <?php else: ?>
-            <!-- ============================================================ -->
-            <!-- PAGO FALLIDO O ERROR -->
-            <!-- ============================================================ -->
-            <div class="icono error">
-                <i class="fas fa-times-circle"></i>
-            </div>
-            <h1 class="titulo">Pago No Completado</h1>
-            <span class="badge-estado error">✖ Fallido</span>
-            <p class="mensaje"><?php echo $mensaje ?? 'Hubo un problema con el procesamiento del pago.'; ?></p>
-            
-            <?php if (isset($response) && ($response->responseCode ?? 0) > 0): ?>
-            <div class="detalles">
-                <div class="detalles-item">
-                    <span class="label"><i class="fas fa-code mr-2"></i>Código Error</span>
-                    <span class="valor error"><?php echo $response->responseCode; ?></span>
-                </div>
-                <div class="detalles-item">
-                    <span class="label"><i class="fas fa-info-circle mr-2"></i>Mensaje</span>
-                    <span class="valor" style="font-size:13px;"><?php echo $response->responseMessage ?? 'Error desconocido'; ?></span>
-                </div>
-            </div>
-            <?php endif; ?>
-            
-            <div class="btn-group">
-                <a href="<?php echo base_url(); ?>dashboard04/registro_pago/<?php echo $id_usuario ?? ''; ?>" class="btn btn-warning">
-                    <i class="fas fa-redo mr-2"></i> Reintentar
-                </a>
-                <a href="<?php echo base_url(); ?>dashboard04/inscripcion" class="btn btn-outline">
-                    <i class="fas fa-edit mr-2"></i> Modificar Inscripción
-                </a>
-                <a href="<?php echo base_url(); ?>dashboard04/home" class="btn btn-primary">
-                    <i class="fas fa-home mr-2"></i> Inicio
-                </a>
-            </div>
-        <?php endif; ?>
+
+<?php
+    // ============================================================
+    // Determinar estado visual
+    // ============================================================
+    $exitoso     = isset($exitoso) && $exitoso === true;
+    $actualizado = isset($actualizado) ? $actualizado : true;
+    $mensaje     = isset($mensaje) && $mensaje !== '' ? $mensaje : 'Procesando resultado del pago...';
+    
+    // Distinguir: éxito, verificado-no-guardado, pendiente, fallido
+    if ($exitoso && $actualizado) {
+        $clase  = 'exitoso';
+        $titulo = '¡Pago exitoso!';
+        $icono  = '✅';
+    } elseif ($exitoso === false && $actualizado === false) {
+        $clase  = 'advertencia';
+        $titulo = 'Pago verificado, pero no registrado';
+        $icono  = '⚠️';
+    } elseif (stripos($mensaje, 'no fue completado') !== false || stripos($mensaje, 'pendiente') !== false) {
+        $clase  = 'pendiente';
+        $titulo = 'Pago pendiente';
+        $icono  = '⏳';
+    } else {
+        $clase  = 'fallido';
+        $titulo = 'Pago no completado';
+        $icono  = '❌';
+    }
+
+    // URL de continuación (fallback a dashboard04/proceso)
+    $url_continuar = isset($url_continuar) && !empty($url_continuar)
+        ? $url_continuar
+        : base_url() . 'dashboard04/proceso';
+
+    // Referencia visible
+    $ref_mostrar = isset($referencia) && !empty($referencia) ? $referencia : '—';
+
+    // Datos del response (si vienen)
+    $monto       = isset($response->amount)        ? $response->amount        : null;
+    $moneda      = isset($response->currency)      ? $response->currency      : null;
+    $fecha_pago  = isset($response->paymentDate)   ? $response->paymentDate   : null;
+    $transaction = isset($response->transactionId) ? $response->transactionId : null;
+?>
+
+<div class="card resultado-card">
+    <div class="resultado-header <?= $clase ?>">
+        <div class="icono"><?= $icono ?></div>
+        <h4 class="mb-0"><?= htmlspecialchars($titulo) ?></h4>
     </div>
 
-    <script>
-        <?php if ($esPendiente): ?>
-        // Auto-verificar cada 30 segundos si está pendiente
-        var intervalId = setInterval(verificarEstado, 30000);
+    <div class="resultado-body">
+        <p class="text-center"><?= htmlspecialchars($mensaje) ?></p>
+
+        <div class="detalle">
+            <div class="fila">
+                <span class="label">Referencia</span>
+                <span class="valor"><?= htmlspecialchars($ref_mostrar) ?></span>
+            </div>
+            <?php if (!empty($transaction)): ?>
+            <div class="fila">
+                <span class="label">ID Transacción BDV</span>
+                <span class="valor"><?= htmlspecialchars($transaction) ?></span>
+            </div>
+            <?php endif; ?>
+            <?php if (!empty($monto)): ?>
+            <div class="fila">
+                <span class="label">Monto</span>
+                <span class="valor">
+                    <?= number_format((float)$monto, 2, ',', '.') ?>
+                    <?= $moneda == 1 ? 'Bs.' : htmlspecialchars($moneda) ?>
+                </span>
+            </div>
+            <?php endif; ?>
+            <?php if (!empty($fecha_pago)): ?>
+            <div class="fila">
+                <span class="label">Fecha del pago</span>
+                <span class="valor"><?= htmlspecialchars($fecha_pago) ?></span>
+            </div>
+            <?php endif; ?>
+        </div>
+
+        <?php // ============================================================ ?>
+        <?php // BLOQUE DE DIAGNÓSTICO (solo si el pago se verificó pero no se guardó) ?>
+        <?php // ============================================================ ?>
+        <?php if (isset($actualizado) && $actualizado === false && !empty($diagnostico)): ?>
+            <div class="diagnostico-box">
+                <h6>⚠️ El pago se verificó con el banco, pero no se pudo registrar en el sistema.</h6>
+                <p class="mb-2">Por favor, contacte a soporte con los siguientes datos:</p>
+                <div class="detalle">
+                    <?php foreach ($diagnostico as $clave => $valor): ?>
+                        <?php if (!empty($valor)): ?>
+                            <div class="fila">
+                                <span class="label"><?= ucfirst(str_replace('_', ' ', $clave)) ?></span>
+                                <span class="valor"><?= htmlspecialchars((string)$valor) ?></span>
+                            </div>
+                        <?php endif; ?>
+                    <?php endforeach; ?>
+                </div>
+            </div>
         <?php endif; ?>
-        
-        function verificarEstado() {
-            var btn = document.getElementById('btnVerificar');
-            var spinner = document.getElementById('spinnerVerificar');
-            
-            if (btn) {
-                btn.disabled = true;
-                spinner.style.display = 'inline-block';
-            }
-            
-            fetch('<?php echo base_url(); ?>pagos/verificar_estado')
-                .then(response => response.json())
-                .then(data => {
-                    if (data.estado === 'pagado') {
-                        // ✅ Pago confirmado: recargar la página
-                        location.reload();
-                    } else if (data.estado === 'pendiente') {
-                        alert('⏳ El pago aún está en proceso. Por favor, espera unos minutos.');
-                        if (btn) {
-                            btn.disabled = false;
-                            spinner.style.display = 'none';
-                        }
-                    } else if (data.estado === 'error') {
-                        alert('❌ ' + data.mensaje);
-                        if (btn) {
-                            btn.disabled = false;
-                            spinner.style.display = 'none';
-                        }
-                    } else {
-                        alert('El pago no ha sido registrado. ¿Deseas reintentar?');
-                        window.location.href = '<?php echo base_url(); ?>dashboard04/registro_pago/<?php echo $id_usuario ?? ''; ?>';
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    alert('Error al verificar el estado. Intenta nuevamente.');
-                    if (btn) {
-                        btn.disabled = false;
-                        spinner.style.display = 'none';
-                    }
-                });
-        }
-    </script>
+
+        <div class="acciones">
+            <a href="<?= htmlspecialchars($url_continuar) ?>" class="btn btn-primary">
+                Continuar
+            </a>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

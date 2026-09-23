@@ -87,5 +87,19 @@ public function getListaTramitesRuc_requisito($id){
 			return false;
 		}
 	}
+	public function getTramites($id){
+        $this->db->where_in('id', $id);
+
+		$this->db->where('status', 1);
+	
+		$resultados = $this->db->get("tramites");
+	
+		if ($resultados->num_rows() > 0) {
+			return $resultados->row();
+		}
+		else{
+			return false;
+		}
+	}
 
 }

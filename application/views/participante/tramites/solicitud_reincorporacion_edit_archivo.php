@@ -240,7 +240,7 @@
                                                         Ver Requisito Cargado:
                                                     </td>
                                                     <td style="padding: 12px 15px;">
-                                                        <a href="<?php echo base_url(); ?>assets/tramites/reincorporaciones/solicitud/<?php echo $solicitud->id_usuario . '_' . $solicitud->id_programa . '_solicitud.pdf'; ?>" target="_new" class="btn" style="border-radius: 0px; padding: 6px 20px; background: #17a2b8; color: white; transition: all 0.2s;">
+                                                        <a href="<?php echo base_url(); ?>assets/tramites/reincorporaciones/solicitud/<?php echo $solicitud->id_usuario . '_' . $solicitud->id_programa . '_solicitud.pdf'; ?>" target="_new" class="btn" style="border-radius: 10px; padding: 6px 20px; background: #17a2b8; color: white; transition: all 0.2s;">
                                                             <i class="fas fa-eye mr-1"></i> Ver Solicitud
                                                         </a>
                                                     </td>
@@ -278,11 +278,11 @@
                                     <!-- Botones de Acción -->
                                     <div class="row mt-4">
                                         <div class="col-md-12 text-center">
-                                            <button type="submit" class="btn btn-primary" style="border-radius: 0px; padding: 10px 40px; font-weight: 500; transition: all 0.3s;">
+                                            <button type="submit" class="btn btn-primary" style="border-radius: 10px; padding: 10px 40px; font-weight: 500; transition: all 0.3s;">
                                                 <i class="fas fa-save mr-2"></i>
                                                 Actualizar Requisito
                                             </button>
-                                            <button type="button" name="btnSeguiente" class="btn btn-default" style="border-radius: 0px; padding: 10px 30px; font-weight: 500; margin-left: 8px; transition: all 0.3s;" onClick="anterior();">
+                                            <button type="button" name="btnSeguiente" class="btn btn-default" style="border-radius: 10px; padding: 10px 30px; font-weight: 500; margin-left: 8px; transition: all 0.3s;" onClick="anterior();">
                                                 <i class="fas fa-arrow-left mr-2"></i>
                                                 Regresar
                                             </button>

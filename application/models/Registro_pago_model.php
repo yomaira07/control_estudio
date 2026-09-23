@@ -16,7 +16,7 @@ class Registro_pago_model extends CI_Model {
 		$this->db->where("r.tramite", 0);
 		
 		$resultados = $this->db->get();
-		//var_dump($this->db->queries);
+		
 			if ($resultados->num_rows() > 0){
 			return true;
 		}
@@ -492,16 +492,18 @@ $this->db->query("SET sql_mode=(SELECT REPLACE(@@sql_mode, 'ONLY_FULL_GROUP_BY',
 	
 	}
 
-
 	public function save($data){
-		return	 $this->db->insert("registro_pago",$data);
-
-	/*$this->db->insert("registro_pago",$data);
-		var_dump($this->db->queries);
-		return	 1;*/
-
+		$result = $this->db->insert("registro_pago", $data);
+		
+		// ✅ Logs de diagnóstico (solo para depurar)
+		log_message('error', '===> save() result=' . var_export($result, true));
+		log_message('error', '===> save() insert_id=' . $this->db->insert_id());
+		log_message('error', '===> save() affected_rows=' . $this->db->affected_rows());
+		log_message('error', '===> save() error=' . print_r($this->db->error(), true));
+		log_message('error', '===> save() last_query=' . $this->db->last_query());
+		
+		return $result;
 	}
-
 	public function RegistradoPago($id_usuario,$id_periodo){
 
 		$this->db->where("id_usuario",$id_usuario);
@@ -549,11 +551,12 @@ $conc=array(0, 1);
 			return false;
 		}
 	}
-	public function VerificarRegistro_validado($id_usuario,$id_periodo){
+	public function VerificarRegistro_validado($id_usuario,$id_periodo){ //inscripciones
 		
 		$this->db->where("id_usuario",$id_usuario);
 		$this->db->where("id_periodo",$id_periodo);
 		$this->db->where("conciliado",1);
+		$this->db->where("tramite",0);
 		
 		$resultados = $this->db->get("registro_pago");
 	
@@ -565,6 +568,7 @@ $conc=array(0, 1);
 			return false;
 		}
 	}
+	
 	
 	
 	public function VerificarRegistro_pago($id_usuario,$id_periodo){
@@ -617,21 +621,21 @@ $conc=array(0, 1);
 
 		$this->db->where("id_usuario",$id);
 		$this->db->where("id_periodo",$id_periodo);
-		
-		//var_dump($this->db->queries);
-		return $this->db->update("registro_pago",$data);
+	
+    // ✅ Logs de diagnóstico (solo para depurar)
+    log_message('error', '===> save() result=' . var_export($result, true));
+    log_message('error', '===> save() insert_id=' . $this->db->insert_id());
+    log_message('error', '===> save() affected_rows=' . $this->db->affected_rows());
+    log_message('error', '===> save() error=' . print_r($this->db->error(), true));
+    log_message('error', '===> save() last_query=' . $this->db->last_query());
+	return $this->db->update("registro_pago",$data);
 
 		
 	}
 	public function save_conciliacion_tramite($id_solicitud,$data){
-
+	
 		$this->db->where("id_solicitud_tramite",$id_solicitud);		
-		
-		
 		return $this->db->update("registro_pago",$data);
-	//	return var_dump($this->db->queries);
-		
-		
 	}
 	
 
@@ -702,6 +706,7 @@ $conc=array(0, 1);
 		$this->db->where("r.conciliado", 1);
 		$this->db->where("r.academico", 0);
 		$this->db->where("r.status", 1);
+		$this->db->where("r.tramite", 0);
 		$this->db->where("r.id_usuario", $id);
 		$this->db->where("pe.status_aspirante", $aspirante);	
 		$this->db->order_by("r.id", "ASC");
@@ -720,6 +725,7 @@ $conc=array(0, 1);
 		$this->db->join("estado est","r.id_estado_estudio = est.id");
 		$this->db->join("periodo pe","r.id_periodo = pe.id");
 		$this->db->where("r.conciliado", 1);	
+		$this->db->where("r.tramite", 0);
 $this->db->where("r.aspirante", 0);	
 		$this->db->where("r.status", 1);
 		$this->db->where("r.id_usuario", $id);
@@ -1326,12 +1332,24 @@ public function getRegistro_Pago_nuevo_proceso($id_periodo){
 					$this->db->where('id_usuario', $id_usuario);
 					$this->db->where('id_periodo', $id_periodo);
 					$this->db->where('metodo_pago', 'bdv');
-					$this->db->where('status', 0);
+					$this->db->where('conciliado', 0);
 					$this->db->order_by('id', 'DESC');
 					$query = $this->db->get('registro_pago');
 					return $query->row();
 					}
 
+					//actualizacion 09-09-2026 pasarela baco de venezuela
+					/**
+					 * Obtener pago pendiente por token BDV
+					 */
+					public function get_pago_pendiente_bdv_tramite($id_solicitud) {
+						$this->db->where('id_solicitud_tramite', $id_solicitud);						
+						$this->db->where('metodo_pago', 'bdv');
+						$this->db->where('conciliado', 0);
+						$this->db->order_by('id', 'DESC');
+						$query = $this->db->get('registro_pago');
+						return $query->row();
+						}
 					/**
  * Actualizar pago por token
  * Versión mejorada: verifica existencia antes de actualizar
@@ -1406,6 +1424,171 @@ public function get_pago_pendiente_por_token($token) {
     return $this->db->get('registro_pago')->row();
 }
 	
+/**
+ * para la ejecución del CRON
+ * Pagos BDV pendientes para el CRON.
+ */
+public function get_pagos_bdv_pendientes_cron($limit = 20, $max_intentos = 3) {
+    return $this->db
+        ->where('metodo_pago', 'bdv')
+        ->where('status', 0)
+        ->where('conciliado', 0)
+        ->where('procesando_cron', 0)
+        ->where('intento_cron <', (int) $max_intentos)
+        ->where('token_bdv IS NOT NULL', null, false)
+        ->where('token_bdv !=', '')
+        ->order_by('fecha_transferencia', 'ASC')
+        ->limit((int) $limit)
+        ->get('registro_pago')
+        ->result();
+}
 
-			
+public function count_pagos_bdv_pendientes() {
+    return (int) $this->db
+        ->where('metodo_pago', 'bdv')
+        ->where('status', 0)
+        ->where('conciliado', 0)
+        ->count_all_results('registro_pago');
+}
+
+public function count_pagos_bdv_procesando() {
+    return (int) $this->db
+        ->where('metodo_pago', 'bdv')
+        ->where('procesando_cron', 1)
+        ->count_all_results('registro_pago');
+}
+
+public function count_pagos_bdv_bloqueados($minutos = 5) {
+    return (int) $this->db
+        ->where('metodo_pago', 'bdv')
+        ->where('procesando_cron', 1)
+        ->where('fecha_transferencia <', date('Y-m-d H:i:s', strtotime('-' . (int)$minutos . ' minutes')))
+        ->count_all_results('registro_pago');
+}
+
+public function liberar_pagos_bdv_procesando($minutos = 5) {
+    $this->db->where('procesando_cron', 1);
+    $this->db->where('fecha_transferencia <', date('Y-m-d H:i:s', strtotime('-' . (int)$minutos . ' minutes')));
+    $this->db->update('registro_pago', array('procesando_cron' => 0));
+    return $this->db->affected_rows();
+}
+			/**
+ * Estadísticas del CRON para el dashboard.
+ */
+public function get_estadisticas_cron() {
+    $stats = array(
+        'pendientes'        => 0,
+        'procesando'        => 0,
+        'bloqueados'        => 0,
+        'confirmados_hoy'   => 0,
+        'errores_hoy'       => 0,
+        'total_confirmados' => 0,
+        'intentos_promedio' => 0
+    );
+
+    // Pendientes
+    $stats['pendientes'] = (int) $this->db
+        ->where('metodo_pago', 'bdv')
+        ->where('status', 0)
+        ->where('conciliado', 0)
+        ->count_all_results('registro_pago');
+
+    // Procesando
+    $stats['procesando'] = (int) $this->db
+        ->where('metodo_pago', 'bdv')
+        ->where('procesando_cron', 1)
+        ->count_all_results('registro_pago');
+
+    // Bloqueados (> 5 min en procesando)
+    $stats['bloqueados'] = $this->count_pagos_bdv_bloqueados(5);
+
+    // Confirmados hoy
+    $stats['confirmados_hoy'] = (int) $this->db
+        ->where('metodo_pago', 'bdv')
+        ->where('status', 1)
+        ->where('DATE(dactualizo)', date('Y-m-d'))
+        ->count_all_results('registro_pago');
+
+    // Total confirmados
+    $stats['total_confirmados'] = (int) $this->db
+        ->where('metodo_pago', 'bdv')
+        ->where('status', 1)
+        ->count_all_results('registro_pago');
+
+    // Errores hoy (del log)
+    if ($this->db->table_exists('logs_pago_bdv')) {
+        $stats['errores_hoy'] = (int) $this->db
+            ->like('accion', 'exception')
+            ->where('DATE(fecha)', date('Y-m-d'))
+            ->count_all_results('logs_pago_bdv');
+    }
+
+    // Promedio de intentos de los pagos pendientes
+    $row = $this->db
+        ->select_avg('intento_cron', 'promedio')
+        ->where('metodo_pago', 'bdv')
+        ->where('status', 0)
+        ->get('registro_pago')
+        ->row();
+    $stats['intentos_promedio'] = $row && $row->promedio ? round($row->promedio, 2) : 0;
+
+    return $stats;
+}
+
+/**
+ * Historial de las últimas N ejecuciones del CRON (deducido del log).
+ */
+public function get_historial_cron($limit = 15) {
+    if (!$this->db->table_exists('logs_pago_bdv')) {
+        return array();
+    }
+
+    return $this->db
+        ->select('DATE(fecha) as dia, COUNT(*) as total, 
+                  SUM(CASE WHEN accion LIKE "%confirm%" THEN 1 ELSE 0 END) as confirmados,
+                  SUM(CASE WHEN accion LIKE "%exception%" OR accion LIKE "%error%" THEN 1 ELSE 0 END) as errores')
+        ->like('accion', 'cron_', 'after')
+        ->group_by('DATE(fecha)')
+        ->order_by('dia', 'DESC')
+        ->limit((int) $limit)
+        ->get('logs_pago_bdv')
+        ->result();
+}
+
+/**
+ * Pagos bloqueados (en procesando > 5 min).
+ */
+public function get_pagos_bloqueados($limit = 10) {
+    return $this->db
+        ->where('metodo_pago', 'bdv')
+        ->where('procesando_cron', 1)
+        ->where('fecha_transferencia <', date('Y-m-d H:i:s', strtotime('-5 minutes')))
+        ->order_by('fecha_transferencia', 'ASC')
+        ->limit((int) $limit)
+        ->get('registro_pago')
+        ->result();
+}
+
+/**
+ * Serie de pagos confirmados por día (últimos N días).
+ */
+public function get_pagos_por_dia($dias = 7) {
+    $resultado = array();
+    for ($i = $dias - 1; $i >= 0; $i--) {
+        $fecha = date('Y-m-d', strtotime("-{$i} days"));
+
+        $confirmados = (int) $this->db
+            ->where('metodo_pago', 'bdv')
+            ->where('status', 1)
+            ->where('DATE(dactualizo)', $fecha)
+            ->count_all_results('registro_pago');
+
+        $resultado[] = array(
+            'fecha'       => $fecha,
+            'label'       => date('d/m', strtotime($fecha)),
+            'confirmados' => $confirmados
+        );
+    }
+    return $resultado;
+}
 }

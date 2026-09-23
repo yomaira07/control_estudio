@@ -14,7 +14,7 @@
                 <div class="col-sm-6">
                     <ol class="breadcrumb float-sm-right" style="background: transparent;">
                         <li class="breadcrumb-item"><a href="<?php echo base_url(); ?>dashboard04/home" style="color: #6c757d;">Inicio</a></li>
-                        <li class="breadcrumb-item"><a href="#" style="color: #6c757d;">Trámites</a></li>
+                        <li class="breadcrumb-item" style="color: #6c757d;">Trámites Administrativos</li>
                         <li class="breadcrumb-item active" style="color: #003366; font-weight: 600;">Solicitud RUC</li>
                     </ol>
                 </div>
@@ -49,7 +49,7 @@
                                 </div>
                             </div>
                             <div>
-                                <span class="badge" style="font-size: 0.8rem; padding: 5px 16px; border-radius: 20px; font-weight: 500; background: #003366; color: white;">
+                                <span class="badge" style="font-size: 0.8rem; padding: 5px 16px; border-radius: 10px; font-weight: 500; background: #003366; color: white;">
                                     <i class="fas fa-edit mr-1"></i>
                                     Nueva Solicitud
                                 </span>
@@ -202,7 +202,7 @@
                                                                 <?php endforeach; ?>
                                                             </select>
                                                             <div class="input-group-append">
-                                                                <button class="btn btn-info" type="button" id="btnVerPensum" onclick="verPensumCursa()" disabled style="border-radius: 0px;">
+                                                                <button class="btn btn-info" type="button" id="btnVerPensum" onclick="verPensumCursa()" disabled style="border-radius: 10px;">
                                                                     <i class="fas fa-eye"></i> Ver Pensum
                                                                 </button>
                                                             </div>
@@ -226,7 +226,7 @@
                                                                 <?php endforeach; ?>
                                                             </select>
                                                             <div class="input-group-append">
-                                                                <button class="btn btn-success" type="button" id="btnVerPensumCursado" onclick="verPensumCursado()" disabled style="border-radius: 0px;">
+                                                                <button class="btn btn-success" type="button" id="btnVerPensumCursado" onclick="verPensumCursado()" disabled style="border-radius: 10px;">
                                                                     <i class="fas fa-eye"></i> Ver Pensum
                                                                 </button>
                                                             </div>
@@ -345,7 +345,7 @@
                                     <!-- Botón de Envío -->
                                     <div class="row mt-4">
                                         <div class="col-md-12 text-center">
-                                            <button type="submit" class="btn btn-primary" style="border-radius: 0px; padding: 10px 40px; font-weight: 500; transition: all 0.3s;">
+                                            <button type="submit" class="btn btn-primary" style="border-radius: 10px; padding: 10px 40px; font-weight: 500; transition: all 0.3s;">
                                                 <i class="fas fa-save mr-2"></i>
                                                 Registrar Trámite
                                             </button>
@@ -436,7 +436,7 @@
                                                     <img width="25px" height="25px" src="<?php echo base_url(); ?>/assets/img/button_green.png" title="Pago Registrado">
                                                     <?php echo "Pago Registrado"; 
                                                     echo "<br>";
-                                                    if($solicitud->reg_pago == 1 && $solicitud->conciliado == 1 && $solicitud->academico == 1 && $solicitud->rev_academica == 1): ?>
+                                                    if($solicitud->reg_pago == 1 && $solicitud->conciliado == 1 ): ?>
                                                         <img width="25px" height="25px" src="<?php echo base_url(); ?>/assets/img/button_green.png" title="Aprobado">
                                                         <?php echo "Aprobado por Administración ENFMP";  
                                                     else: ?>
@@ -449,30 +449,51 @@
                                                             <?php echo "Pendiente por Aprobar Administración ENFMP";  
                                                         endif; 
                                                     endif; 
+                                                        if($solicitud->reg_pago == 1 && $solicitud->conciliado == 1 && $solicitud->rev_academica == 1 && $solicitud->academico == 1 ): ?>
+                                                            <img width="25px" height="25px" src="<?php echo base_url(); ?>/assets/img/button_green.png" title="Aprobado">
+                                                            <?php echo "Aprobado por Secretaría General ENFMP";  
+                                                         else: ?>
+                                                            <br>
+                                                            <?php if($solicitud->rev_academica == 2 && $solicitud->academico == 2): ?>
+                                                                <img width="25px" height="25px" src="<?php echo base_url(); ?>/assets/img/button_red.jpeg" title="Rechazado">
+                                                                <?php echo "Rechazado por Secretaría General ENFMP";  
+                                                            else: ?>
+                                                                <img width="25px" height="25px" src="<?php echo base_url(); ?>/assets/img/button_gray.png" title="Pendiente">
+                                                                <?php echo "Pendiente por Revisión  Secretaría General ENFMP";  
+                                                            endif; 
+                                                        endif;                                                     
                                                 endif; ?>
                                             </td>
-                                            <td style="padding: 10px 15px; text-align: center;">
-                                                <?php if($solicitud->reg_pago == 0 && $this->session->userdata("ruc") == 1): ?>
-                                                    <a href="<?php echo base_url(); ?>dashboard09/registro_pago_ruc/<?php echo $solicitud->id_solicitud . '/' . $solicitud->id_tipo_tramite; ?>" class="btn" style="border-radius: 0px; padding: 4px 12px; background: #28a745; color: white; font-size: 0.75rem; margin-bottom: 5px; display: inline-block; transition: all 0.2s;">
-                                                        <i class="fas fa-money-bill-wave mr-1"></i> Pagar
-                                                    </a>
-                                                <?php elseif($solicitud->reg_pago == 0 && ($this->session->userdata("ruc") == 0)): ?>
-                                                    <span style="color: #dc3545; font-weight: 600; font-size: 0.75rem;">
-                                                        <i class="fas fa-times-circle mr-1"></i> TIEMPO CERRADO
-                                                    </span>
-                                                <?php endif; ?>
-                                                
-                                                <?php if($solicitud->rev_academica == 0): ?>
-                                                    <a href="<?php echo base_url(); ?>dashboard09/solicitud_ruc_requisitos_edit/<?php echo $solicitud->id_solicitud; ?>" class="btn" style="border-radius: 0px; padding: 4px 12px; background: #17a2b8; color: white; font-size: 0.75rem; margin-bottom: 5px; display: inline-block; transition: all 0.2s;">
-                                                        <i class="fas fa-eye mr-1"></i> Ver Docs
-                                                    </a>
-                                                <?php endif; ?>
-                                                
-                                                <?php if($solicitud->reg_pago == 1 && $solicitud->rev_academica == 1): ?>
-                                                    <a href="<?php echo base_url(); ?>dashboard09/planilla/<?php echo $solicitud->id_usuario . '/' . $solicitud->id_solicitud; ?>" class="btn" style="border-radius: 0px; padding: 4px 12px; background: #6c757d; color: white; font-size: 0.75rem; margin-bottom: 5px; display: inline-block; transition: all 0.2s;">
-                                                        <i class="fas fa-print mr-1"></i> Planilla
-                                                    </a>
-                                                <?php endif; ?>
+                                            <td style="padding: 10px 15px; text-align: center; vertical-align: middle;">
+                                                <div class="d-flex flex-column align-items-center" style="gap: 8px;">
+                                                    <?php if($solicitud->reg_pago == 0 && $this->session->userdata("ruc") == 1): ?>
+                                                        <a href="<?php echo base_url(); ?>dashboard09/registro_pago/<?php echo $solicitud->id_solicitud . '/' . $solicitud->id_tipo_tramite; ?>" 
+                                                        class="btn btn-success btn-sm btn-accion" 
+                                                        style="border-radius: 6px; padding: 6px 14px; font-size: 0.75rem; font-weight: 600; border: none; box-shadow: 0 2px 8px rgba(40, 167, 69, 0.3); transition: all 0.25s ease; width: 100%; display: inline-flex; align-items: center; justify-content: center;">
+                                                            <i class="fas fa-money-bill-wave mr-2"></i> Pagar
+                                                        </a>
+                                                    <?php elseif($solicitud->reg_pago == 0 && ($this->session->userdata("ruc") == 0)): ?>
+                                                        <span style="background: #dc3545; color: white; border-radius: 6px; padding: 6px 14px; font-size: 0.75rem; font-weight: 600; width: 100%; display: inline-flex; align-items: center; justify-content: center; box-shadow: 0 2px 8px rgba(220, 53, 69, 0.3);">
+                                                            <i class="fas fa-times-circle mr-2"></i> TIEMPO CERRADO
+                                                        </span>
+                                                    <?php endif; ?>
+                                                    
+                                                    <?php if($solicitud->rev_academica == 0): ?>
+                                                        <a href="<?php echo base_url(); ?>dashboard09/solicitud_ruc_requisitos_edit/<?php echo $solicitud->id_solicitud; ?>" 
+                                                        class="btn btn-info btn-sm btn-accion" 
+                                                        style="border-radius: 6px; padding: 6px 14px; font-size: 0.75rem; font-weight: 600; border: none; box-shadow: 0 2px 8px rgba(23, 162, 184, 0.3); transition: all 0.25s ease; width: 100%; display: inline-flex; align-items: center; justify-content: center;">
+                                                            <i class="fas fa-eye mr-2"></i> Ver Docs
+                                                        </a>
+                                                    <?php endif; ?>
+                                                    
+                                                    <?php if($solicitud->reg_pago == 1 && $solicitud->rev_academica == 1): ?>
+                                                        <a href="<?php echo base_url(); ?>dashboard09/planilla/<?php echo $solicitud->id_usuario . '/' . $solicitud->id_solicitud; ?>" 
+                                                        class="btn btn-secondary btn-sm btn-accion" 
+                                                        style="border-radius: 6px; padding: 6px 14px; font-size: 0.75rem; font-weight: 600; border: none; box-shadow: 0 2px 8px rgba(108, 117, 125, 0.3); transition: all 0.25s ease; width: 100%; display: inline-flex; align-items: center; justify-content: center;">
+                                                            <i class="fas fa-print mr-2"></i> Planilla
+                                                        </a>
+                                                    <?php endif; ?>
+                                                </div>
                                             </td>
                                         </tr>
                                         <?php endforeach; ?>

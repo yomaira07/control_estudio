@@ -295,13 +295,6 @@ public function materias_inscritas_cedula($cedula){//materias inscritas por cedu
 	}
 	public function Materias_inscritas_disponible($materia){
 
-		/*SELECT  COUNT(id_usuario)AS ocupados,oferta_academica.cupos ,id_oferta_academica ,id_pensum
-FROM materias_preinscritas 
-INNER JOIN oferta_academica ON materias_preinscritas.id_oferta_academica=oferta_academica.id
-INNER JOIN pensum ON  oferta_academica.id_pensum=pensum.id
-WHERE  materias_preinscritas.status=1
-GROUP BY id_oferta_academica,id_pensum */
-//var_dump($materia);
 
 		$this->db->select("count(mp.id_usuario), COUNT(mp.id_usuario)AS ocupados,oa.cupos ,mp.id_oferta_academica ,oa.id_pensum");
 		$this->db->from("materias_preinscritas mp");
@@ -851,7 +844,7 @@ $this->db->query("SET sql_mode=(SELECT REPLACE(@@sql_mode, 'ONLY_FULL_GROUP_BY',
 			
 			$this->db->order_by("oa.trimestre","ASC");
 			$resultados = $this->db->get();
-			var_dump($this->db->queries);
+			
 			
 			if ($resultados->num_rows() > 0) {
 				return $resultados->result();

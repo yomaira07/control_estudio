@@ -194,7 +194,14 @@
                                                         Último Año que cursó estudios en la ENFMP:
                                                     </td>
                                                     <td style="padding: 12px 15px;">
-                                                        <input type="number" name="ult_anno_cursado" id="ult_anno_cursado" min="2017" max="2026" class="form-control" required style="border-radius: 0px; border: 1px solid #ced4da; width: 40%;" />
+                                                        <input type="number" 
+                                                            name="ult_anno_cursado" 
+                                                            id="ult_anno_cursado" 
+                                                            min="2017" 
+                                                            max="<?php echo date('Y'); ?>" 
+                                                            class="form-control" 
+                                                            required 
+                                                            style="border-radius: 0px; border: 1px solid #ced4da; width: 40%;" />
                                                     </td>
                                                 </tr>
                                                 <tr style="border-bottom: 1px solid #f0f0f0;">
@@ -246,7 +253,7 @@
                                     <!-- Botón de Envío -->
                                     <div class="row mt-3">
                                         <div class="col-md-12 text-center">
-                                            <button type="submit" class="btn btn-primary" style="border-radius: 0px; padding: 10px 40px; font-weight: 500; transition: all 0.3s;">
+                                            <button type="submit" class="btn btn-primary" style="border-radius: 10px; padding: 10px 40px; font-weight: 500; transition: all 0.3s;">
                                                 <i class="fas fa-save mr-2"></i>
                                                 Registrar Trámite
                                             </button>
@@ -377,31 +384,39 @@
                                                     endif;
                                                     echo "<br>";
                                                 endif; ?>
-                                            </td>
-                                            <td style="padding: 10px 15px; text-align: center;">
-                                                <?php if($solicitudes->reg_pago == 0 and $solicitudes->id_tramite == 16): ?>
-                                                    <div>
-                                                        <a href="<?php echo base_url(); ?>dashboard09/registro_pago/<?php echo $solicitudes->id_solicitud . '/' . $solicitudes->id_tipo_tramite; ?>">
-                                                            <img src="<?php echo base_url(); ?>/assets/img/dinero.png" style="width:45px; height:45px;" title="Registrar Pago de arancel"> Pagar
-                                                        </a>
-                                                    </div>
-                                                <?php endif; ?>
-                                                <?php if($solicitudes->rev_academica == 0 and $solicitudes->id_tramite == 16): ?>
-                                                    <div>
-                                                        <a href="<?php echo base_url(); ?>dashboard09/edit_reincorporacion/<?php echo $solicitudes->id_solicitud . '/' . $solicitudes->id_tipo_tramite; ?>">
-                                                            <img src="<?php echo base_url(); ?>/assets/img/icons8-Edit.png" style="width:45px; height:45px;" title="Editar Carta Solicitud de Reincorporación"> Editar Carta
-                                                        </a>
-                                                    </div>
-                                                <?php endif; ?>
-                                                <hr>
-                                                <?php if($solicitudes->requisitos == 1 and $solicitudes->id_tramite == 16 and $solicitudes->reg_pago == 1): ?>
-                                                    <div>
-                                                        <a href="<?php echo base_url(); ?>assets/tramites/reincorporaciones/solicitud/<?php echo $solicitudes->id_usuario . '_' . $solicitudes->id_programa . '_solicitud.pdf'; ?>" target="_new">
-                                                            <img src="<?php echo base_url(); ?>/assets/img/pdf.png" style="width:35px; height:35px;" title="Ver Carta de Solicitud"> Solicitud
-                                                        </a>
-                                                    </div>
-                                                <?php endif; ?>
-                                            </td>
+                                                </td>
+                                                <td style="padding: 10px 15px; text-align: center;">
+        <?php if($solicitudes->reg_pago == 0 and $solicitudes->id_tramite == 16): ?>
+            <div style="margin-bottom: 8px;">
+                <a href="<?php echo base_url(); ?>dashboard09/registro_pago/<?php echo $solicitudes->id_solicitud . '/' . $solicitudes->id_tipo_tramite; ?>" 
+                class="btn" 
+                style="border-radius: 6px; padding: 5px 14px; background: #28a745; color: white; font-size: 0.75rem; font-weight: 500; display: inline-block; width: 100%; transition: all 0.25s ease; border: none; box-shadow: 0 2px 6px rgba(40, 167, 69, 0.3);">
+                    <i class="fas fa-money-bill-wave mr-1"></i> Pagar
+                </a>
+            </div>
+        <?php endif; ?>
+        
+        <?php if($solicitudes->rev_academica == 0 and $solicitudes->id_tramite == 16): ?>
+            <div style="margin-bottom: 8px;">
+                <a href="<?php echo base_url(); ?>dashboard09/edit_reincorporacion/<?php echo $solicitudes->id_solicitud . '/' . $solicitudes->id_tipo_tramite; ?>" 
+                class="btn" 
+                style="border-radius: 6px; padding: 5px 14px; background: #003366; color: white; font-size: 0.75rem; font-weight: 500; display: inline-block; width: 100%; transition: all 0.25s ease; border: none; box-shadow: 0 2px 6px rgba(0, 51, 102, 0.3);">
+                    <i class="fas fa-edit mr-1"></i> Editar Carta
+                </a>
+            </div>
+        <?php endif; ?>
+        
+        <?php if($solicitudes->requisitos == 1 and $solicitudes->id_tramite == 16 and $solicitudes->reg_pago == 1): ?>
+            <div style="margin-bottom: 8px;">
+                <a href="<?php echo base_url(); ?>assets/tramites/reincorporaciones/solicitud/<?php echo $solicitudes->id_usuario . '_' . $solicitudes->id_programa . '_solicitud.pdf'; ?>" 
+                target="_blank" 
+                class="btn" 
+                style="border-radius: 6px; padding: 5px 14px; background: #17a2b8; color: white; font-size: 0.75rem; font-weight: 500; display: inline-block; width: 100%; transition: all 0.25s ease; border: none; box-shadow: 0 2px 6px rgba(23, 162, 184, 0.3);">
+                    <i class="fas fa-file-pdf mr-1"></i> Ver Solicitud
+                </a>
+            </div>
+        <?php endif; ?>
+    </td>
                                         </tr>
                                         <?php endforeach; ?>
                                     <?php else: ?>

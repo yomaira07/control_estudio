@@ -160,7 +160,7 @@
                             <div class="card-body p-3">
                                 <form action="<?php echo base_url(); ?>dashboard09/registrotramiteRetiro_update/1" method="POST" enctype="multipart/form-data">
                                     
-                                    <input type="text" name="id_solicitud" value="<?php echo $solicitud->id; ?>">
+                                    <input type="hidden" name="id_solicitud" value="<?php echo $solicitud->id; ?>">
 
                                     <!-- Datos de la Solicitud -->
                                     <div class="table-responsive">
@@ -313,7 +313,7 @@
                                         </div>
                                     </div>
 
-                                    <input type="text" name="str" id="str">
+                                    <input type="hidden" name="str" id="str">
 
                                     <?php else: ?>
                                         <div class="alert alert-warning" style="border-radius: 8px; border-left: 4px solid #ffc107; text-align: center;">

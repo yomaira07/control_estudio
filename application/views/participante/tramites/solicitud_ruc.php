@@ -14,7 +14,7 @@
                 <div class="col-sm-6">
                     <ol class="breadcrumb float-sm-right" style="background: transparent;">
                         <li class="breadcrumb-item"><a href="<?php echo base_url(); ?>dashboard04/home" style="color: #6c757d;">Inicio</a></li>
-                        <li class="breadcrumb-item"><a href="#" style="color: #6c757d;">Trámites</a></li>
+                        <li class="breadcrumb-item" style="color: #6c757d;">Trámites Administrativos</li>
                         <li class="breadcrumb-item active" style="color: #003366; font-weight: 600;">RUC Aprobadas</li>
                     </ol>
                 </div>
@@ -49,7 +49,7 @@
                                 </div>
                             </div>
                             <div>
-                                <span class="badge" style="font-size: 0.8rem; padding: 5px 16px; border-radius: 20px; font-weight: 500; background: #003366; color: white;">
+                                <span class="badge" style="font-size: 0.8rem; padding: 5px 16px; border-radius: 10px; font-weight: 500; background: #003366; color: white;">
                                     <i class="fas fa-edit mr-1"></i>
                                     Nueva Solicitud
                                 </span>
@@ -217,7 +217,7 @@
                                     <!-- Botón de Envío -->
                                     <div class="row mt-3">
                                         <div class="col-md-12 text-center">
-                                            <button type="submit" class="btn btn-primary" style="border-radius: 0px; padding: 10px 40px; font-weight: 500; transition: all 0.3s;">
+                                            <button type="submit" class="btn btn-primary" style="border-radius: 10px; padding: 10px 40px; font-weight: 500; transition: all 0.3s;">
                                                 <i class="fas fa-save mr-2"></i>
                                                 Registrar Trámite
                                             </button>
@@ -256,7 +256,7 @@
                                 </div>
                             </div>
                             <div>
-                                <span class="badge" style="font-size: 0.8rem; padding: 5px 16px; border-radius: 20px; font-weight: 500; background: #17a2b8; color: white;">
+                                <span class="badge" style="font-size: 0.8rem; padding: 5px 16px; border-radius: 10px; font-weight: 500; background: #17a2b8; color: white;">
                                     <i class="fas fa-history mr-1"></i>
                                     Historial
                                 </span>
@@ -323,19 +323,24 @@
                                                     endif; 
                                                 endif; ?>
                                             </td>
-                                            <td style="padding: 10px 15px; text-align: center;">
-                                                <?php if($solicitudes->reg_pago == 0): ?>
-                                                    <a href="<?php echo base_url(); ?>dashboard09/registro_pago_ruc/<?php echo $solicitudes->id_solicitud . '/' . $solicitudes->id_tipo_tramite; ?>" class="btn" style="border-radius: 0px; padding: 4px 12px; background: #28a745; color: white; font-size: 0.75rem; margin-bottom: 5px; display: inline-block; transition: all 0.2s;">
-                                                        <i class="fas fa-money-bill-wave mr-1"></i> Pagar
-                                                    </a>
-                                                <?php endif; ?>
-                                                <br>
-                                                <hr>
-                                                <?php if($solicitudes->reg_pago == 1 and $solicitudes->rev_academica == 1): ?>
-                                                    <a href="<?php echo base_url(); ?>dashboard09/planilla/<?php echo $solicitudes->id_usuario . '/' . $solicitudes->id_solicitud; ?>" class="btn" style="border-radius: 0px; padding: 4px 12px; background: #17a2b8; color: white; font-size: 0.75rem; display: inline-block; transition: all 0.2s;">
-                                                        <i class="fas fa-print mr-1"></i> Planilla
-                                                    </a>
-                                                <?php endif; ?>
+                                            <td style="padding: 10px 15px; text-align: center; vertical-align: middle;">
+                                                <div class="d-flex flex-column align-items-center" style="gap: 8px;">
+                                                    <?php if($solicitudes->reg_pago == 0): ?>
+                                                        <a href="<?php echo base_url(); ?>dashboard09/registro_pago/<?php echo $solicitudes->id_solicitud . '/' . $solicitudes->id_tipo_tramite; ?>" 
+                                                        class="btn btn-success btn-sm btn-accion" 
+                                                        style="border-radius: 6px; padding: 6px 14px; font-size: 0.75rem; font-weight: 600; border: none; box-shadow: 0 2px 8px rgba(40, 167, 69, 0.3); transition: all 0.25s ease; width: 100%; display: inline-flex; align-items: center; justify-content: center;">
+                                                            <i class="fas fa-money-bill-wave mr-2"></i> Pagar
+                                                        </a>
+                                                    <?php endif; ?>
+                                                    
+                                                    <?php if($solicitudes->reg_pago == 1 and $solicitudes->rev_academica == 1): ?>
+                                                        <a href="<?php echo base_url(); ?>dashboard09/planilla/<?php echo $solicitudes->id_usuario . '/' . $solicitudes->id_solicitud; ?>" 
+                                                        class="btn btn-info btn-sm btn-accion" 
+                                                        style="border-radius: 6px; padding: 6px 14px; font-size: 0.75rem; font-weight: 600; border: none; box-shadow: 0 2px 8px rgba(23, 162, 184, 0.3); transition: all 0.25s ease; width: 100%; display: inline-flex; align-items: center; justify-content: center;">
+                                                            <i class="fas fa-print mr-2"></i> Planilla
+                                                        </a>
+                                                    <?php endif; ?>
+                                                </div>
                                             </td>
                                         </tr>
                                         <?php endforeach; ?>

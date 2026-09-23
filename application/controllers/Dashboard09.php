@@ -365,7 +365,9 @@ if($egresado==1 and (DATE('Y-m-d',$fecha_apertura->desde)<=$fecha_hoy and $fecha
 									if( !$this->Solictudtramite_model->VerificarSolicitud($id_usuario,$id_tramite,$id_programa)){
 										if ($this->Solictudtramite_model->save($data)){
 											?>
-												<script> alert ("Solicitud Registrada.");
+												<script> alert ("✅ Solicitud Registrada con Éxito.\n\n" +
+    "📌 Para realizar el pago, diríjase al botón 'PAGAR' ubicado en la solicitud generada.\n\n" +
+    "⚠️ Recuerde cancelar los aranceles del trámite solicitado para completar el proceso.");
 												location.assign("<?php echo base_url(); ?>dashboard09/index/2");   
 												</script>
 											<?php 
@@ -407,7 +409,9 @@ if($egresado==1 and (DATE('Y-m-d',$fecha_apertura->desde)<=$fecha_hoy and $fecha
 												
 														if ($this->Solictudtramite_model->save($data)){
 															?>
-																<script> alert ("Solicitud Registrada.");
+																<script> alert ("    ✅ Solicitud Registrada con Éxito.\n\n" +
+    "📌 Para realizar el pago, diríjase al botón 'PAGAR' ubicado en la solicitud generada.\n\n" +
+    "⚠️ Recuerde cancelar los aranceles del trámite solicitado para completar el proceso.");
 																location.assign("<?php echo base_url(); ?>dashboard09/index/2");   
 																</script>
 															<?php 
@@ -439,8 +443,10 @@ if($egresado==1 and (DATE('Y-m-d',$fecha_apertura->desde)<=$fecha_hoy and $fecha
 						case 22:// constancia de estudio
 						case 24:
 							
+							$programa_inscrito=$this->Materias_preinscrita_model->Materia_alumno($id_usuario,$id_programa);
+							
 							$procesar_constancia=$this->Materias_preinscrita_model->materias_preinscritas_periodo($id_usuario,$periodo->id,$id_programa);
-							if(!$procesar_constancia){
+							if(!$procesar_constancia or empty($programa_inscrito)){
 								?>
 										<script> alert ("NO tiene unidades curriculares inscritas para el programa seleccionado en el período académico vigente.");
 										location.assign("<?php echo base_url(); ?>dashboard09/index/2");   
@@ -450,7 +456,9 @@ if($egresado==1 and (DATE('Y-m-d',$fecha_apertura->desde)<=$fecha_hoy and $fecha
 								if (!$this->Solictudtramite_model->VerificarSolicitud($id_usuario,$id_tramite,$id_programa)){
 									if ($this->Solictudtramite_model->save($data)){
 										?>
-											<script> alert ("Solicitud Registrada.");
+											<script> alert ("✅ Solicitud Registrada con Éxito.\n\n" +
+    "📌 Para realizar el pago, diríjase al botón 'PAGAR' ubicado en la solicitud generada.\n\n" +
+    "⚠️ Recuerde cancelar los aranceles del trámite solicitado para completar el proceso.");
 											location.assign("<?php echo base_url(); ?>dashboard09/index/2");   
 											</script>
 										<?php 
@@ -487,7 +495,9 @@ if($egresado==1 and (DATE('Y-m-d',$fecha_apertura->desde)<=$fecha_hoy and $fecha
 									if( !$this->Solictudtramite_model->VerificarSolicitud($id_usuario,$id_tramite,$id_programa)){
 										if ($this->Solictudtramite_model->save($data)){
 											?>
-												<script> alert ("Solicitud Registrada.");
+												<script> alert ("✅ Solicitud Registrada con Éxito.\n\n" +
+    "📌 Para realizar el pago, diríjase al botón 'PAGAR' ubicado en la solicitud generada.\n\n" +
+    "⚠️ Recuerde cancelar los aranceles del trámite solicitado para completar el proceso.");
 												location.assign("<?php echo base_url(); ?>dashboard09/solicitud_egreso/2");   
 												</script>
 											<?php 
@@ -512,7 +522,9 @@ if($egresado==1 and (DATE('Y-m-d',$fecha_apertura->desde)<=$fecha_hoy and $fecha
 							if (!$this->Solictudtramite_model->VerificarSolicitud($id_usuario,$id_tramite,$id_programa)){
 								if ($this->Solictudtramite_model->save($data)){
 									?>
-										<script> alert ("Solicitud Registrada.");
+										<script> alert ("✅ Solicitud Registrada con Éxito.\n\n" +
+    "📌 Para realizar el pago, diríjase al botón 'PAGAR' ubicado en la solicitud generada.\n\n" +
+    "⚠️ Recuerde cancelar los aranceles del trámite solicitado para completar el proceso.");
 										location.assign("<?php echo base_url(); ?>dashboard09/index/2");   
 										</script>
 									<?php 
@@ -1226,7 +1238,9 @@ if ($mensaje=="") {
 				if ($this->Solictudtramite_model->save($data)){
 					?>
 					
-						<script> alert ("Solicitud Registrada.");
+						<script> alert ("✅ Solicitud Registrada con Éxito.\n\n" +
+    "📌 Para realizar el pago, diríjase al botón 'PAGAR' ubicado en la solicitud generada.\n\n" +
+    "⚠️ Recuerde cancelar los aranceles del trámite solicitado para completar el proceso.");
 						location.assign("<?php echo base_url(); ?>dashboard09/solicitud_ruc/2");   
 						</script>
 					<?php 
@@ -1312,7 +1326,9 @@ if ($mensaje=="") {
 							if ($this->Solictudtramite_model->save($data)){
 							?>
 							
-								<script> alert ("Solicitud Registrada.");
+								<script> alert ("✅ Solicitud Registrada con Éxito.\n\n" +
+    "📌 Para realizar el pago, diríjase al botón 'PAGAR' ubicado en la solicitud generada.\n\n" +
+    "⚠️ Recuerde cancelar los aranceles del trámite solicitado para completar el proceso.");
 								location.assign("<?php echo base_url(); ?>dashboard09/solicitud_egreso/2");   
 								</script>
 							<?php 
@@ -1371,7 +1387,9 @@ public function registrotramiteReincorporacion_store($id){
 				if ($this->Solictudtramite_model->save($data)){
 					?>
 					
-						<script> alert ("Solicitud Registrada con exito.");
+						<script> alert ("✅ Solicitud Registrada con Éxito.\n\n" +
+    "📌 Para realizar el pago, diríjase al botón 'PAGAR' ubicado en la solicitud generada.\n\n" +
+    "⚠️ Recuerde cancelar los aranceles del trámite solicitado para completar el proceso.");
 						location.assign("<?php echo base_url(); ?>dashboard09/solicitud_reincorporacion/2");   
 						</script>
 					<?php 
@@ -3588,7 +3606,7 @@ $mpdf->SetProtection(array('copy','print'), '', 't3n0l0g143n7m9');
 			'combotramite'=> $this->Tramites_model->getListaTramites(2),			
 			);
 
-		var_dump($data);
+	
 		$this->load->view('layouts/header');
 		$this->load->view('layouts/sidebar_tramites');
 
@@ -3923,31 +3941,46 @@ $this->load->view('layouts/footer');
 }
 public function get_unidades_retiro($id_solicitud) {
     // Forzar respuesta JSON
-    header('Content-Type: application/json');
+    $this->output->set_content_type('application/json');
+    
+    log_message('debug', '=== get_unidades_retiro() === id_solicitud=' . $id_solicitud);
     
     if (empty($id_solicitud)) {
-        echo json_encode(['success' => false, 'message' => 'ID de solicitud no proporcionado.']);
+        log_message('error', 'get_unidades_retiro: ID vacío');
+        $this->output->set_output(json_encode([
+            'success' => false,
+            'message' => 'ID de solicitud no proporcionado.'
+        ]));
         return;
     }
     
-    // Primero obtener el período de la solicitud
+    // 1. Obtener datos de la solicitud
     $this->db->select("st.periodo_solicitud_retiro, st.id_usuario, st.id_programa");
     $this->db->from("solicitud_tramite st");
-    $this->db->where("st.id", $id_solicitud); // CAMBIADO: id_solicitud en lugar de id
+    $this->db->where("st.id", $id_solicitud);
     $query_solicitud = $this->db->get();
     $solicitud = $query_solicitud->row();
-   
+    
+    log_message('debug', 'get_unidades_retiro: solicitud encontrada=' . ($solicitud ? 'SI' : 'NO'));
+    
     if (empty($solicitud)) {
-        echo json_encode(['success' => false, 'message' => 'No se encontró la solicitud con ID: ' . $id_solicitud]);
+        $this->output->set_output(json_encode([
+            'success' => false,
+            'message' => 'No se encontró la solicitud con ID: ' . $id_solicitud
+        ]));
         return;
     }
     
-    $id_periodo = $solicitud->periodo_solicitud_retiro;
-    $id_usuario = $solicitud->id_usuario;
+    $id_periodo  = $solicitud->periodo_solicitud_retiro;
+    $id_usuario  = $solicitud->id_usuario;
     $id_programa = $solicitud->id_programa;
     
-   // Obtener las materias con retiro = 1 para este período y usuario
-    $this->db->select("mp.id, mp.id_oferta_academica, mp.retiro, oa.trimestre, pen.codigo, pen.nombre as unidad_curricular, oa.unidades_creditos as uc");
+    // 2. Obtener las materias con retiro = 1 para este período y usuario
+    $this->db->select("mp.id, mp.id_oferta_academica, mp.retiro, 
+                       oa.trimestre, 
+                       pen.codigo, 
+                       pen.nombre as unidad_curricular, 
+                       oa.unidades_creditos as uc");
     $this->db->from("materias_preinscritas mp");
     $this->db->join("oferta_academica oa", "mp.id_oferta_academica = oa.id");
     $this->db->join("pensum pen", "oa.id_pensum = pen.id");
@@ -3966,33 +3999,41 @@ public function get_unidades_retiro($id_solicitud) {
     
     $query = $this->db->get();
     $resultados = $query->result();
-   
-    // Obtener información adicional de la solicitud
+    
+    log_message('debug', 'get_unidades_retiro: materias encontradas=' . count($resultados));
+    log_message('debug', 'get_unidades_retiro: last_query=' . $this->db->last_query());
+    
+    // 3. Obtener información adicional (trámite, programa, período)
     $this->db->select("t.nombre as tramite, p.nombre as programa, pe.nombre as periodo");
     $this->db->from("solicitud_tramite st");
     $this->db->join("tramites t", "st.id_tramite = t.id");
     $this->db->join("programa p", "st.id_programa = p.id");
     $this->db->join("periodo pe", "st.periodo_solicitud_retiro = pe.id");
-    $this->db->where("st.id", $id_solicitud); 
+    $this->db->where("st.id", $id_solicitud);
     $query_info = $this->db->get();
-
+    
     $info = $query_info->row();
-
-    // Calcular total de UC
+    
+    // 4. Calcular total de UC
     $total_uc = 0;
     if (!empty($resultados)) {
         foreach ($resultados as $item) {
             $total_uc += floatval($item->uc);
         }
     }
-      
-    echo json_encode([
-        'success' => true,
-        'data' => $resultados,
-        'info' => $info,
-        'fecha' => date('d/m/Y H:i'),
+    
+    // 5. Devolver JSON
+    $response = [
+        'success'  => true,
+        'data'     => $resultados,
+        'info'     => $info,
+        'fecha'    => date('d/m/Y H:i'),
         'total_uc' => $total_uc
-    ]);
+    ];
+    
+    log_message('debug', 'get_unidades_retiro: response OK. total_uc=' . $total_uc . ' | registros=' . count($resultados));
+    
+    $this->output->set_output(json_encode($response));
 }
 
 }
