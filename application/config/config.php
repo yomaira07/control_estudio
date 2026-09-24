@@ -74,6 +74,11 @@ if (isset($_SERVER['HTTP_HOST']) && preg_match('/^[a-zA-Z0-9\.\-:]+$/', $_SERVER
 $base_path = '/control_estudio/';
 
 $config['base_url'] = $protocol . $host . $base_path;
+<<<<<<< HEAD
+=======
+
+
+>>>>>>> develop
 /*
 |--------------------------------------------------------------------------
 | Index File
