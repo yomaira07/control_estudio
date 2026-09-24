@@ -26,12 +26,15 @@ class Pagos extends CI_Controller {
         $this->load->model('Exonerados_model');
         $this->load->model('Programa_model');
         $this->load->model('Tiempo_preinscripcion_model');
+         $this->load->model('Usuarios_model');
+
         $this->load->model("Solictudtramite_model");
         $this->load->model("Tramites_model");
         $this->load->model('Logs_pago_bdv_model'); // ✅ NUEVO
         
         // Cargar librería BDV
         require_once(APPPATH . 'libraries/ipg2-bdv.php');
+        $this->load->library('tasa_bcv');
         
         // Credenciales BDV desde configuración
         $this->bdv_afiliado = $this->config->item('bdv_afiliado');
@@ -82,7 +85,9 @@ class Pagos extends CI_Controller {
         $id_estudiante = $alumno->id;
         
         // Obtener el total a pagar y uc calculados en el form anterior
-        $total_final = $this->input->post('total_final');
+        $monto_usd = $this->input->post('total_final'); //expresados en dolares ameicanos
+        $total_final= $this->tasa_bcv->calcular_monto_ves($monto_usd);
+
         if ($total_final <= 0) {
             $this->session->set_flashdata('error', 'El monto a pagar debe ser mayor a 0.');
             redirect(base_url() . 'dashboard04/registro_pago/' . $id_usuario);
@@ -149,6 +154,7 @@ class Pagos extends CI_Controller {
                 //    ÚNICAMENTE si el pago es exitoso.
                 $this->session->set_userdata(array(
                     'pago_bdv_token'         => $response->paymentId,
+                    'pago_bdv_monto_usd'     => $monto_usd,  
                     'pago_bdv_monto'         => $total_final,
                     'pago_bdv_referencia'    => $referencia,
                     'pago_bdv_periodo'       => $periodo->id,
@@ -189,6 +195,7 @@ class Pagos extends CI_Controller {
             redirect(base_url() . 'dashboard04/registro_pago/' . $id_usuario);
         }
     }
+
 
     // ================================================================
     // INICIAR PAGO aranceles de trámites administrativos
@@ -231,7 +238,9 @@ class Pagos extends CI_Controller {
         $id_estudiante = $alumno->id;
         
         // Obtener el total a pagar
-        $total_final = $this->input->post('total_final');
+        $monto_usdt = $this->input->post('total_final'); //expresados en dolares ameicanos
+        $total_final= $this->tasa_bcv->calcular_monto_ves($monto_usdt);
+
         if ($total_final <= 0) {
             $this->session->set_flashdata('error', 'El monto a pagar debe ser mayor a 0.');
             redirect(base_url() . 'dashboard09/index/2');
@@ -274,6 +283,7 @@ class Pagos extends CI_Controller {
                 'urlToReturn' => $Payment->urlToReturn,
                 'tramite'     => $tramite,
                 'id_solicitud'=> $id_solicitud_tramite,
+                'monto_usdt'  => $monto_usdt
             );
             
             log_message('debug', '=== BDV iniciar_tramite_adm() Payment ===' . print_r($request_data, true));
@@ -300,6 +310,7 @@ class Pagos extends CI_Controller {
                 $this->session->set_userdata(array(
                     'pago_bdv_token'         => $response->paymentId,
                     'pago_bdv_monto'         => $total_final,
+                    'pago_bdv_monto_usd'     => $monto_usd,  
                     'pago_bdv_referencia'    => $referencia,
                     'pago_bdv_periodo'       => $periodo->id,
                     'pago_bdv_tipo'          => $tipo_pago,       // 1 = trámite
@@ -331,6 +342,7 @@ class Pagos extends CI_Controller {
                     'tramite'      => isset($tramite) ? $tramite : null,
                     'id_solicitud' => isset($id_solicitud_tramite) ? $id_solicitud_tramite : null,
                     'total_final'  => isset($total_final) ? $total_final : null,
+                    'monto_usdt'   => isset($monto_usdt) ? $monto_usdt : null
                 ),
                 array(
                     'error' => $e->getMessage(),
@@ -352,6 +364,7 @@ class Pagos extends CI_Controller {
     public function confirmacion() {
         $id_usuario = $this->session->userdata('id');
         $referencia = $this->input->get('ref');
+
         
         // Token: URL (?token= o ?ID=) o sesión
         $paymentToken = $this->input->get('token');
@@ -374,6 +387,7 @@ class Pagos extends CI_Controller {
         $concepto_sesion      = $this->session->userdata('pago_bdv_concepto');
         $id_solicitud_sesion  = $this->session->userdata('pago_bdv_id_solicitud');
         $monto_sesion         = $this->session->userdata('pago_bdv_monto');
+        $monto_usd_sesion     = $this->session->userdata('pago_bdv_monto_usd'); 
         
         // ✅ 2. Buscar registro existente
         $registro = null;
@@ -466,7 +480,8 @@ class Pagos extends CI_Controller {
                         $referencia,
                         $id_estudiante_sesion,
                         $tipo_pago_sesion,
-                        $concepto_sesion
+                        $concepto_sesion,
+                        $monto_usd_sesion
                     );
                     
                     log_message('debug', 'confirmacion: registrar_pago_pendiente result=' . var_export($registrado, true));
@@ -841,7 +856,7 @@ class Pagos extends CI_Controller {
      * Revisar que el nombre 'id_solicitud_tramite' coincida con la columna real
      * de tu tabla (verificar con DESCRIBE registro_pago;).
      */
-    private function registrar_pago_pendiente($id_solicitud_tramite, $id_usuario, $id_periodo, $response, $total_final, $total_uc, $referencia, $id_estudiante, $tipo_pago, $concepto) {
+    private function registrar_pago_pendiente($id_solicitud_tramite, $id_usuario, $id_periodo, $response, $total_final, $total_uc, $referencia, $id_estudiante, $tipo_pago, $concepto,$monto_usdt) {
 
         if (empty($id_estudiante)) {
             $id_estudiante = $id_usuario;
@@ -860,7 +875,7 @@ class Pagos extends CI_Controller {
             'id_usuario'           => (int) $id_usuario,
             'id_periodo'           => (int) $id_periodo,
             'id_estado_estudio'    => 24,
-            'monto_apagar'         => (string) $total_final,
+            'monto_apagar'         => (string) $monto_usdt,
             'monto_depositado'     => (string) $total_final,
             'nro_referencia'       => $referencia,
             'fecha_transferencia'  => date('Y-m-d'),
@@ -872,7 +887,7 @@ class Pagos extends CI_Controller {
             'id_banco'             => 1,
             'cedula'               => substr((string) $this->session->userdata('username'), 0, 10),
             'id_estudiante'        => (int) $id_estudiante,
-            'postgrado'            => 'SOLICITUD DE TRAMITE '.substr((string) $concepto, 0, 100),
+            'postgrado'            => (string) $concepto,
             'token_bdv'            => substr((string) $token_bdv, 0, 100),
             'transaction_id_bdv'   => '',
             'metodo_pago'          => 'bdv',
@@ -1076,32 +1091,286 @@ class Pagos extends CI_Controller {
         return $result;
     }
 
-    /**
-     * Obtiene el nombre del postgrado
-     */
-    private function obtener_nombre_postgrado($id_usuario, $id_periodo) {
-        $programas = $this->Materias_preinscrita_model->lista_programas_preinscritas($id_usuario, $id_periodo);
-        
-        if (!empty($programas) && is_array($programas)) {
-            $nombres = array();
-            foreach ($programas as $p) {
-                if (isset($p->programa) && !empty($p->programa)) {
-                    $nombres[] = $p->programa;
-                } elseif (isset($p->nombre_programa) && !empty($p->nombre_programa)) {
-                    $nombres[] = $p->nombre_programa;
-                } elseif (isset($p->nombre) && !empty($p->nombre)) {
-                    $nombres[] = $p->nombre;
-                }
+    /*/* Obtiene el nombre del posgrado incluyendo los conceptos de aranceles
+ * que el estudiante está pagando en el período indicado.
+ *
+ * @param int $id_usuario
+ * @param int $id_periodo
+ * @return string
+ */
+private function obtener_nombre_postgrado($id_usuario, $id_periodo) {
+    log_message('debug', '[obtener_nombre_postgrado] INICIO - usuario: ' . $id_usuario
+        . ' | periodo: ' . $id_periodo);
+
+    // 1. Obtener programas preinscritos
+    $programas = $this->Materias_preinscrita_model
+        ->lista_programas_preinscritas_trimestre($id_usuario, $id_periodo);
+
+    $nombres = array();
+
+    if (!empty($programas) && is_array($programas)) {
+        foreach ($programas as $p) {
+            $nombre_prog = null;
+            if (isset($p->programa) && !empty($p->programa)) {
+                $nombre_prog = $p->programa;
+            } elseif (isset($p->nombre_programa) && !empty($p->nombre_programa)) {
+                $nombre_prog = $p->nombre_programa;
+            } elseif (isset($p->nombre) && !empty($p->nombre)) {
+                $nombre_prog = $p->nombre;
             }
-            $nombres = array_unique($nombres);
-            if (!empty($nombres)) {
-                return implode(', ', $nombres);
+
+            if ($nombre_prog !== null) {
+                $uc = isset($p->unidades_creditos) ? $p->unidades_creditos : 0;
+                $trimestre = isset($p->trimestre) ? $p->trimestre : '';
+                $nombres[] = '(uc: ' . $uc . ') ' . $nombre_prog . ' - ' . $trimestre;
             }
         }
-        
-        return 'Posgrado FENFMP';
+        $nombres = array_unique($nombres);
     }
 
+    // 2. Obtener conceptos de aranceles aplicables
+    $conceptos = $this->_obtener_conceptos_aranceles_pago($id_usuario, $id_periodo);
+
+    if (!empty($conceptos)) {
+        $nombres[] = 'Conceptos: ' . implode(' + ', $conceptos);
+    }
+
+    $resultado = !empty($nombres) ? implode(', ', $nombres) : 'Posgrado FENFMP';
+
+    log_message('info', '[obtener_nombre_postgrado] OK - Resultado: ' . $resultado);
+
+    return $resultado;
+}
+
+/**
+ * Determina qué conceptos de aranceles debe pagar el estudiante.
+ * Reutiliza los modelos Materias_preinscrita_model, Reincorporacion_model
+ * y Tiempo_preinscripcion_model.
+ *
+ * @param int $id_usuario
+ * @param int $id_periodo
+ * @return array Lista de conceptos: ['Inscripción', 'Permanencia', 'Fuera de Lapso']
+ */
+private function _obtener_conceptos_aranceles_pago($id_usuario, $id_periodo) {
+    log_message('debug', '[_obtener_conceptos_aranceles_pago] INICIO - usuario: ' . $id_usuario
+        . ' | periodo: ' . $id_periodo);
+
+    $conceptos = array();
+
+    // --- Inscripción ---
+    if ($this->_aplica_arancel_inscripcion($id_usuario, $id_periodo)) {
+        $conceptos[] = 'Inscripción';
+    }
+
+    // --- Permanencia ---
+    if ($this->_aplica_arancel_permanencia($id_usuario, $id_periodo)) {
+        $conceptos[] = 'Permanencia';
+    }
+
+    // --- Fuera de Lapso (por cada programa) ---
+    if ($this->_aplica_arancel_fuera_lapso($id_usuario, $id_periodo)) {
+        $cantidad = $this->_contar_programas_para_fuera_lapso($id_usuario, $id_periodo);
+
+        if ($cantidad > 0) {
+            $etiqueta = 'Fuera de Lapso';
+            if ($cantidad > 1) {
+                $etiqueta .= ' (x' . $cantidad . ' programas)';
+            }
+            $conceptos[] = $etiqueta;
+
+            log_message('debug', '[_obtener_conceptos_aranceles_pago] Fuera de Lapso aplica en '
+                . $cantidad . ' programa(s).');
+        } else {
+            log_message('debug', '[_obtener_conceptos_aranceles_pago] Fuera de Lapso aplica pero sin programas (0).');
+        }
+    }
+
+    log_message('info', '[_obtener_conceptos_aranceles_pago] FIN - Conceptos: ['
+        . implode(', ', $conceptos) . ']');
+
+    return $conceptos;
+}
+
+/**
+ * Determina si aplica el arancel de inscripción.
+ * Regla: el estudiante tiene al menos un programa preinscrito en el período.
+ *
+ * @param int $id_usuario
+ * @param int $id_periodo
+ * @return bool
+ */
+private function _aplica_arancel_inscripcion($id_usuario, $id_periodo) {
+    log_message('debug', '[_aplica_arancel_inscripcion] Verificando usuario=' . $id_usuario
+        . ' | periodo=' . $id_periodo);
+
+    $programas = $this->Materias_preinscrita_model
+        ->lista_programas_preinscritas_trimestre($id_usuario, $id_periodo);
+
+    if (empty($programas) || !is_array($programas)) {
+        log_message('debug', '[_aplica_arancel_inscripcion] No hay programas preinscritos.');
+        return false;
+    }
+
+    // Contar programas válidos (misma lógica que la vista)
+    $total_programas = 0;
+    $hay_especial = false;
+
+    foreach ($programas as $p) {
+        if (isset($p->id_programa) && $p->id_programa <> 27 && $p->id_programa <> 28) {
+            $total_programas++;
+        } else {
+            $hay_especial = true;
+        }
+    }
+
+    $aplica = ($total_programas > 0 || $hay_especial);
+
+    log_message('debug', '[_aplica_arancel_inscripcion] Resultado: '
+        . ($aplica ? 'SÍ' : 'NO') . ' (programas: ' . $total_programas
+        . ' | especiales: ' . ($hay_especial ? 'sí' : 'no') . ')');
+
+    return $aplica;
+}
+
+/**
+ * Determina si aplica el arancel de permanencia.
+ * Regla: existe al menos una reincorporación registrada para el estudiante
+ *        en el período consultado (Reincorporaciones_model::buscar_reincorporacion).
+ *
+ * @param int $id_usuario
+ * @param int $id_periodo
+ * @return bool
+ */
+private function _aplica_arancel_permanencia($id_usuario, $id_periodo) {
+    log_message('debug', '[_aplica_arancel_permanencia] Verificando usuario=' . $id_usuario
+        . ' | periodo=' . $id_periodo);
+
+   
+    $reincorporaciones = $this->Reincorporaciones_model
+        ->buscar_reincorporacion($id_usuario, $id_periodo);
+
+    // El modelo devuelve 0 si no hay registros, o un array de objetos si hay
+    $aplica = (!empty($reincorporaciones) && is_array($reincorporaciones));
+
+    $total = is_array($reincorporaciones) ? count($reincorporaciones) : 0;
+
+    log_message('debug', '[_aplica_arancel_permanencia] Resultado: '
+        . ($aplica ? 'SÍ' : 'NO') . ' (reincorporaciones: ' . $total . ')');
+
+    return $aplica;
+}
+
+/**
+ * Determina si aplica el arancel fuera de lapso.
+ *
+ * Reglas:
+ *   - Aplica si el lapso activo tiene tipo_lapso = 2,
+ *     O si el id_tiempo_preinscripcion del usuario es distinto de 73.
+ *   - Se cobra POR CADA PROGRAMA en el que el estudiante está inscrito
+ *     (excluyendo programas 27 y 28, que son especiales).
+ *
+ * @param int $id_usuario
+ * @param int $id_periodo
+ * @return bool
+ */
+private function _aplica_arancel_fuera_lapso($id_usuario, $id_periodo) {
+    log_message('debug', '[_aplica_arancel_fuera_lapso] INICIO - usuario=' . $id_usuario
+        . ' | periodo=' . $id_periodo);
+
+    $aplica_por_lapso = false;
+    $aplica_por_tiempo = false;
+
+    // ============================================================
+    // CONDICIÓN 1: tipo_lapso == 2 (consultando directo en BD)
+    // ============================================================
+    $lapso = $this->Tiempo_preinscripcion_model->gettiempo_preinscripcion();
+    
+
+    if (!empty($lapso)) {
+        log_message('debug', '[_aplica_arancel_fuera_lapso] Lapso encontrado: '
+            . print_r($lapso, true));
+
+        $tipo_lapso = null;
+        if (isset($lapso->tipo_lapso)) {
+            $tipo_lapso = $lapso->tipo_lapso;
+        } 
+
+        if ($tipo_lapso !== null && (int) $tipo_lapso === 2) {
+            $aplica_por_lapso = true;
+            log_message('debug', '[_aplica_arancel_fuera_lapso] Condición 1 cumplida: tipo_lapso = 2');
+        } else {
+            log_message('debug', '[_aplica_arancel_fuera_lapso] Condición 1 NO cumplida: tipo_lapso = '
+                . var_export($tipo_lapso, true));
+        }
+    } else {
+        log_message('debug', '[_aplica_arancel_fuera_lapso] No se encontró lapso activo para periodo '
+            . $id_periodo);
+    }
+
+    // ============================================================
+    // CONDICIÓN 2: id_tiempo_preinscripcion del usuario != 73
+    // ============================================================
+    $usuario = $this->Usuarios_model->buscar_usuario($id_usuario);
+
+    if (!empty($usuario) && isset($usuario->id_tiempo_preinscripcion)) {
+        $id_tiempo = (int) $usuario->id_tiempo_preinscripcion;
+        log_message('debug', '[_aplica_arancel_fuera_lapso] Usuario id_tiempo_preinscripcion=' . $id_tiempo);
+
+        if ($id_tiempo !== 73) {
+            $aplica_por_tiempo = true;
+            log_message('debug', '[_aplica_arancel_fuera_lapso] Condición 2 cumplida: id_tiempo_preinscripcion = '
+                . $id_tiempo);
+        }
+    } else {
+        log_message('debug', '[_aplica_arancel_fuera_lapso] Usuario sin id_tiempo_preinscripcion. Usuario='
+            . print_r($usuario, true));
+    }
+
+    // ============================================================
+    // RESULTADO FINAL
+    // ============================================================
+    $aplica = ($aplica_por_lapso || $aplica_por_tiempo);
+
+    log_message('info', '[_aplica_arancel_fuera_lapso] FIN - Resultado: '
+        . ($aplica ? 'SÍ' : 'NO')
+        . ' | por_lapso=' . ($aplica_por_lapso ? 'sí' : 'no')
+        . ' | por_tiempo=' . ($aplica_por_tiempo ? 'sí' : 'no'));
+
+    return $aplica;
+}
+
+/**
+ * Cuenta los programas preinscritos del estudiante en el período.
+ * Excluye los programas 27 y 28 (que son líneas especiales y ya
+ * se manejan aparte en la vista).
+ *
+ * @param int $id_usuario
+ * @param int $id_periodo
+ * @return int Cantidad de programas a considerar para el arancel
+ */
+private function _contar_programas_para_fuera_lapso($id_usuario, $id_periodo) {
+    log_message('debug', '[_contar_programas_para_fuera_lapso] INICIO - usuario=' . $id_usuario
+        . ' | periodo=' . $id_periodo);
+
+    $programas = $this->Materias_preinscrita_model
+        ->lista_programas_preinscritas_trimestre($id_usuario, $id_periodo);
+
+    if (empty($programas) || !is_array($programas)) {
+        log_message('debug', '[_contar_programas_para_fuera_lapso] Sin programas.');
+        return 0;
+    }
+
+    $total = 0;
+    foreach ($programas as $p) {
+        // Excluir programas 27 y 28 (líneas especiales)
+        if (isset($p->id_programa) && $p->id_programa <> 27 && $p->id_programa <> 28) {
+            $total++;
+        }
+    }
+
+    log_message('debug', '[_contar_programas_para_fuera_lapso] Total programas válidos: ' . $total);
+    return $total;
+}
     /**
      * Obtiene el nombre del trámite
      * Soporta tanto objeto fila (row()) como array de filas (result())
@@ -1145,6 +1414,7 @@ class Pagos extends CI_Controller {
         $this->session->unset_userdata(array(
             'pago_bdv_token',
             'pago_bdv_monto',
+            'pago_bdv_monto_usd',   
             'pago_bdv_referencia',
             'pago_bdv_periodo',
             'pago_bdv_tipo',

@@ -1917,7 +1917,7 @@ public function inscripcion()
 							</script>
 							<?php 
 					}else{
-						if( $fecha_actual<='2026-03-06'){ //} or $this->session->userdata('tiempo_preinscripcion')==49  ){
+						if( $fecha_actual<='2026-09-31'){ //} or $this->session->userdata('tiempo_preinscripcion')==49  ){
 							$this->load->view('aspirante/inscripcion/list_registro_pago_aspirante',$data);
 						}else{
 							?>

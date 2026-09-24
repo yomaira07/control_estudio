@@ -775,7 +775,7 @@ document.addEventListener('DOMContentLoaded', function() {
             var monto = '<?php echo number_format($total_final, 2, ",", "."); ?>';
             var mensaje = "💳 PAGO CON BANCO DE VENEZUELA\n\n" +
                           "Serás redirigido a la pasarela de pago BDV.\n\n" +
-                          "📌 Monto a pagar: Bs. " + monto + "\n\n" +
+                          "📌 Monto a pagar: Ref. " + monto + "\n\n" +
                           "⚠️ Antes de continuar, asegúrate de:\n" +
                           "✅ Tener saldo suficiente en tu cuenta BDV\n" +
                           "✅ Tener a la mano los datos de tu tarjeta\n" +

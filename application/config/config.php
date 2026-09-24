@@ -26,7 +26,7 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 //$config['base_url'] = 'http://app.enf.edu.ve/control_estudio/';
 //$config['base_url'] = 'http://www.enf.edu.ve/control_estudio';
 //$config['base_url'] = 'http://172.16.38.143/control_estudio/';
-//$config['base_url'] = 'http://localhost/control_estudio_boton';
+$config['base_url'] = 'http://localhost/control_estudio';
 //$config['base_url'] = 'https://agencies-classification-phrases-patch.trycloudflare.com/';
 /*
 |--------------------------------------------------------------------------
@@ -50,6 +50,7 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 | Base Site URL - Detección dinámica
 |--------------------------------------------------------------------------
 */
+<<<<<<< HEAD
 // Detectar protocolo (http/https)
 $protocol = 'http://';
 if (
@@ -58,6 +59,11 @@ if (
     (isset($_SERVER['HTTP_X_FORWARDED_SSL']) && $_SERVER['HTTP_X_FORWARDED_SSL'] === 'on') ||
     (isset($_SERVER['SERVER_PORT']) && $_SERVER['SERVER_PORT'] == 443)
 ) {
+=======
+/*$protocol = 'http://';
+if ((isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') 
+    || (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https')) {
+>>>>>>> main
     $protocol = 'https://';
 }
 
@@ -72,7 +78,7 @@ if (isset($_SERVER['HTTP_HOST']) && preg_match('/^[a-zA-Z0-9\.\-:]+$/', $_SERVER
 // Subcarpeta fija del proyecto
 $base_path = '/control_estudio/';
 
-$config['base_url'] = $protocol . $host . $base_path;
+$config['base_url'] = $protocol . $host . $base_path;*/
 
 
 /*

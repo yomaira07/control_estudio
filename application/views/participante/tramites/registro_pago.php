@@ -136,7 +136,7 @@
                                                         <?php endif; ?>
                                                     </td>
                                                     <td style="padding: 10px 15px; text-align: right; font-size: 0.85rem; font-weight: 600; color: #28a745;">
-                                                        <?php echo number_format($monto_arancel, 2, ',', '.') . ' Bs.'; ?>
+                                                        <?php echo number_format($monto_arancel, 2, ',', '.') . ' Ref.'; ?>
                                                     </td>
                                                 </tr>
                                             <?php endforeach; ?>
@@ -182,7 +182,7 @@
                                                     <i class="fas fa-file-signature text-primary mr-2"></i>Subtotal Trámites
                                                 </td>
                                                 <td style="padding: 10px 15px; text-align: right; font-weight: 500; color: #2c3e50;">
-                                                    <?php echo number_format($total_pagar, 2, ',', '.') . ' Bs.'; ?>
+                                                    <?php echo number_format($total_pagar, 2, ',', '.') . ' Ref.'; ?>
                                                 </td>
                                             </tr>
                                             <?php if ($total_pagar_fuera_lapso > 0): ?>
@@ -191,7 +191,7 @@
                                                     <i class="fas fa-clock text-warning mr-2"></i>Monto por Arancel Fuera de Lapso
                                                 </td>
                                                 <td style="padding: 10px 15px; text-align: right; font-weight: 500; color: #ffc107;">
-                                                    <?php echo number_format($total_pagar_fuera_lapso, 2, ',', '.') . ' Bs.'; ?>
+                                                    <?php echo number_format($total_pagar_fuera_lapso, 2, ',', '.') . ' Ref.'; ?>
                                                 </td>
                                             </tr>
                                             <?php endif; ?>
@@ -201,7 +201,7 @@
                                                     TOTAL A PAGAR
                                                 </td>
                                                 <td style="padding: 12px 15px; text-align: right; font-weight: 700; color: #28a745; font-size: 1.2rem;">
-                                                    <?php echo number_format($total_pagar_gen, 2, ',', '.') . ' Bs.'; ?>
+                                                    <?php echo number_format($total_pagar_gen, 2, ',', '.') . ' Ref.'; ?>
                                                     <br><small style="font-size: 0.7rem; color: #6c757d; font-weight: 400;">
                                                         <i class="fas fa-info-circle mr-1"></i> No se aceptan divisas. El pago debe ser realizado a la tasa de cambio establecida por el BCV correspondiente al día que realiza el registro.
                                                     </small>
@@ -337,7 +337,7 @@ document.addEventListener('DOMContentLoaded', function() {
             
             var mensaje = "💳 PAGO CON BANCO DE VENEZUELA\n\n" +
                           "Serás redirigido a la pasarela de pago BDV.\n\n" +
-                          "📌 Monto a pagar: Bs. " + montoFormateado + "\n\n" +
+                          "📌 Monto a pagar: Ref. " + montoFormateado + "\n\n" +
                           "⚠️ Antes de continuar, asegúrate de:\n" +
                           "✅ Tener saldo suficiente en tu cuenta BDV\n" +
                           "✅ Tener a la mano los datos de tu tarjeta\n" +

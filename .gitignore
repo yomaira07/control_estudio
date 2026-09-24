@@ -12,6 +12,8 @@ application/config/*
 
 composer.lock
 
+application/config/*	
+
 user_guide_src/build/*
 user_guide_src/cilexer/build/*
 user_guide_src/cilexer/dist/*
