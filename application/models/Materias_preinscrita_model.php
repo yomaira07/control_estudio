@@ -64,9 +64,24 @@ public function lista_programas_preinscritas($id_usuario,$periodo){
 		$this->db->join("programa p","oa.id_programa = p.id");
 		$this->db->where('mp.id_usuario', $id_usuario);		
 		$this->db->where('mp.id_periodo', $periodo);	
-		//$this->db->where_in('p.id', $periodo);
+	
 		$this->db->where('mp.status',1);
 		$this->db->group_by('oa.id_programa');
+		$resultados = $this->db->get();
+	//var_dump($this->db->queries);
+		return $resultados->result();
+	}
+public function lista_programas_preinscritas_trimestre($id_usuario,$periodo){
+		$this->db->query("SET sql_mode=(SELECT REPLACE(@@sql_mode, 'ONLY_FULL_GROUP_BY', ''));");	
+		$this->db->select("sum(oa.unidades_creditos) as unidades_creditos,oa.valorpubmp,oa.valorpubgen, oa.id_programa,p.nombre,p.tipo_programa,oa.trimestre");
+		$this->db->from("materias_preinscritas mp");
+		$this->db->join("oferta_academica oa","mp.id_oferta_academica = oa.id");
+		$this->db->join("programa p","oa.id_programa = p.id");
+		$this->db->where('mp.id_usuario', $id_usuario);		
+		$this->db->where('mp.id_periodo', $periodo);	
+	
+		$this->db->where('mp.status',1);
+		$this->db->group_by('oa.id_programa','oa.trimestre');
 		$resultados = $this->db->get();
 	//var_dump($this->db->queries);
 		return $resultados->result();
@@ -79,7 +94,7 @@ public function lista_programas_preinscritas1($id_usuario,$periodo){
 		$this->db->join("programa p","oa.id_programa = p.id");
 		$this->db->where('mp.id_usuario', $id_usuario);		
 		$this->db->where('mp.id_periodo', $periodo);	
-		//$this->db->where_in('p.id', $periodo);
+	
 		$this->db->where('mp.status',1);
 		$this->db->group_by('p.prog_pertenece');
 		$resultados = $this->db->get();
