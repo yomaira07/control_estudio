@@ -50,8 +50,8 @@ $config['base_url'] = 'http://localhost/control_estudio';
 | Base Site URL - Detección dinámica
 |--------------------------------------------------------------------------
 */
-<<<<<<< HEAD
 // Detectar protocolo (http/https)
+
 $protocol = 'http://';
 if (
     (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') ||
@@ -59,11 +59,6 @@ if (
     (isset($_SERVER['HTTP_X_FORWARDED_SSL']) && $_SERVER['HTTP_X_FORWARDED_SSL'] === 'on') ||
     (isset($_SERVER['SERVER_PORT']) && $_SERVER['SERVER_PORT'] == 443)
 ) {
-=======
-/*$protocol = 'http://';
-if ((isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') 
-    || (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https')) {
->>>>>>> main
     $protocol = 'https://';
 }
 
@@ -78,9 +73,7 @@ if (isset($_SERVER['HTTP_HOST']) && preg_match('/^[a-zA-Z0-9\.\-:]+$/', $_SERVER
 // Subcarpeta fija del proyecto
 $base_path = '/control_estudio/';
 
-$config['base_url'] = $protocol . $host . $base_path;*/
-
-
+$config['base_url'] = $protocol . $host . $base_path;
 /*
 |--------------------------------------------------------------------------
 | Index File
