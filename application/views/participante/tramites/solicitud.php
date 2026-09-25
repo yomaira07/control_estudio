@@ -359,9 +359,16 @@
                                                     class="btn btn-success btn-sm" 
                                                     style="border-radius: 6px; padding: 6px 14px; font-size: 0.75rem; font-weight: 600; border: none; box-shadow: 0 2px 8px rgba(40, 167, 69, 0.3); transition: all 0.25s ease; width: 100%; display: inline-flex; align-items: center; justify-content: center;">
                                                         <i class="fas fa-money-bill-wave mr-2"></i> Pagar
+                                                    </a>                                               
+                                                  <?php elseif($solicitudes->reg_pago == 1 and $solicitudes->conciliado == 1 ): ?>
+                                                  
+                                                            <a href="<?php echo base_url(); ?>dashboard09/ver_pago/<?php echo $solicitudes->id_usuario. '/' .$solicitudes->id_solicitud; ?>" 
+                                                    class="btn btn-secondary btn-sm" 
+                                                    style="border-radius: 6px; padding: 6px 14px; font-size: 0.75rem; font-weight: 600; border: none; box-shadow: 0 2px 8px rgba(40, 167, 69, 0.3); transition: all 0.25s ease; width: 100%; display: inline-flex; align-items: center; justify-content: center;">
+                                                        <i class="fas fa-money-bill-wave mr-2"></i> Ver pago realizado
                                                     </a>
-                                                <?php endif; ?>
-                                                
+                                              
+                                                <?php endif; ?> 
                                                 <?php if($solicitudes->reg_pago == 1 and $solicitudes->rev_academica == 1 and $solicitudes->id_tramite <> 16): ?>
                                                     <a href="<?php echo base_url(); ?>dashboard09/planilla/<?php echo $solicitudes->id_usuario . '/' . $solicitudes->id_solicitud; ?>" 
                                                     class="btn btn-info btn-sm" 
@@ -405,7 +412,11 @@
                                                         </p>
                                                     </div>
                                                 <?php endif; ?>
+                                             
                                             </div>
+                                            
+                                          
+                                           
                                         </td>
                                         </tr>
                                         <?php endforeach; ?>

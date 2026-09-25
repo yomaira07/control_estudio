@@ -472,15 +472,19 @@
                                                         style="border-radius: 6px; padding: 6px 14px; font-size: 0.75rem; font-weight: 600; border: none; box-shadow: 0 2px 8px rgba(40, 167, 69, 0.3); transition: all 0.25s ease; width: 100%; display: inline-flex; align-items: center; justify-content: center;">
                                                             <i class="fas fa-money-bill-wave mr-2"></i> Pagar
                                                         </a>
-                                                    <?php elseif($solicitud->reg_pago == 0 && ($this->session->userdata("ruc") == 0)): ?>
-                                                        <span style="background: #dc3545; color: white; border-radius: 6px; padding: 6px 14px; font-size: 0.75rem; font-weight: 600; width: 100%; display: inline-flex; align-items: center; justify-content: center; box-shadow: 0 2px 8px rgba(220, 53, 69, 0.3);">
-                                                            <i class="fas fa-times-circle mr-2"></i> TIEMPO CERRADO
-                                                        </span>
-                                                    <?php endif; ?>
+                                                    <?php elseif($solicitud->reg_pago == 1 and $solicitud->conciliado == 1 ): ?>
+                                                  
+                                                            <a href="<?php echo base_url(); ?>dashboard09/ver_pago/<?php echo $solicitud->id_usuario. '/' .$solicitud->id_solicitud; ?>" 
+                                                    class="btn btn-secondary btn-sm" 
+                                                    style="border-radius: 6px; padding: 6px 14px; font-size: 0.75rem; font-weight: 600; border: none; box-shadow: 0 2px 8px rgba(40, 167, 69, 0.3); transition: all 0.25s ease; width: 100%; display: inline-flex; align-items: center; justify-content: center;">
+                                                        <i class="fas fa-money-bill-wave mr-2"></i> Ver pago realizado
+                                                    </a>
+                                              
+                                                <?php endif; ?> 
                                                     
                                                     <?php if($solicitud->rev_academica == 0): ?>
                                                         <a href="<?php echo base_url(); ?>dashboard09/solicitud_ruc_requisitos_edit/<?php echo $solicitud->id_solicitud; ?>" 
-                                                        class="btn btn-info btn-sm btn-accion" 
+                                                        class="btn btn-default btn-sm btn-accion" 
                                                         style="border-radius: 6px; padding: 6px 14px; font-size: 0.75rem; font-weight: 600; border: none; box-shadow: 0 2px 8px rgba(23, 162, 184, 0.3); transition: all 0.25s ease; width: 100%; display: inline-flex; align-items: center; justify-content: center;">
                                                             <i class="fas fa-eye mr-2"></i> Ver Docs
                                                         </a>
@@ -488,7 +492,7 @@
                                                     
                                                     <?php if($solicitud->reg_pago == 1 && $solicitud->rev_academica == 1): ?>
                                                         <a href="<?php echo base_url(); ?>dashboard09/planilla/<?php echo $solicitud->id_usuario . '/' . $solicitud->id_solicitud; ?>" 
-                                                        class="btn btn-secondary btn-sm btn-accion" 
+                                                        class="btn btn-info btn-sm btn-accion" 
                                                         style="border-radius: 6px; padding: 6px 14px; font-size: 0.75rem; font-weight: 600; border: none; box-shadow: 0 2px 8px rgba(108, 117, 125, 0.3); transition: all 0.25s ease; width: 100%; display: inline-flex; align-items: center; justify-content: center;">
                                                             <i class="fas fa-print mr-2"></i> Planilla
                                                         </a>

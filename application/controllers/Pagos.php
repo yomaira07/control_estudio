@@ -26,7 +26,7 @@ class Pagos extends CI_Controller {
         $this->load->model('Exonerados_model');
         $this->load->model('Programa_model');
         $this->load->model('Tiempo_preinscripcion_model');
-         $this->load->model('Usuarios_model');
+        $this->load->model('Usuarios_model');
 
         $this->load->model("Solictudtramite_model");
         $this->load->model("Tramites_model");
@@ -57,7 +57,24 @@ class Pagos extends CI_Controller {
         $id_usuario = $this->session->userdata('id');
         $periodo    = $this->Periodo_model->PeriodoActivo();
         $total_uc   = $this->input->post('total_uc');
-      
+        $tipo_documento = $this->input->post('tipo_documento');  // V, E, J, G, P
+        $cedula_rif     = $this->input->post('cedula_rif');      // Solo números
+        $documento_pasarela = $tipo_documento . $cedula_rif;     // Ej: V12345678
+
+        // ✅ VALIDAR cédula/RIF del depositante (NUNCA puede llegar vacía)
+        $validacion_doc = $this->validar_documento_depositante($tipo_documento, $cedula_rif);
+        if (!$validacion_doc['ok']) {
+        log_message('error', 'iniciar(): documento depositante inválido -> ' . $validacion_doc['mensaje']);
+        $this->session->set_flashdata('error', $validacion_doc['mensaje']);
+        redirect(base_url() . 'dashboard04/registro_pago/' . $id_usuario);
+        return;
+        }
+
+        // ✅ Documento ya validado y normalizado
+        $documento_pasarela = $validacion_doc['documento'];   // Ej: V12345678
+        $tipo_documento     = $validacion_doc['tipo'];        // V
+        $cedula_rif         = $validacion_doc['numero'];      // 12345678
+        
         if (!$periodo) {
             $this->session->set_flashdata('error', 'No hay período académico activo.');
             redirect(base_url() . 'dashboard04/inscripcion');
@@ -76,24 +93,34 @@ class Pagos extends CI_Controller {
             redirect(base_url() . 'dashboard04/proceso');
         }
         
-        // ✅ Obtener datos del estudiante (validar ANTES de usar ->id)
+        // ✅ Obtener datos del estudiante
         $alumno = $this->Alumno_model->getListaAlumno($id_usuario);
         if (!$alumno || empty($alumno->id)) {
             $this->session->set_flashdata('error', 'No se encontraron datos del estudiante.');
             redirect(base_url() . 'dashboard04/home');
         }
-        $id_estudiante = $alumno->id;
+        
+        // ✅ CORRECCIÓN CLAVE:
+        // - $id_estudiante       → ID REAL del alumno (para la FK id_estudiante)
+        // - $cedula_depositante  → Cédula/RIF del input (para la columna `cedula`)
+        $id_estudiante      = $alumno->id;
+        $cedula_depositante = $documento_pasarela;
+
+
         
         // Obtener el total a pagar y uc calculados en el form anterior
-        $monto_usd = $this->input->post('total_final'); //expresados en dolares ameicanos
-        $total_final= $this->tasa_bcv->calcular_monto_ves($monto_usd);
+        $monto_usd = $this->input->post('total_final'); // expresados en dólares americanos
+        $total_final = $this->tasa_bcv->calcular_monto_ves($monto_usd);
 
         if ($total_final <= 0) {
             $this->session->set_flashdata('error', 'El monto a pagar debe ser mayor a 0.');
             redirect(base_url() . 'dashboard04/registro_pago/' . $id_usuario);
         }
 
-        log_message('debug', 'iniciar(): total=' . $total_final . ' | uc=' . $total_uc);
+        log_message('debug', 'iniciar(): total=' . $total_final . ' | uc=' . $total_uc 
+        . ' | id_estudiante=' . $id_estudiante 
+        . ' | cedula_depositante=' . $cedula_depositante);
+
 
         $concepto  = $this->obtener_nombre_postgrado($id_usuario, $periodo->id);
         $tipo_pago = 0;
@@ -104,8 +131,8 @@ class Pagos extends CI_Controller {
             $referencia = 'REF' . $id_usuario . '_' . date('YmdHis');
             
             $Payment = new IpgBdvPaymentRequest();
-            $Payment->idLetter    = $alumno->nacionalidad ?: 'V';
-            $Payment->idNumber    = '32873615';
+            $Payment->idLetter    = $tipo_documento ?: 'V';
+            $Payment->idNumber    = $cedula_rif;
             $Payment->amount      = (float) $total_final;
             $Payment->currency    = 1;
             $Payment->reference   = $referencia;
@@ -150,7 +177,7 @@ class Pagos extends CI_Controller {
             );
             
             if ($response->success == true) {
-                // ✅ SOLO guardar en sesión. El registro en BD se creará en confirmacion()
+                // ✅ Guardar en sesión. El registro en BD se creará en confirmacion()
                 //    ÚNICAMENTE si el pago es exitoso.
                 $this->session->set_userdata(array(
                     'pago_bdv_token'         => $response->paymentId,
@@ -159,13 +186,16 @@ class Pagos extends CI_Controller {
                     'pago_bdv_referencia'    => $referencia,
                     'pago_bdv_periodo'       => $periodo->id,
                     'pago_bdv_tipo'          => $tipo_pago,       // 0 = inscripción
-                    'pago_bdv_id_estudiante' => $id_estudiante,
+                    'pago_bdv_id_estudiante' => $id_estudiante,   // ✅ ID REAL del alumno
+                    'pago_bdv_cedula'        => $cedula_depositante, // ✅ CÉDULA del input
                     'pago_bdv_uc'            => $total_uc,
                     'pago_bdv_concepto'      => $concepto,
                     'pago_bdv_id_solicitud'  => null
                 ));
                 
-                log_message('debug', 'iniciar(): datos guardados en sesión. Ref=' . $referencia);
+                log_message('debug', 'iniciar(): datos guardados en sesión. Ref=' . $referencia 
+                    . ' | id_estudiante=' . $id_estudiante 
+                    . ' | cedula=' . $cedula_depositante);
                 
                 redirect($response->urlPayment);
                 
@@ -178,7 +208,7 @@ class Pagos extends CI_Controller {
         } catch (Exception $e) {
             log_message('error', 'Excepción en pago BDV: ' . $e->getMessage());
             
-            // ✅ NUEVO: Registrar excepción en log BDV
+            // ✅ Registrar excepción en log BDV
             $this->log_pago_bdv(
                 'exception_createPayment_inscripcion',
                 null,
@@ -205,6 +235,23 @@ class Pagos extends CI_Controller {
         $periodo    = $this->Periodo_model->PeriodoActivo();
         $tramite    = $this->input->post('tramite');
         $total_uc   = 0;
+        $tipo_documento = $this->input->post('tipo_documento');  // V, E, J, G, P
+        $cedula_rif     = $this->input->post('cedula_rif');      // Solo números
+        $documento_pasarela = $tipo_documento . $cedula_rif;     // Ej: V12345678
+
+        // ✅ VALIDAR cédula/RIF del depositante (NUNCA puede llegar vacía)
+        $validacion_doc = $this->validar_documento_depositante($tipo_documento, $cedula_rif);
+        if (!$validacion_doc['ok']) {
+        log_message('error', 'iniciar_tramite_adm(): documento depositante inválido -> ' . $validacion_doc['mensaje']);
+        $this->session->set_flashdata('error', $validacion_doc['mensaje']);
+        redirect(base_url() . 'dashboard09/index/2');
+        return;
+        }
+
+        // ✅ Documento ya validado y normalizado
+        $documento_pasarela = $validacion_doc['documento'];
+        $tipo_documento     = $validacion_doc['tipo'];
+        $cedula_rif         = $validacion_doc['numero'];
         
         if (!$periodo) {
             $this->session->set_flashdata('error', 'No hay período académico activo.');
@@ -235,18 +282,30 @@ class Pagos extends CI_Controller {
             $this->session->set_flashdata('error', 'No se encontraron datos del estudiante.');
             redirect(base_url() . 'dashboard09/index/2');
         }
-        $id_estudiante = $alumno->id;
+        
+        // ✅ CORRECCIÓN CLAVE (igual que en iniciar):
+        $id_estudiante      = $alumno->id;              // ✅ ID REAL para FK
+        $cedula_depositante = $documento_pasarela;      // ✅ Cédula del input
+
         
         // Obtener el total a pagar
-        $monto_usdt = $this->input->post('total_final'); //expresados en dolares ameicanos
-        $total_final= $this->tasa_bcv->calcular_monto_ves($monto_usdt);
+        $monto_usdt = $this->input->post('total_final'); // expresados en dólares americanos
+        $total_final = $this->tasa_bcv->calcular_monto_ves($monto_usdt);
+
+        log_message('debug', 'iniciar_tramite_adm(): total=' . $total_final 
+        . ' | id_solicitud=' . $id_solicitud_tramite
+        . ' | id_estudiante=' . $id_estudiante
+        . ' | cedula_depositante=' . $cedula_depositante);
 
         if ($total_final <= 0) {
             $this->session->set_flashdata('error', 'El monto a pagar debe ser mayor a 0.');
             redirect(base_url() . 'dashboard09/index/2');
         }
 
-        log_message('debug', 'iniciar_tramite_adm(): total=' . $total_final . ' | id_solicitud=' . $id_solicitud_tramite);
+        log_message('debug', 'iniciar_tramite_adm(): total=' . $total_final 
+            . ' | id_solicitud=' . $id_solicitud_tramite
+            . ' | id_estudiante=' . $id_estudiante
+            . ' | cedula_depositante=' . $cedula_depositante);
 
         $concepto  = $this->obtener_nombre_tramite($tramite);
         $tipo_pago = 1;
@@ -257,8 +316,8 @@ class Pagos extends CI_Controller {
             $referencia = 'REFTRA' . $id_usuario . '_' . date('YmdHis');
             
             $Payment = new IpgBdvPaymentRequest();
-            $Payment->idLetter    = $alumno->nacionalidad ?: 'V';
-            $Payment->idNumber    = '32873615';
+            $Payment->idLetter    = $tipo_documento ?: 'V';
+            $Payment->idNumber    = $cedula_rif;
             $Payment->amount      = (float) $total_final;
             $Payment->currency    = 1;
             $Payment->reference   = $referencia;
@@ -292,7 +351,7 @@ class Pagos extends CI_Controller {
             
             log_message('debug', '=== BDV iniciar_tramite_adm() Response ===' . print_r($response, true));
             
-            // ✅ NUEVO: Registrar log de la transacción
+            // ✅ Registrar log de la transacción
             $accion_log = (isset($response->success) && $response->success == true) 
                 ? 'createPayment_tramite_ok' 
                 : 'createPayment_tramite_error';
@@ -306,21 +365,24 @@ class Pagos extends CI_Controller {
             );
             
             if ($response->success == true) {
-                // ✅ SOLO guardar en sesión
+                // ✅ Guardar en sesión (SIN registro en BD todavía)
                 $this->session->set_userdata(array(
                     'pago_bdv_token'         => $response->paymentId,
                     'pago_bdv_monto'         => $total_final,
-                    'pago_bdv_monto_usd'     => $monto_usd,  
+                    'pago_bdv_monto_usd'     => $monto_usdt,  
                     'pago_bdv_referencia'    => $referencia,
                     'pago_bdv_periodo'       => $periodo->id,
                     'pago_bdv_tipo'          => $tipo_pago,       // 1 = trámite
-                    'pago_bdv_id_estudiante' => $id_estudiante,
+                    'pago_bdv_id_estudiante' => $id_estudiante,   // ✅ ID REAL
+                    'pago_bdv_cedula'        => $cedula_depositante, // ✅ CÉDULA del input
                     'pago_bdv_uc'            => $total_uc,
                     'pago_bdv_concepto'      => $concepto,
                     'pago_bdv_id_solicitud'  => $id_solicitud_tramite
                 ));
                 
-                log_message('debug', 'iniciar_tramite_adm(): datos guardados en sesión. Ref=' . $referencia);
+                log_message('debug', 'iniciar_tramite_adm(): datos guardados en sesión. Ref=' . $referencia
+                    . ' | id_estudiante=' . $id_estudiante
+                    . ' | cedula=' . $cedula_depositante);
                 
                 redirect($response->urlPayment);
                 
@@ -334,7 +396,7 @@ class Pagos extends CI_Controller {
         } catch (Exception $e) {
             log_message('error', 'Excepción en pago BDV: ' . $e->getMessage());
             
-            // ✅ NUEVO: Registrar excepción en log BDV
+            // ✅ Registrar excepción en log BDV
             $this->log_pago_bdv(
                 'exception_createPayment_tramite',
                 null,
@@ -362,264 +424,253 @@ class Pagos extends CI_Controller {
     // CONFIRMACIÓN DE PAGO BDV (callback)
     // ================================================================
     public function confirmacion() {
-        $id_usuario = $this->session->userdata('id');
-        $referencia = $this->input->get('ref');
-
-        
-        // Token: URL (?token= o ?ID=) o sesión
-        $paymentToken = $this->input->get('token');
-        if (empty($paymentToken)) {
-            $paymentToken = $this->input->get('ID');
+    $id_usuario = $this->session->userdata('id');
+    $referencia = $this->input->get('ref');
+    $paymentToken = $this->input->get('token');
+    if (empty($paymentToken)) $paymentToken = $this->input->get('ID');
+    if (empty($paymentToken)) $paymentToken = $this->session->userdata('pago_bdv_token');
+    
+    log_message('debug', '=== BDV confirmacion() ===');
+    log_message('debug', 'GET: ' . print_r($this->input->get(), true));
+    log_message('debug', 'Token: ' . ($paymentToken ?: 'NULL') . ' | Ref: ' . ($referencia ?: 'NULL'));
+    
+    // ✅ 1. Recuperar datos de sesión
+    $id_periodo_sesion    = $this->session->userdata('pago_bdv_periodo');
+    $tipo_pago_sesion     = $this->session->userdata('pago_bdv_tipo');
+    $id_estudiante_sesion = $this->session->userdata('pago_bdv_id_estudiante');
+    $cedula_sesion        = $this->session->userdata('pago_bdv_cedula');
+    $total_uc_sesion      = $this->session->userdata('pago_bdv_uc');
+    $concepto_sesion      = $this->session->userdata('pago_bdv_concepto');
+    $id_solicitud_sesion  = $this->session->userdata('pago_bdv_id_solicitud');
+    $monto_sesion         = $this->session->userdata('pago_bdv_monto');
+    $monto_usd_sesion     = $this->session->userdata('pago_bdv_monto_usd');
+    
+    // ✅ 2. Buscar registro existente por referencia
+    $registro = null;
+    if (!empty($referencia)) {
+        $registro = $this->Registro_pago_model->get_pago_pendiente_por_referencia($referencia);
+        if ($registro && empty($paymentToken)) {
+            $paymentToken = $registro->token_bdv;
+            log_message('debug', 'Token recuperado de BD: ' . $paymentToken);
         }
-        if (empty($paymentToken)) {
-            $paymentToken = $this->session->userdata('pago_bdv_token');
-        }
+    }
+    
+    // ✅ 3. Determinar tipo_pago, id_periodo e id_solicitud (CLAVE PARA REDIRIGIR)
+    $tipo_pago    = $registro ? (int)$registro->tramite : (int)$tipo_pago_sesion;
+    $id_periodo   = $registro ? $registro->id_periodo    : $id_periodo_sesion;
+    $id_solicitud = ($registro && $registro->id_solicitud_tramite) 
+        ? $registro->id_solicitud_tramite 
+        : $id_solicitud_sesion;
+    
+    log_message('debug', 'confirmacion: tipo_pago=' . $tipo_pago 
+        . ' | id_periodo=' . $id_periodo 
+        . ' | id_solicitud=' . $id_solicitud);
+    
+    // ✅ 4. Si no hay token, no podemos consultar BDV
+    if (empty($paymentToken)) {
+        $this->session->set_flashdata('error', 'No se pudo identificar el pago.');
+        $this->limpiar_sesion_pago();
         
-        log_message('debug', '=== BDV confirmacion() ===');
-        log_message('debug', 'GET: ' . print_r($this->input->get(), true));
-        log_message('debug', 'Token: ' . ($paymentToken ?: 'NULL') . ' | Ref: ' . ($referencia ?: 'NULL'));
-        
-        // ✅ 1. Recuperar datos de sesión
-        $id_periodo_sesion    = $this->session->userdata('pago_bdv_periodo');
-        $tipo_pago_sesion     = $this->session->userdata('pago_bdv_tipo');
-        $id_estudiante_sesion = $this->session->userdata('pago_bdv_id_estudiante');
-        $total_uc_sesion      = $this->session->userdata('pago_bdv_uc');
-        $concepto_sesion      = $this->session->userdata('pago_bdv_concepto');
-        $id_solicitud_sesion  = $this->session->userdata('pago_bdv_id_solicitud');
-        $monto_sesion         = $this->session->userdata('pago_bdv_monto');
-        $monto_usd_sesion     = $this->session->userdata('pago_bdv_monto_usd'); 
-        
-        // ✅ 2. Buscar registro existente
-        $registro = null;
-        if (!empty($referencia)) {
-            $registro = $this->Registro_pago_model->get_pago_pendiente_por_referencia($referencia);
-            if ($registro && empty($paymentToken)) {
-                $paymentToken = $registro->token_bdv;
-                log_message('debug', 'Token recuperado de BD: ' . $paymentToken);
-            }
-        }
-        
-        // ✅ 3. Determinar tipo_pago e id_periodo
-        $tipo_pago  = $registro ? (int)$registro->tramite : (int)$tipo_pago_sesion;
-        $id_periodo = $registro ? $registro->id_periodo    : $id_periodo_sesion;
-        
-        // ✅ 4. Si no hay token, no podemos consultar BDV
-        if (empty($paymentToken)) {
-            $this->session->set_flashdata('error', 'No se pudo identificar el pago.');
-            $this->limpiar_sesion_pago();
-            
-            if ($tipo_pago == 1) {
-                $id_sol = ($registro && $registro->id_solicitud_tramite) ? $registro->id_solicitud_tramite : $id_solicitud_sesion;
-                if (!empty($id_sol)) {
-                    $this->redirigir_por_tramite($tramite);
-                    return;
-                }
-            }
-            redirect(base_url() . 'dashboard04/proceso');
+        if ($tipo_pago == 1 && !empty($id_solicitud)) {
+            $this->redirigir_por_tramite($id_solicitud);
             return;
         }
+        redirect(base_url() . 'dashboard04/proceso');
+        return;
+    }
+    
+    // ================================================================
+    // CONSULTAR BDV
+    // ================================================================
+    try {
+        $PaymentProcess = new IpgBdv2($this->bdv_afiliado, $this->bdv_clave);
+        $response = $PaymentProcess->checkPayment($paymentToken);
         
-        // ================================================================
-        // CONSULTAR BDV
-        // ================================================================
-        try {
-            $PaymentProcess = new IpgBdv2($this->bdv_afiliado, $this->bdv_clave);
-            $response = $PaymentProcess->checkPayment($paymentToken);
+        log_message('debug', 'BDV checkPayment: ' . print_r($response, true));
+        log_message('debug', '>>> status=' . var_export(isset($response->status) ? $response->status : 'NULL', true));
+        
+        // ✅ Registrar log de la verificación
+        $accion_log = 'checkPayment_confirmacion_error';
+        if (isset($response->success) && $response->success == true && isset($response->status)) {
+            $accion_log = ((int)$response->status === 1) 
+                ? 'checkPayment_confirmacion_exitoso' 
+                : 'checkPayment_confirmacion_pendiente';
+        }
+        
+        $this->log_pago_bdv(
+            $accion_log,
+            $paymentToken,
+            array(
+                'referencia'   => $referencia,
+                'id_periodo'   => $id_periodo,
+                'tipo_pago'    => $tipo_pago,
+                'id_solicitud' => $id_solicitud,
+            ),
+            $response,
+            $id_usuario
+        );
+        
+        // ============================================================
+        // PAGO EXITOSO
+        // ============================================================
+        if ($response->success == true && (int)$response->status === 1) {
             
-            log_message('debug', 'BDV checkPayment: ' . print_r($response, true));
-            log_message('debug', '>>> status=' . var_export(isset($response->status) ? $response->status : 'NULL', true));
-            
-            // ✅ NUEVO: Registrar log de la verificación
-            $accion_log = 'checkPayment_confirmacion_error';
-            if (isset($response->success) && $response->success == true && isset($response->status)) {
-                if ((int)$response->status === 1) {
-                    $accion_log = 'checkPayment_confirmacion_exitoso';
-                } else {
-                    $accion_log = 'checkPayment_confirmacion_pendiente';
-                }
-            }
-            
-            $this->log_pago_bdv(
-                $accion_log,
-                $paymentToken,
-                array(
-                    'referencia'   => $referencia,
-                    'id_periodo'   => $id_periodo,
-                    'tipo_pago'    => $tipo_pago,
-                    'id_solicitud' => $id_solicitud_sesion,
-                ),
-                $response,
-                $id_usuario
-            );
-            
-            // ============================================================
-            // PAGO EXITOSO
-            // ============================================================
-            if ($response->success == true && (int)$response->status === 1) {
-                
-                // ✅ Validar id_periodo
-                if (empty($id_periodo)) {
-                    log_message('error', 'confirmacion: sin id_periodo. Ref=' . $referencia);
-                    $this->session->set_flashdata('error', 'No se pudo determinar el período del pago.');
-                    $this->limpiar_sesion_pago();
-                    $this->mostrar_vista_diagnostico($registro, $id_solicitud_sesion, $tipo_pago, $response, $referencia, $id_usuario, 'Sin id_periodo');
-                    return;
-                }
-                
-                // ✅ PASO 1: Si NO existe registro, CREARLO
-                if (!$registro) {
-                    log_message('debug', 'confirmacion: no existe registro. Creando uno nuevo. Ref=' . $referencia);
-                    
-                    $registrado = $this->registrar_pago_pendiente(
-                        $id_solicitud_sesion,
-                        $id_usuario,
-                        $id_periodo,
-                        $response,
-                        $monto_sesion,
-                        $total_uc_sesion,
-                        $referencia,
-                        $id_estudiante_sesion,
-                        $tipo_pago_sesion,
-                        $concepto_sesion,
-                        $monto_usd_sesion
-                    );
-                    
-                    log_message('debug', 'confirmacion: registrar_pago_pendiente result=' . var_export($registrado, true));
-                    
-                    if (!$registrado) {
-                        log_message('error', 'confirmacion: falló crear registro. Ref=' . $referencia);
-                        $this->session->set_flashdata('error', 'No se pudo registrar el pago. Contacte a soporte.');
-                        $this->limpiar_sesion_pago();
-                        $this->mostrar_vista_diagnostico(null, $id_solicitud_sesion, $tipo_pago, $response, $referencia, $id_usuario, 'Fallo al crear registro');
-                        return;
-                    }
-                    
-                    // Recuperar el registro recién creado
-                    $registro = $this->Registro_pago_model->get_pago_pendiente_por_referencia($referencia);
-                    
-                    if (!$registro) {
-                        log_message('error', 'confirmacion: registro creado pero no recuperable. Ref=' . $referencia);
-                        $this->session->set_flashdata('error', 'No se pudo recuperar el registro. Contacte a soporte.');
-                        $this->limpiar_sesion_pago();
-                        $this->mostrar_vista_diagnostico(null, $id_solicitud_sesion, $tipo_pago, $response, $referencia, $id_usuario, 'Registro creado pero no recuperable');
-                        return;
-                    }
-                    
-                    log_message('debug', 'confirmacion: registro creado. ID=' . $registro->id);
-                }
-                
-                // ✅ PASO 2: Actualizar el registro a exitoso (ahora SÍ existe)
-                $id_solicitud_actual = ($registro && $registro->id_solicitud_tramite) 
-                    ? $registro->id_solicitud_tramite 
-                    : $id_solicitud_sesion;
-
-                $actualizado = $this->actualizar_pago_exitoso(
-                    $id_usuario, 
-                    $id_periodo, 
-                    $response, 
-                    $paymentToken, 
-                    $referencia,
-                    $id_solicitud_actual,
-                    $tipo_pago
-                );
-                
-                log_message('debug', 'confirmacion: actualizar_pago_exitoso result=' . var_export($actualizado, true));
-                
-                if (!$actualizado) {
-                    log_message('error', 'confirmacion: falló actualizar pago. Ref=' . $referencia);
-                    $this->session->set_flashdata('error', 'El pago fue verificado pero no se pudo actualizar. Contacte a soporte.');
-                    $this->limpiar_sesion_pago();
-                    $this->mostrar_vista_diagnostico($registro, $id_solicitud_sesion, $tipo_pago, $response, $referencia, $id_usuario, 'Fallo al actualizar registro');
-                    return;
-                }
-                
-                // ✅ PASO 3: Actualizar materias si es inscripción
-                if ($tipo_pago == 0) {
-                    $this->actualizar_materias_pagadas($id_usuario, $id_periodo);
-                }
-                if ($tipo_pago == 1) {
-                    $this->actualizar_tramites($id_solicitud_sesion, $id_usuario);
-                }
-                
-                // ✅ PASO 4: Limpiar sesión
+            if (empty($id_periodo)) {
+                log_message('error', 'confirmacion: sin id_periodo. Ref=' . $referencia);
+                $this->session->set_flashdata('error', 'No se pudo determinar el período del pago.');
                 $this->limpiar_sesion_pago();
-                $this->session->set_flashdata('success', '¡Pago confirmado exitosamente!');
-                
-                // ✅ PASO 5: Mostrar vista
-                $data = array(
-                    'response'    => $response,
-                    'id_usuario'  => $id_usuario,
-                    'referencia'  => $referencia,
-                    'exitoso'     => true,
-                    'actualizado' => true,
-                    'mensaje'     => 'Pago completado exitosamente.'
-                );
-                
-                if ($tipo_pago == 1) {
-                    $id_sol = ($registro && $registro->id_solicitud_tramite) ? $registro->id_solicitud_tramite : $id_solicitud_sesion;
-                    $data['url_continuar'] = $this->url_por_tramite($id_sol);
-                    $this->load->view('participante/tramites/pago_bdv_resultado_tramite', $data);
-                    return;
-                }
-                
-                $data['url_continuar'] = base_url() . 'dashboard04/proceso';
-                $this->load->view('participante/inscripcion/pago_bdv_resultado', $data);
+                $this->mostrar_vista_diagnostico($registro, $id_solicitud, $tipo_pago, $response, $referencia, $id_usuario, 'Sin id_periodo');
                 return;
             }
             
-            // ============================================================
-            // PAGO NO EXITOSO / PENDIENTE / ERROR
-            // ============================================================
-            if ($response->success == true && (int)$response->status !== 1) {
-                $this->session->set_flashdata('warning', 'El pago no fue completado. Estado: ' . $response->responseMessage);
-            } else {
-                $this->session->set_flashdata('error', 'Error al verificar el pago: ' . $response->responseMessage);
-            }
-            
-            $this->limpiar_sesion_pago();
-            
-            if ($tipo_pago == 1) {
-                $id_sol = ($registro && $registro->id_solicitud_tramite) ? $registro->id_solicitud_tramite : $id_solicitud_sesion;
-                if (!empty($id_sol)) {
-                    $this->redirigir_por_tramite($tramite);
+            // ✅ PASO 1: Si NO existe registro, CREARLO
+            if (!$registro) {
+                log_message('debug', 'confirmacion: no existe registro. Creando uno nuevo. Ref=' . $referencia);
+                
+                if (empty($cedula_sesion)) {
+                    log_message('error', 'confirmacion: cedula_sesion vacía. Ref=' . $referencia);
+                    $this->session->set_flashdata('error', 'No se pudo identificar la cédula del depositante.');
+                    $this->limpiar_sesion_pago();
+                    $this->mostrar_vista_diagnostico(null, $id_solicitud, $tipo_pago, $response, $referencia, $id_usuario, 'Cédula vacía');
                     return;
+                }
+                
+                $registrado = $this->registrar_pago_pendiente(
+                    $id_solicitud,
+                    $id_usuario,
+                    $id_periodo,
+                    $response,
+                    $monto_sesion,
+                    $total_uc_sesion,
+                    $referencia,
+                    $id_estudiante_sesion,
+                    $tipo_pago_sesion,
+                    $concepto_sesion,
+                    $monto_usd_sesion,
+                    $cedula_sesion
+                );
+                
+                if (!$registrado) {
+                    log_message('error', 'confirmacion: falló crear registro. Ref=' . $referencia);
+                    $this->session->set_flashdata('error', 'No se pudo registrar el pago. Contacte a soporte.');
+                    $this->limpiar_sesion_pago();
+                    $this->mostrar_vista_diagnostico(null, $id_solicitud, $tipo_pago, $response, $referencia, $id_usuario, 'Fallo al crear registro');
+                    return;
+                }
+                
+                $registro = $this->Registro_pago_model->get_pago_pendiente_por_referencia($referencia);
+                
+                if (!$registro) {
+                    $this->session->set_flashdata('error', 'No se pudo recuperar el registro.');
+                    $this->limpiar_sesion_pago();
+                    $this->mostrar_vista_diagnostico(null, $id_solicitud, $tipo_pago, $response, $referencia, $id_usuario, 'Registro no recuperable');
+                    return;
+                }
+                
+                // ✅ Si el registro recién creado tiene id_solicitud_tramite, usarlo
+                if (!empty($registro->id_solicitud_tramite)) {
+                    $id_solicitud = $registro->id_solicitud_tramite;
                 }
             }
             
-            redirect(base_url() . 'dashboard04/registro_pago/' . $id_usuario);
-            return;
+            // ✅ PASO 2: Actualizar el registro a exitoso
+            $id_solicitud_actual = ($registro && $registro->id_solicitud_tramite) 
+                ? $registro->id_solicitud_tramite 
+                : $id_solicitud;
             
-        } catch (Exception $e) {
-            log_message('error', 'Excepción confirmacion: ' . $e->getMessage()
-                . ' en ' . $e->getFile() . ':' . $e->getLine());
-            
-            // ✅ NUEVO: Registrar excepción en log BDV
-            $this->log_pago_bdv(
-                'exception_checkPayment_confirmacion',
-                isset($paymentToken) ? $paymentToken : null,
-                array('referencia' => isset($referencia) ? $referencia : null),
-                array(
-                    'error' => $e->getMessage(),
-                    'file'  => $e->getFile(),
-                    'line'  => $e->getLine()
-                ),
-                $id_usuario
+            $actualizado = $this->actualizar_pago_exitoso(
+                $id_usuario, 
+                $id_periodo, 
+                $response, 
+                $paymentToken, 
+                $referencia,
+                $id_solicitud_actual,
+                $tipo_pago
             );
             
-            $this->session->set_flashdata('error', 'Error al verificar el pago. Contacte a soporte.');
-            $this->limpiar_sesion_pago();
-            
-            if ($tipo_pago == 1) {
-                $id_sol = ($registro && $registro->id_solicitud_tramite) ? $registro->id_solicitud_tramite : $id_solicitud_sesion;
-                if (!empty($id_sol)) {
-                    $this->redirigir_por_tramite($tramite);
-                    return;
-                }
+            if (!$actualizado) {
+                log_message('error', 'confirmacion: falló actualizar pago. Ref=' . $referencia);
+                $this->session->set_flashdata('error', 'El pago fue verificado pero no se pudo actualizar.');
+                $this->limpiar_sesion_pago();
+                $this->mostrar_vista_diagnostico($registro, $id_solicitud, $tipo_pago, $response, $referencia, $id_usuario, 'Fallo al actualizar');
+                return;
             }
             
-            redirect(base_url() . 'dashboard04/registro_pago/' . $id_usuario);
+            // ✅ PASO 3: Actualizar materias o trámites
+            if ($tipo_pago == 0) {
+                $this->actualizar_materias_pagadas($id_usuario, $id_periodo);
+            }
+            if ($tipo_pago == 1 && !empty($id_solicitud_actual)) {
+                $this->actualizar_tramites($id_solicitud_actual, $id_usuario);
+            }
+            
+            // ✅ PASO 4: Limpiar sesión
+            $this->limpiar_sesion_pago();
+            $this->session->set_flashdata('success', '¡Pago confirmado exitosamente!');
+            
+            // ✅ PASO 5: Redirigir según tipo de trámite
+            $data = array(
+                'response'    => $response,
+                'id_usuario'  => $id_usuario,
+                'referencia'  => $referencia,
+                'exitoso'     => true,
+                'actualizado' => true,
+                'mensaje'     => 'Pago completado exitosamente.'
+            );
+            
+            if ($tipo_pago == 1 && !empty($id_solicitud_actual)) {
+                $data['url_continuar'] = $this->url_por_tramite($id_solicitud_actual);
+                $this->load->view('participante/tramites/pago_bdv_resultado_tramite', $data);
+                return;
+            }
+            
+            $data['url_continuar'] = base_url() . 'dashboard04/proceso';
+            $this->load->view('participante/inscripcion/pago_bdv_resultado', $data);
+            return;
         }
+        
+        // ============================================================
+        // PAGO NO EXITOSO / PENDIENTE
+        // ============================================================
+        if ($response->success == true && (int)$response->status !== 1) {
+            $this->session->set_flashdata('warning', 'El pago no fue completado. Estado: ' . $response->responseMessage);
+        } else {
+            $this->session->set_flashdata('error', 'Error al verificar el pago: ' . $response->responseMessage);
+        }
+        
+        $this->limpiar_sesion_pago();
+        
+        if ($tipo_pago == 1 && !empty($id_solicitud)) {
+            $this->redirigir_por_tramite($id_solicitud);
+            return;
+        }
+        
+        redirect(base_url() . 'dashboard04/registro_pago/' . $id_usuario);
+        return;
+        
+    } catch (Exception $e) {
+        log_message('error', 'Excepción confirmacion: ' . $e->getMessage()
+            . ' en ' . $e->getFile() . ':' . $e->getLine());
+        
+        $this->log_pago_bdv(
+            'exception_checkPayment_confirmacion',
+            isset($paymentToken) ? $paymentToken : null,
+            array('referencia' => isset($referencia) ? $referencia : null),
+            array('error' => $e->getMessage(), 'file' => $e->getFile(), 'line' => $e->getLine()),
+            $id_usuario
+        );
+        
+        $this->session->set_flashdata('error', 'Error al verificar el pago. Contacte a soporte.');
+        $this->limpiar_sesion_pago();
+        
+        if ($tipo_pago == 1 && !empty($id_solicitud)) {
+            $this->redirigir_por_tramite($id_solicitud);
+            return;
+        }
+        
+        redirect(base_url() . 'dashboard04/registro_pago/' . $id_usuario);
     }
+}
 
     // ================================================================
     // ===================== FUNCIONES COMUNES ========================
@@ -652,7 +703,7 @@ class Pagos extends CI_Controller {
             $PaymentProcess = new IpgBdv2($this->bdv_afiliado, $this->bdv_clave);
             $response = $PaymentProcess->checkPayment($token);
             
-            // ✅ NUEVO: Registrar log de la verificación AJAX
+            // ✅ Registrar log de la verificación AJAX
             $accion_log = 'checkPayment_ajax_error';
             if (isset($response->success) && $response->success == true) {
                 $accion_log = ((int)$response->status === 1) 
@@ -703,7 +754,7 @@ class Pagos extends CI_Controller {
         } catch (Exception $e) {
             log_message('error', 'Excepción verificar_estado: ' . $e->getMessage());
             
-            // ✅ NUEVO: Registrar excepción en log BDV
+            // ✅ Registrar excepción en log BDV
             $this->log_pago_bdv(
                 'exception_checkPayment_ajax',
                 isset($token) ? $token : null,
@@ -738,7 +789,7 @@ class Pagos extends CI_Controller {
             $registro = $this->Registro_pago_model->get_pago_pendiente_por_referencia($referencia);
         }
         
-        // ✅ NUEVO: Registrar cancelación
+        // ✅ Registrar cancelación
         $this->log_pago_bdv(
             'cancelacion_usuario',
             $this->session->userdata('pago_bdv_token'),
@@ -781,13 +832,13 @@ class Pagos extends CI_Controller {
     // ================================================================
 
     /**
-     * ✅ NUEVO: Registra un log de la transacción con la pasarela BDV.
+     * ✅ Registra un log de la transacción con la pasarela BDV.
      *
-     * @param string      $accion     Acción realizada ('createPayment_*', 'checkPayment_*', 'exception_*', etc.)
+     * @param string      $accion     Acción realizada
      * @param string|null $token      Token/paymentId de BDV
-     * @param mixed       $request    Datos enviados a BDV (array, objeto o string)
-     * @param mixed       $response   Respuesta recibida de BDV (array, objeto o string)
-     * @param int|null    $id_usuario ID del usuario (si no se pasa, se toma de sesión)
+     * @param mixed       $request    Datos enviados a BDV
+     * @param mixed       $response   Respuesta recibida de BDV
+     * @param int|null    $id_usuario ID del usuario
      * @return bool
      */
     private function log_pago_bdv($accion, $token = null, $request = null, $response = null, $id_usuario = null) {
@@ -797,7 +848,7 @@ class Pagos extends CI_Controller {
             $id_usuario = (int) $this->session->userdata('id');
         }
         if (empty($id_usuario)) {
-            $id_usuario = 0; // Fallback para evitar error de NOT NULL
+            $id_usuario = 0;
         }
         
         // Normalizar token
@@ -827,7 +878,7 @@ class Pagos extends CI_Controller {
     }
 
     /**
-     * ✅ NUEVO: Normaliza cualquier dato (array, objeto, string) a un string para el log.
+     * ✅ Normaliza cualquier dato (array, objeto, string) a un string para el log.
      */
     private function normalizar_dato_log($dato) {
         if ($dato === null) {
@@ -851,15 +902,42 @@ class Pagos extends CI_Controller {
 
     /**
      * Registra el pago como pendiente en la base de datos.
-     * ⚠️ IMPORTANTE: Este método solo se llama cuando el pago es EXITOSO en BDV.
-     * 
-     * Revisar que el nombre 'id_solicitud_tramite' coincida con la columna real
-     * de tu tabla (verificar con DESCRIBE registro_pago;).
+     * ⚠️ Solo se llama cuando el pago es EXITOSO en BDV.
+     *
+     * @param int|null $id_solicitud_tramite  ID de solicitud (solo trámites)
+     * @param int      $id_usuario            ID del usuario logueado
+     * @param int      $id_periodo            ID del período
+     * @param object   $response              Respuesta de BDV
+     * @param float    $total_final           Monto en Bs (monto_depositado)
+     * @param int      $total_uc              Unidades de crédito
+     * @param string   $referencia            Referencia generada
+     * @param int      $id_estudiante         ID REAL del alumno (para FK id_estudiante)
+     * @param int      $tipo_pago             0 = inscripción, 1 = trámite
+     * @param string   $concepto              Concepto/postgrado
+     * @param float    $monto_usdt            Monto en USD (monto_apagar)
+     * @param string   $cedula_depositante    Cédula/RIF del input (V12345678)
+     * @return bool
      */
-    private function registrar_pago_pendiente($id_solicitud_tramite, $id_usuario, $id_periodo, $response, $total_final, $total_uc, $referencia, $id_estudiante, $tipo_pago, $concepto,$monto_usdt) {
+    private function registrar_pago_pendiente(
+        $id_solicitud_tramite, 
+        $id_usuario, 
+        $id_periodo, 
+        $response, 
+        $total_final, 
+        $total_uc, 
+        $referencia, 
+        $id_estudiante,          // ✅ ID REAL del alumno (FK)
+        $tipo_pago, 
+        $concepto,
+        $monto_usdt, 
+        $cedula_depositante      // ✅ Cédula/RIF del input
+    ) {
 
+        // ✅ Sanear id_estudiante para que NUNCA sea 0 (la FK lo rechazaría)
+        $id_estudiante = (int) $id_estudiante;
         if (empty($id_estudiante)) {
-            $id_estudiante = $id_usuario;
+            log_message('error', 'registrar_pago_pendiente: id_estudiante vacío. Usando id_usuario como fallback.');
+            $id_estudiante = (int) $id_usuario;
         }
     
         $token_bdv = '';
@@ -885,8 +963,8 @@ class Pagos extends CI_Controller {
             'conciliado'           => 0,
             'quien_registro'       => (int) $id_usuario,
             'id_banco'             => 1,
-            'cedula'               => substr((string) $this->session->userdata('username'), 0, 10),
-            'id_estudiante'        => (int) $id_estudiante,
+            'cedula'               => substr((string) $cedula_depositante, 0, 10), // ✅ CÉDULA DEL DEPOSITANTE
+            'id_estudiante'        => $id_estudiante,                               // ✅ ID REAL (FK válida)
             'postgrado'            => (string) $concepto,
             'token_bdv'            => substr((string) $token_bdv, 0, 100),
             'transaction_id_bdv'   => '',
@@ -897,7 +975,6 @@ class Pagos extends CI_Controller {
     
         log_message('debug', 'registrar_pago_pendiente DATA: ' . print_r($data, true));
     
-        // ✅ SIEMPRE INSERTAR (Escenario 1: solo crear cuando el pago es exitoso)
         $result = $this->Registro_pago_model->save($data);
     
         log_message('debug', 'registrar_pago_pendiente result: ' . var_export($result, true));
@@ -944,7 +1021,6 @@ class Pagos extends CI_Controller {
         // ================================================================
         if ($tipo_pago == 1 && !empty($id_solicitud)) {
             
-            // Obtener la solicitud para conocer el id_tramite
             $solicitud = $this->Solictudtramite_model->getSolicitud($id_solicitud);
             
             if (!$solicitud) {
@@ -954,9 +1030,7 @@ class Pagos extends CI_Controller {
             
             $tramites = array(18,16,23,25,28,20,38,39,40,41,42,44,45,46,56,57,58,59,60,62,63,64,43,61);
             
-            // Determinar si requiere revisión académica o no
             if (in_array((int)$solicitud->id_tramite, $tramites)) {
-                // Requiere revisión académica posterior (academico=0)
                 $data = array(
                     'transaction_id_bdv'  => $transaction_id,
                     'fecha_transferencia' => $fecha_transferencia,
@@ -974,7 +1048,6 @@ class Pagos extends CI_Controller {
                     'quien_actualizo'     => $id_usuario
                 );
             } else {
-                // No requiere revisión académica (academico=1)
                 $data = array(
                     'transaction_id_bdv'  => $transaction_id,
                     'fecha_transferencia' => $fecha_transferencia,
@@ -995,7 +1068,6 @@ class Pagos extends CI_Controller {
             
             log_message('debug', 'actualizar_pago_exitoso (trámite) DATA: ' . print_r($data, true));
             
-            // Actualizar el registro de pago del trámite
             $ok_pago = $this->Registro_pago_model->save_conciliacion_error_tramite($id_solicitud, $data);
             log_message('debug', 'save_conciliacion_error_tramite result: ' . var_export($ok_pago, true));
             
@@ -1003,7 +1075,6 @@ class Pagos extends CI_Controller {
                 return false;
             }
             
-            // Actualizar la solicitud del trámite
             $ok_sol = $this->Solictudtramite_model->update($id_solicitud, $data2);
             log_message('debug', 'Solictudtramite_model->update result: ' . var_export($ok_sol, true));
             
@@ -1024,7 +1095,6 @@ class Pagos extends CI_Controller {
         
         log_message('debug', 'actualizar_pago_exitoso (inscripción) DATA: ' . print_r($data, true));
         
-        // PRIORIDAD 1: por referencia
         if (!empty($referencia)) {
             log_message('debug', 'update_by_referencia: buscando ref=' . $referencia);
             $result = $this->Registro_pago_model->update_by_referencia($referencia, $data);
@@ -1035,7 +1105,6 @@ class Pagos extends CI_Controller {
             log_message('debug', '⚠️ update_by_referencia no encontró registro. Intentando por token...');
         }
         
-        // PRIORIDAD 2: por token
         $token_busqueda = '';
         if (!empty($response->token)) {
             $token_busqueda = $response->token;
@@ -1091,289 +1160,234 @@ class Pagos extends CI_Controller {
         return $result;
     }
 
-    /*/* Obtiene el nombre del posgrado incluyendo los conceptos de aranceles
- * que el estudiante está pagando en el período indicado.
- *
- * @param int $id_usuario
- * @param int $id_periodo
- * @return string
- */
-private function obtener_nombre_postgrado($id_usuario, $id_periodo) {
-    log_message('debug', '[obtener_nombre_postgrado] INICIO - usuario: ' . $id_usuario
-        . ' | periodo: ' . $id_periodo);
+    /**
+     * Obtiene el nombre del posgrado incluyendo los conceptos de aranceles
+     * que el estudiante está pagando en el período indicado.
+     */
+    private function obtener_nombre_postgrado($id_usuario, $id_periodo) {
+        log_message('debug', '[obtener_nombre_postgrado] INICIO - usuario: ' . $id_usuario
+            . ' | periodo: ' . $id_periodo);
 
-    // 1. Obtener programas preinscritos
-    $programas = $this->Materias_preinscrita_model
-        ->lista_programas_preinscritas_trimestre($id_usuario, $id_periodo);
+        $programas = $this->Materias_preinscrita_model
+            ->lista_programas_preinscritas_trimestre($id_usuario, $id_periodo);
 
-    $nombres = array();
+        $nombres = array();
 
-    if (!empty($programas) && is_array($programas)) {
+        if (!empty($programas) && is_array($programas)) {
+            foreach ($programas as $p) {
+                $nombre_prog = null;
+                if (isset($p->programa) && !empty($p->programa)) {
+                    $nombre_prog = $p->programa;
+                } elseif (isset($p->nombre_programa) && !empty($p->nombre_programa)) {
+                    $nombre_prog = $p->nombre_programa;
+                } elseif (isset($p->nombre) && !empty($p->nombre)) {
+                    $nombre_prog = $p->nombre;
+                }
+
+                if ($nombre_prog !== null) {
+                    $uc = isset($p->unidades_creditos) ? $p->unidades_creditos : 0;
+                    $trimestre = isset($p->trimestre) ? $p->trimestre : '';
+                    $nombres[] = '(uc: ' . $uc . ') ' . $nombre_prog . ' - ' . $trimestre;
+                }
+            }
+            $nombres = array_unique($nombres);
+        }
+
+        $conceptos = $this->_obtener_conceptos_aranceles_pago($id_usuario, $id_periodo);
+
+        if (!empty($conceptos)) {
+            $nombres[] = 'Conceptos: ' . implode(' + ', $conceptos);
+        }
+
+        $resultado = !empty($nombres) ? implode(', ', $nombres) : 'Posgrado FENFMP';
+
+        log_message('info', '[obtener_nombre_postgrado] OK - Resultado: ' . $resultado);
+
+        return $resultado;
+    }
+
+    /**
+     * Determina qué conceptos de aranceles debe pagar el estudiante.
+     */
+    private function _obtener_conceptos_aranceles_pago($id_usuario, $id_periodo) {
+        log_message('debug', '[_obtener_conceptos_aranceles_pago] INICIO - usuario: ' . $id_usuario
+            . ' | periodo: ' . $id_periodo);
+
+        $conceptos = array();
+
+        if ($this->_aplica_arancel_inscripcion($id_usuario, $id_periodo)) {
+            $conceptos[] = 'Inscripción';
+        }
+
+        if ($this->_aplica_arancel_permanencia($id_usuario, $id_periodo)) {
+            $conceptos[] = 'Permanencia';
+        }
+
+        if ($this->_aplica_arancel_fuera_lapso($id_usuario, $id_periodo)) {
+            $cantidad = $this->_contar_programas_para_fuera_lapso($id_usuario, $id_periodo);
+
+            if ($cantidad > 0) {
+                $etiqueta = 'Fuera de Lapso';
+                if ($cantidad > 1) {
+                    $etiqueta .= ' (x' . $cantidad . ' programas)';
+                }
+                $conceptos[] = $etiqueta;
+
+                log_message('debug', '[_obtener_conceptos_aranceles_pago] Fuera de Lapso aplica en '
+                    . $cantidad . ' programa(s).');
+            } else {
+                log_message('debug', '[_obtener_conceptos_aranceles_pago] Fuera de Lapso aplica pero sin programas (0).');
+            }
+        }
+
+        log_message('info', '[_obtener_conceptos_aranceles_pago] FIN - Conceptos: ['
+            . implode(', ', $conceptos) . ']');
+
+        return $conceptos;
+    }
+
+    /**
+     * Determina si aplica el arancel de inscripción.
+     */
+    private function _aplica_arancel_inscripcion($id_usuario, $id_periodo) {
+        log_message('debug', '[_aplica_arancel_inscripcion] Verificando usuario=' . $id_usuario
+            . ' | periodo=' . $id_periodo);
+
+        $programas = $this->Materias_preinscrita_model
+            ->lista_programas_preinscritas_trimestre($id_usuario, $id_periodo);
+
+        if (empty($programas) || !is_array($programas)) {
+            log_message('debug', '[_aplica_arancel_inscripcion] No hay programas preinscritos.');
+            return false;
+        }
+
+        $total_programas = 0;
+        $hay_especial = false;
+
         foreach ($programas as $p) {
-            $nombre_prog = null;
-            if (isset($p->programa) && !empty($p->programa)) {
-                $nombre_prog = $p->programa;
-            } elseif (isset($p->nombre_programa) && !empty($p->nombre_programa)) {
-                $nombre_prog = $p->nombre_programa;
-            } elseif (isset($p->nombre) && !empty($p->nombre)) {
-                $nombre_prog = $p->nombre;
-            }
-
-            if ($nombre_prog !== null) {
-                $uc = isset($p->unidades_creditos) ? $p->unidades_creditos : 0;
-                $trimestre = isset($p->trimestre) ? $p->trimestre : '';
-                $nombres[] = '(uc: ' . $uc . ') ' . $nombre_prog . ' - ' . $trimestre;
+            if (isset($p->id_programa) && $p->id_programa <> 27 && $p->id_programa <> 28) {
+                $total_programas++;
+            } else {
+                $hay_especial = true;
             }
         }
-        $nombres = array_unique($nombres);
+
+        $aplica = ($total_programas > 0 || $hay_especial);
+
+        log_message('debug', '[_aplica_arancel_inscripcion] Resultado: '
+            . ($aplica ? 'SÍ' : 'NO') . ' (programas: ' . $total_programas
+            . ' | especiales: ' . ($hay_especial ? 'sí' : 'no') . ')');
+
+        return $aplica;
     }
 
-    // 2. Obtener conceptos de aranceles aplicables
-    $conceptos = $this->_obtener_conceptos_aranceles_pago($id_usuario, $id_periodo);
+    /**
+     * Determina si aplica el arancel de permanencia.
+     */
+    private function _aplica_arancel_permanencia($id_usuario, $id_periodo) {
+        log_message('debug', '[_aplica_arancel_permanencia] Verificando usuario=' . $id_usuario
+            . ' | periodo=' . $id_periodo);
 
-    if (!empty($conceptos)) {
-        $nombres[] = 'Conceptos: ' . implode(' + ', $conceptos);
+        $reincorporaciones = $this->Reincorporaciones_model
+            ->buscar_reincorporacion($id_usuario, $id_periodo);
+
+        $aplica = (!empty($reincorporaciones) && is_array($reincorporaciones));
+
+        $total = is_array($reincorporaciones) ? count($reincorporaciones) : 0;
+
+        log_message('debug', '[_aplica_arancel_permanencia] Resultado: '
+            . ($aplica ? 'SÍ' : 'NO') . ' (reincorporaciones: ' . $total . ')');
+
+        return $aplica;
     }
 
-    $resultado = !empty($nombres) ? implode(', ', $nombres) : 'Posgrado FENFMP';
+    /**
+     * Determina si aplica el arancel fuera de lapso.
+     */
+    private function _aplica_arancel_fuera_lapso($id_usuario, $id_periodo) {
+        log_message('debug', '[_aplica_arancel_fuera_lapso] INICIO - usuario=' . $id_usuario
+            . ' | periodo=' . $id_periodo);
 
-    log_message('info', '[obtener_nombre_postgrado] OK - Resultado: ' . $resultado);
+        $aplica_por_lapso = false;
+        $aplica_por_tiempo = false;
 
-    return $resultado;
-}
+        $lapso = $this->Tiempo_preinscripcion_model->gettiempo_preinscripcion();
 
-/**
- * Determina qué conceptos de aranceles debe pagar el estudiante.
- * Reutiliza los modelos Materias_preinscrita_model, Reincorporacion_model
- * y Tiempo_preinscripcion_model.
- *
- * @param int $id_usuario
- * @param int $id_periodo
- * @return array Lista de conceptos: ['Inscripción', 'Permanencia', 'Fuera de Lapso']
- */
-private function _obtener_conceptos_aranceles_pago($id_usuario, $id_periodo) {
-    log_message('debug', '[_obtener_conceptos_aranceles_pago] INICIO - usuario: ' . $id_usuario
-        . ' | periodo: ' . $id_periodo);
+        if (!empty($lapso)) {
+            log_message('debug', '[_aplica_arancel_fuera_lapso] Lapso encontrado: '
+                . print_r($lapso, true));
 
-    $conceptos = array();
+            $tipo_lapso = null;
+            if (isset($lapso->tipo_lapso)) {
+                $tipo_lapso = $lapso->tipo_lapso;
+            } 
 
-    // --- Inscripción ---
-    if ($this->_aplica_arancel_inscripcion($id_usuario, $id_periodo)) {
-        $conceptos[] = 'Inscripción';
-    }
-
-    // --- Permanencia ---
-    if ($this->_aplica_arancel_permanencia($id_usuario, $id_periodo)) {
-        $conceptos[] = 'Permanencia';
-    }
-
-    // --- Fuera de Lapso (por cada programa) ---
-    if ($this->_aplica_arancel_fuera_lapso($id_usuario, $id_periodo)) {
-        $cantidad = $this->_contar_programas_para_fuera_lapso($id_usuario, $id_periodo);
-
-        if ($cantidad > 0) {
-            $etiqueta = 'Fuera de Lapso';
-            if ($cantidad > 1) {
-                $etiqueta .= ' (x' . $cantidad . ' programas)';
+            if ($tipo_lapso !== null && (int) $tipo_lapso === 2) {
+                $aplica_por_lapso = true;
+                log_message('debug', '[_aplica_arancel_fuera_lapso] Condición 1 cumplida: tipo_lapso = 2');
+            } else {
+                log_message('debug', '[_aplica_arancel_fuera_lapso] Condición 1 NO cumplida: tipo_lapso = '
+                    . var_export($tipo_lapso, true));
             }
-            $conceptos[] = $etiqueta;
-
-            log_message('debug', '[_obtener_conceptos_aranceles_pago] Fuera de Lapso aplica en '
-                . $cantidad . ' programa(s).');
         } else {
-            log_message('debug', '[_obtener_conceptos_aranceles_pago] Fuera de Lapso aplica pero sin programas (0).');
+            log_message('debug', '[_aplica_arancel_fuera_lapso] No se encontró lapso activo para periodo '
+                . $id_periodo);
         }
-    }
 
-    log_message('info', '[_obtener_conceptos_aranceles_pago] FIN - Conceptos: ['
-        . implode(', ', $conceptos) . ']');
+        $usuario = $this->Usuarios_model->buscar_usuario($id_usuario);
 
-    return $conceptos;
-}
+        if (!empty($usuario) && isset($usuario->id_tiempo_preinscripcion)) {
+            $id_tiempo = (int) $usuario->id_tiempo_preinscripcion;
+            log_message('debug', '[_aplica_arancel_fuera_lapso] Usuario id_tiempo_preinscripcion=' . $id_tiempo);
 
-/**
- * Determina si aplica el arancel de inscripción.
- * Regla: el estudiante tiene al menos un programa preinscrito en el período.
- *
- * @param int $id_usuario
- * @param int $id_periodo
- * @return bool
- */
-private function _aplica_arancel_inscripcion($id_usuario, $id_periodo) {
-    log_message('debug', '[_aplica_arancel_inscripcion] Verificando usuario=' . $id_usuario
-        . ' | periodo=' . $id_periodo);
-
-    $programas = $this->Materias_preinscrita_model
-        ->lista_programas_preinscritas_trimestre($id_usuario, $id_periodo);
-
-    if (empty($programas) || !is_array($programas)) {
-        log_message('debug', '[_aplica_arancel_inscripcion] No hay programas preinscritos.');
-        return false;
-    }
-
-    // Contar programas válidos (misma lógica que la vista)
-    $total_programas = 0;
-    $hay_especial = false;
-
-    foreach ($programas as $p) {
-        if (isset($p->id_programa) && $p->id_programa <> 27 && $p->id_programa <> 28) {
-            $total_programas++;
+            if ($id_tiempo !== 73) {
+                $aplica_por_tiempo = true;
+                log_message('debug', '[_aplica_arancel_fuera_lapso] Condición 2 cumplida: id_tiempo_preinscripcion = '
+                    . $id_tiempo);
+            }
         } else {
-            $hay_especial = true;
+            log_message('debug', '[_aplica_arancel_fuera_lapso] Usuario sin id_tiempo_preinscripcion. Usuario='
+                . print_r($usuario, true));
         }
+
+        $aplica = ($aplica_por_lapso || $aplica_por_tiempo);
+
+        log_message('info', '[_aplica_arancel_fuera_lapso] FIN - Resultado: '
+            . ($aplica ? 'SÍ' : 'NO')
+            . ' | por_lapso=' . ($aplica_por_lapso ? 'sí' : 'no')
+            . ' | por_tiempo=' . ($aplica_por_tiempo ? 'sí' : 'no'));
+
+        return $aplica;
     }
 
-    $aplica = ($total_programas > 0 || $hay_especial);
+    /**
+     * Cuenta los programas preinscritos del estudiante en el período.
+     */
+    private function _contar_programas_para_fuera_lapso($id_usuario, $id_periodo) {
+        log_message('debug', '[_contar_programas_para_fuera_lapso] INICIO - usuario=' . $id_usuario
+            . ' | periodo=' . $id_periodo);
 
-    log_message('debug', '[_aplica_arancel_inscripcion] Resultado: '
-        . ($aplica ? 'SÍ' : 'NO') . ' (programas: ' . $total_programas
-        . ' | especiales: ' . ($hay_especial ? 'sí' : 'no') . ')');
+        $programas = $this->Materias_preinscrita_model
+            ->lista_programas_preinscritas_trimestre($id_usuario, $id_periodo);
 
-    return $aplica;
-}
-
-/**
- * Determina si aplica el arancel de permanencia.
- * Regla: existe al menos una reincorporación registrada para el estudiante
- *        en el período consultado (Reincorporaciones_model::buscar_reincorporacion).
- *
- * @param int $id_usuario
- * @param int $id_periodo
- * @return bool
- */
-private function _aplica_arancel_permanencia($id_usuario, $id_periodo) {
-    log_message('debug', '[_aplica_arancel_permanencia] Verificando usuario=' . $id_usuario
-        . ' | periodo=' . $id_periodo);
-
-   
-    $reincorporaciones = $this->Reincorporaciones_model
-        ->buscar_reincorporacion($id_usuario, $id_periodo);
-
-    // El modelo devuelve 0 si no hay registros, o un array de objetos si hay
-    $aplica = (!empty($reincorporaciones) && is_array($reincorporaciones));
-
-    $total = is_array($reincorporaciones) ? count($reincorporaciones) : 0;
-
-    log_message('debug', '[_aplica_arancel_permanencia] Resultado: '
-        . ($aplica ? 'SÍ' : 'NO') . ' (reincorporaciones: ' . $total . ')');
-
-    return $aplica;
-}
-
-/**
- * Determina si aplica el arancel fuera de lapso.
- *
- * Reglas:
- *   - Aplica si el lapso activo tiene tipo_lapso = 2,
- *     O si el id_tiempo_preinscripcion del usuario es distinto de 73.
- *   - Se cobra POR CADA PROGRAMA en el que el estudiante está inscrito
- *     (excluyendo programas 27 y 28, que son especiales).
- *
- * @param int $id_usuario
- * @param int $id_periodo
- * @return bool
- */
-private function _aplica_arancel_fuera_lapso($id_usuario, $id_periodo) {
-    log_message('debug', '[_aplica_arancel_fuera_lapso] INICIO - usuario=' . $id_usuario
-        . ' | periodo=' . $id_periodo);
-
-    $aplica_por_lapso = false;
-    $aplica_por_tiempo = false;
-
-    // ============================================================
-    // CONDICIÓN 1: tipo_lapso == 2 (consultando directo en BD)
-    // ============================================================
-    $lapso = $this->Tiempo_preinscripcion_model->gettiempo_preinscripcion();
-    
-
-    if (!empty($lapso)) {
-        log_message('debug', '[_aplica_arancel_fuera_lapso] Lapso encontrado: '
-            . print_r($lapso, true));
-
-        $tipo_lapso = null;
-        if (isset($lapso->tipo_lapso)) {
-            $tipo_lapso = $lapso->tipo_lapso;
-        } 
-
-        if ($tipo_lapso !== null && (int) $tipo_lapso === 2) {
-            $aplica_por_lapso = true;
-            log_message('debug', '[_aplica_arancel_fuera_lapso] Condición 1 cumplida: tipo_lapso = 2');
-        } else {
-            log_message('debug', '[_aplica_arancel_fuera_lapso] Condición 1 NO cumplida: tipo_lapso = '
-                . var_export($tipo_lapso, true));
+        if (empty($programas) || !is_array($programas)) {
+            log_message('debug', '[_contar_programas_para_fuera_lapso] Sin programas.');
+            return 0;
         }
-    } else {
-        log_message('debug', '[_aplica_arancel_fuera_lapso] No se encontró lapso activo para periodo '
-            . $id_periodo);
-    }
 
-    // ============================================================
-    // CONDICIÓN 2: id_tiempo_preinscripcion del usuario != 73
-    // ============================================================
-    $usuario = $this->Usuarios_model->buscar_usuario($id_usuario);
-
-    if (!empty($usuario) && isset($usuario->id_tiempo_preinscripcion)) {
-        $id_tiempo = (int) $usuario->id_tiempo_preinscripcion;
-        log_message('debug', '[_aplica_arancel_fuera_lapso] Usuario id_tiempo_preinscripcion=' . $id_tiempo);
-
-        if ($id_tiempo !== 73) {
-            $aplica_por_tiempo = true;
-            log_message('debug', '[_aplica_arancel_fuera_lapso] Condición 2 cumplida: id_tiempo_preinscripcion = '
-                . $id_tiempo);
+        $total = 0;
+        foreach ($programas as $p) {
+            if (isset($p->id_programa) && $p->id_programa <> 27 && $p->id_programa <> 28) {
+                $total++;
+            }
         }
-    } else {
-        log_message('debug', '[_aplica_arancel_fuera_lapso] Usuario sin id_tiempo_preinscripcion. Usuario='
-            . print_r($usuario, true));
+
+        log_message('debug', '[_contar_programas_para_fuera_lapso] Total programas válidos: ' . $total);
+        return $total;
     }
 
-    // ============================================================
-    // RESULTADO FINAL
-    // ============================================================
-    $aplica = ($aplica_por_lapso || $aplica_por_tiempo);
-
-    log_message('info', '[_aplica_arancel_fuera_lapso] FIN - Resultado: '
-        . ($aplica ? 'SÍ' : 'NO')
-        . ' | por_lapso=' . ($aplica_por_lapso ? 'sí' : 'no')
-        . ' | por_tiempo=' . ($aplica_por_tiempo ? 'sí' : 'no'));
-
-    return $aplica;
-}
-
-/**
- * Cuenta los programas preinscritos del estudiante en el período.
- * Excluye los programas 27 y 28 (que son líneas especiales y ya
- * se manejan aparte en la vista).
- *
- * @param int $id_usuario
- * @param int $id_periodo
- * @return int Cantidad de programas a considerar para el arancel
- */
-private function _contar_programas_para_fuera_lapso($id_usuario, $id_periodo) {
-    log_message('debug', '[_contar_programas_para_fuera_lapso] INICIO - usuario=' . $id_usuario
-        . ' | periodo=' . $id_periodo);
-
-    $programas = $this->Materias_preinscrita_model
-        ->lista_programas_preinscritas_trimestre($id_usuario, $id_periodo);
-
-    if (empty($programas) || !is_array($programas)) {
-        log_message('debug', '[_contar_programas_para_fuera_lapso] Sin programas.');
-        return 0;
-    }
-
-    $total = 0;
-    foreach ($programas as $p) {
-        // Excluir programas 27 y 28 (líneas especiales)
-        if (isset($p->id_programa) && $p->id_programa <> 27 && $p->id_programa <> 28) {
-            $total++;
-        }
-    }
-
-    log_message('debug', '[_contar_programas_para_fuera_lapso] Total programas válidos: ' . $total);
-    return $total;
-}
     /**
      * Obtiene el nombre del trámite
-     * Soporta tanto objeto fila (row()) como array de filas (result())
      */
     private function obtener_nombre_tramite($tramite) {
         $nombre_tramite = $this->Tramites_model->getTramites($tramite);
@@ -1382,7 +1396,6 @@ private function _contar_programas_para_fuera_lapso($id_usuario, $id_periodo) {
             return 'Trámite Administrativo FENFMP';
         }
         
-        // ✅ Caso 1: es un solo objeto (row())
         if (is_object($nombre_tramite)) {
             if (isset($nombre_tramite->nombre) && !empty($nombre_tramite->nombre)) {
                 return $nombre_tramite->nombre;
@@ -1390,7 +1403,6 @@ private function _contar_programas_para_fuera_lapso($id_usuario, $id_periodo) {
             return 'Trámite Administrativo FENFMP';
         }
         
-        // ✅ Caso 2: es un array de objetos (result())
         if (is_array($nombre_tramite)) {
             $nombres = array();
             foreach ($nombre_tramite as $t) {
@@ -1408,7 +1420,7 @@ private function _contar_programas_para_fuera_lapso($id_usuario, $id_periodo) {
     }
 
     /**
-     * Limpia TODOS los datos de pago de la sesión
+     * Limpia TODOS los datos de pago de la sesión (incluye la nueva cédula)
      */
     private function limpiar_sesion_pago() {
         $this->session->unset_userdata(array(
@@ -1419,6 +1431,7 @@ private function _contar_programas_para_fuera_lapso($id_usuario, $id_periodo) {
             'pago_bdv_periodo',
             'pago_bdv_tipo',
             'pago_bdv_id_estudiante',
+            'pago_bdv_cedula',          // ✅ NUEVO
             'pago_bdv_uc',
             'pago_bdv_concepto',
             'pago_bdv_id_solicitud'
@@ -1499,4 +1512,101 @@ private function _contar_programas_para_fuera_lapso($id_usuario, $id_periodo) {
         redirect($this->url_por_tramite($id_solicitud_tramite));
         return;
     }
+    /**
+ * ✅ Valida y sanitiza la cédula/RIF del depositante.
+ * 
+ * Reglas:
+ *  - tipo_documento debe estar entre: V, E, J, G, P
+ *  - cedula_rif es obligatoria (no vacía)
+ *  - cedula_rif solo contiene dígitos
+ *  - cedula_rif tiene entre 6 y 12 dígitos
+ *
+ * @param string $tipo_documento
+ * @param string $cedula_rif
+ * @return array ['ok' => bool, 'mensaje' => string, 'documento' => string, 'tipo' => string, 'numero' => string]
+ */
+private function validar_documento_depositante($tipo_documento, $cedula_rif) {
+    
+    // Lista blanca de tipos de documento
+    $tipos_validos = array('V', 'E', 'J', 'G', 'P');
+    
+    // ✅ Normalizar entradas
+    $tipo_documento = strtoupper(trim((string) $tipo_documento));
+    $cedula_rif     = trim((string) $cedula_rif);
+    
+    // ✅ 1. Validar tipo de documento
+    if (empty($tipo_documento)) {
+        return array(
+            'ok'      => false,
+            'mensaje' => 'Debe seleccionar el tipo de documento (V, E, J, G o P).',
+            'documento' => '',
+            'tipo'    => '',
+            'numero'  => ''
+        );
+    }
+    
+    if (!in_array($tipo_documento, $tipos_validos, true)) {
+        return array(
+            'ok'      => false,
+            'mensaje' => 'Tipo de documento no válido. Debe ser V, E, J, G o P.',
+            'documento' => '',
+            'tipo'    => '',
+            'numero'  => ''
+        );
+    }
+    
+    // ✅ 2. Validar que la cédula/RIF no esté vacía
+    if ($cedula_rif === '') {
+        return array(
+            'ok'      => false,
+            'mensaje' => 'La cédula o RIF del depositante es obligatoria.',
+            'documento' => '',
+            'tipo'    => $tipo_documento,
+            'numero'  => ''
+        );
+    }
+    
+    // ✅ 3. Validar que solo tenga dígitos
+    if (!preg_match('/^[0-9]+$/', $cedula_rif)) {
+        return array(
+            'ok'      => false,
+            'mensaje' => 'La cédula o RIF solo debe contener números, sin guiones ni puntos.',
+            'documento' => '',
+            'tipo'    => $tipo_documento,
+            'numero'  => ''
+        );
+    }
+    
+    // ✅ 4. Validar longitud (6 a 12 dígitos)
+    $largo = strlen($cedula_rif);
+    if ($largo < 6 || $largo > 12) {
+        return array(
+            'ok'      => false,
+            'mensaje' => 'La cédula o RIF debe tener entre 6 y 12 dígitos. Ingresó ' . $largo . '.',
+            'documento' => '',
+            'tipo'    => $tipo_documento,
+            'numero'  => ''
+        );
+    }
+    
+    // ✅ 5. Validación adicional: no puede ser todo ceros
+    if (preg_match('/^0+$/', $cedula_rif)) {
+        return array(
+            'ok'      => false,
+            'mensaje' => 'La cédula o RIF no puede ser todo ceros.',
+            'documento' => '',
+            'tipo'    => $tipo_documento,
+            'numero'  => ''
+        );
+    }
+    
+    // ✅ Todo OK
+    return array(
+        'ok'        => true,
+        'mensaje'   => '',
+        'documento' => $tipo_documento . $cedula_rif,  // Ej: V12345678
+        'tipo'      => $tipo_documento,
+        'numero'    => $cedula_rif
+    );
+}
 }

@@ -382,20 +382,6 @@
 
                             // Total final
                             $total_final = $total_pagar_gen + $total_arancel_permanencia_gen + $arancel_fuera_lapso - $monto_exonerar;
-
-                            // ============================================================
-                            // PREPARAR CÉDULA/RIF POR DEFECTO PARA LA PASARELA
-                            // ============================================================
-                            // Se extrae solo la parte numérica de la cédula del estudiante.
-                            // Se asume que $datos_alumno->cedula puede venir como "V-12345678", "12345678", etc.
-                            $cedula_default_raw = isset($datos_alumno->cedula) ? $datos_alumno->cedula : '';
-                            $cedula_default_numeros = preg_replace('/[^0-9]/', '', $cedula_default_raw);
-                            // Detectar tipo de documento por defecto (V para venezolanos, E para extranjeros)
-                            $tipo_doc_default = 'V';
-                            if (stripos($cedula_default_raw, 'E') === 0) { $tipo_doc_default = 'E'; }
-                            elseif (stripos($cedula_default_raw, 'J') === 0) { $tipo_doc_default = 'J'; }
-                            elseif (stripos($cedula_default_raw, 'G') === 0) { $tipo_doc_default = 'G'; }
-                            elseif (stripos($cedula_default_raw, 'P') === 0) { $tipo_doc_default = 'P'; }
                             ?>
 
                             <!-- ============================================================ -->
@@ -551,56 +537,55 @@
                             </div>
 
                             <!-- ============================================================ -->
-                            <!-- CAMPO: CÉDULA / RIF PARA LA PASARELA DE PAGO                 -->
+                            <!-- Sección de Reporte de Pago                                  -->
                             <!-- ============================================================ -->
-                            <div class="row mt-4">
-                                <div class="col-md-12">
-                                    <div class="card card-outline" style="border-radius: 8px; border-left: 4px solid #1a8a3f; border-top: none; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
-                                        <div class="card-header" style="background: #f0fdf4; border-bottom: 1px solid #e8e8e8; padding: 8px 15px; border-radius: 8px 8px 0 0;">
-                                            <h6 class="mb-0" style="font-weight: 600; color: #1a8a3f;">
-                                                <i class="fas fa-id-card mr-2"></i>
-                                                Datos para la Pasarela de Pago
-                                            </h6>
-                                        </div>
-                                        <div class="card-body p-3">
-                                            <div class="form-group mb-0">
-                                                <label for="cedula_rif_pago" class="form-label" style="font-weight: 600; color: #2c3e50; font-size: 0.9rem;">
-                                                    Cédula del Estudiante o RIF del Comercio <span class="text-danger">*</span>
-                                                </label>
-                                                <div class="input-group">
-                                                    <div class="input-group-prepend">
-                                                        <select name="tipo_documento_pago" id="tipo_documento_pago" class="form-control" style="border-radius: 8px 0 0 8px; font-weight: 500; background: #f8f9fa;">
-                                                            <option value="V" <?php echo ($tipo_doc_default == 'V') ? 'selected' : ''; ?>>V</option>
-                                                            <option value="E" <?php echo ($tipo_doc_default == 'E') ? 'selected' : ''; ?>>E</option>
-                                                            <option value="J" <?php echo ($tipo_doc_default == 'J') ? 'selected' : ''; ?>>J</option>
-                                                            <option value="G" <?php echo ($tipo_doc_default == 'G') ? 'selected' : ''; ?>>G</option>
-                                                            <option value="P" <?php echo ($tipo_doc_default == 'P') ? 'selected' : ''; ?>>P</option>
-                                                        </select>
-                                                    </div>
-                                                    <input type="text" 
-                                                           class="form-control" 
-                                                           id="cedula_rif_pago" 
-                                                           name="cedula_rif_pago" 
-                                                           placeholder="Ej: 12345678"
-                                                           pattern="[0-9]{6,12}"
-                                                           maxlength="12"
-                                                           required
-                                                           value="<?php echo htmlspecialchars($cedula_default_numeros); ?>"
-                                                           style="border-radius: 0 8px 8px 0; font-weight: 500; letter-spacing: 0.5px;">
-                                                </div>
-                                                <small class="form-text text-muted" style="font-size: 0.78rem;">
-                                                    <i class="fas fa-info-circle text-info"></i>
-                                                    Se ha precargado tu cédula, pero puedes <strong>modificarla</strong> si deseas usar otro documento (por ejemplo, el RIF de un comercio o tercero). Solo números, sin guiones ni puntos.
-                                                </small>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- ============================================================ -->
-                            <!-- Sección de Botones de Pago                                   -->
-                            <!-- ============================================================ -->
+                          <!-- ============================================================ -->
+<!-- CAMPO: CÉDULA / RIF PARA LA PASARELA DE PAGO                 -->
+<!-- ============================================================ -->
+<div class="row mt-4">
+    <div class="col-md-12">
+        <div class="card card-outline" style="border-radius: 8px; border-left: 4px solid #1a8a3f; border-top: none; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
+            <div class="card-header" style="background: #f0fdf4; border-bottom: 1px solid #e8e8e8; padding: 8px 15px; border-radius: 8px 8px 0 0;">
+                <h6 class="mb-0" style="font-weight: 600; color: #1a8a3f;">
+                    <i class="fas fa-id-card mr-2"></i>
+                    Datos para la Pasarela de Pago
+                </h6>
+            </div>
+            <div class="card-body p-3">
+                <div class="form-group mb-0">
+                    <label for="cedula_rif_pago" class="form-label" style="font-weight: 600; color: #2c3e50; font-size: 0.9rem;">
+                        Cédula del Estudiante o RIF del Comercio <span class="text-danger">*</span>
+                    </label>
+                    <div class="input-group">
+                        <div class="input-group-prepend">
+                            <select name="tipo_documento_pago" id="tipo_documento_pago" class="form-control" style="border-radius: 8px 0 0 8px; font-weight: 500; background: #f8f9fa;">
+                                <option value="V">V</option>
+                                <option value="E">E</option>
+                                <option value="J">J</option>
+                                <option value="G">G</option>
+                                <option value="P">P</option>
+                            </select>
+                        </div>
+                        <input type="text" 
+                               class="form-control" 
+                               id="cedula_rif_pago" 
+                               name="cedula_rif_pago" 
+                               placeholder="Ej: 12345678"
+                               pattern="[0-9]{6,12}"
+                               maxlength="12"
+                               required
+                               style="border-radius: 0 8px 8px 0; font-weight: 500; letter-spacing: 0.5px;">
+                    </div>
+                    <small class="form-text text-muted" style="font-size: 0.78rem;">
+                        <i class="fas fa-info-circle text-info"></i>
+                        Ingresa tu cédula (V/E) o el RIF (J/G/P) que se usará en la transacción bancaria. Solo números, sin guiones ni puntos.
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+                            <!-- Agregar en la sección de botones de pago -->
                             <div class="row mt-4">
                                 <div class="col-md-12 text-center">
                                     <div class="d-flex justify-content-center flex-wrap" style="gap: 12px;">
@@ -831,30 +816,9 @@ document.addEventListener('DOMContentLoaded', function() {
         btnPagoBDV.addEventListener('click', function(e) {
             e.preventDefault();
             
-            // ============================================================
-            // VALIDACIÓN DE CÉDULA / RIF
-            // ============================================================
-            var cedulaInput = document.getElementById('cedula_rif_pago');
-            var cedulaValor = cedulaInput.value.trim();
-            
-            if (!cedulaValor || !/^[0-9]{6,12}$/.test(cedulaValor)) {
-                alert('⚠️ Debes ingresar una cédula o RIF válido antes de continuar.\n\n' +
-                      'Solo números, entre 6 y 12 dígitos.\n' +
-                      'Ejemplo: 12345678');
-                cedulaInput.focus();
-                cedulaInput.style.borderColor = '#dc3545';
-                cedulaInput.style.borderWidth = '2px';
-                return;
-            }
-            // Limpiar el resaltado si ya es válido
-            cedulaInput.style.borderColor = '';
-            cedulaInput.style.borderWidth = '';
-            
             var monto = '<?php echo number_format($total_final, 2, ",", "."); ?>';
-            var tipoDoc = document.getElementById('tipo_documento_pago').value;
             var mensaje = "💳 PAGO CON BANCO DE VENEZUELA\n\n" +
                           "Serás redirigido a la pasarela de pago BDV.\n\n" +
-                          "📌 Documento: " + tipoDoc + "-" + cedulaValor + "\n" +
                           "📌 Monto a pagar: Ref. " + monto + "\n\n" +
                           "⚠️ Antes de continuar, asegúrate de:\n" +
                           "✅ Tener saldo suficiente en tu cuenta BDV\n" +
@@ -871,32 +835,21 @@ document.addEventListener('DOMContentLoaded', function() {
                 form.action = "<?php echo base_url(); ?>pagos/iniciar";
 
                 // 2. Definir las variables que quieres enviar por POST
+                // Puedes duplicar este bloque para enviar más variables si lo necesitas
                 var total_final = document.createElement('input');
                 total_final.type = 'hidden';
-                total_final.name = 'total_final';
-                total_final.value = '<?php echo $total_final; ?>';
+                total_final.name = 'total_final'; // Nombre con el que se recibirá en PHP ($_POST['monto'])
+                total_final.value = '<?php echo $total_final; ?>'; // Es mejor enviar el número limpio sin formato para procesarlo en BDV
                 form.appendChild(total_final);
 
+                // Ejemplo de variable extra (opcional, por si necesitas enviar un ID de orden)
+              
                 var total_uc = document.createElement('input');
                 total_uc.type = 'hidden';
                 total_uc.name = 'total_uc';
                 total_uc.value = '<?php echo $total_uc; ?>';
                 form.appendChild(total_uc);
-
-                // ============================================================
-                // NUEVOS CAMPOS: TIPO DE DOCUMENTO Y CÉDULA/RIF
-                // ============================================================
-                var tipo_documento = document.createElement('input');
-                tipo_documento.type = 'hidden';
-                tipo_documento.name = 'tipo_documento';
-                tipo_documento.value = tipoDoc;
-                form.appendChild(tipo_documento);
-
-                var cedula_rif = document.createElement('input');
-                cedula_rif.type = 'hidden';
-                cedula_rif.name = 'cedula_rif';
-                cedula_rif.value = cedulaValor;
-                form.appendChild(cedula_rif);
+                
 
                 // 3. Añadir el formulario al documento y enviarlo
                 document.body.appendChild(form);
@@ -905,4 +858,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 });
+
+                   
 </script>

@@ -591,8 +591,24 @@ $conc=array(0, 1);
 		$this->db->join("banco","banco.id = registro_pago.id_banco");
 		$this->db->where("id_usuario",$id_usuario);
 		$this->db->where("id_periodo",$id_periodo);
+		$this->db->where("tramite",0);
 		$resultados = $this->db->get("registro_pago");
 		//var_dump($this->db->queries);
+		if ($resultados->num_rows() > 0) {
+			return $resultados->result();
+		}
+		else{
+			return false;
+		}
+	}
+	public function VerificarRegistro_pagotodosSolicitudes($id_usuario,$id_solicitud){
+
+		$this->db->join("banco","banco.id = registro_pago.id_banco");
+		$this->db->where("id_usuario",$id_usuario);
+		$this->db->where("id_solicitud_tramite",$id_solicitud);
+		$this->db->where("tramite",1);
+		$resultados = $this->db->get("registro_pago");
+	
 		if ($resultados->num_rows() > 0) {
 			return $resultados->result();
 		}

@@ -4035,6 +4035,21 @@ public function get_unidades_retiro($id_solicitud) {
     
     $this->output->set_output(json_encode($response));
 }
+public function ver_pago($id_usuario,$id_solicitud)
+		{
+					
+			
+			$data = array(
+				'datos_alumno' => $this->Alumno_model->getListaAlumno($id_usuario),				
+				'pago' => $this->Registro_pago_model->VerificarRegistro_pagotodosSolicitudes($id_usuario, $id_solicitud),
+				'info_solicitud' => $this->Solictudtramite_model->getSolicitud($id_solicitud)
+			);
+			
+			$this->load->view('layouts/header');
+			$this->load->view('layouts/sidebar_tramites', $data);
+			$this->load->view('participante/tramites/ver_registro_pago', $data);
+			$this->load->view('layouts/footer');
+		}
 
 }
 

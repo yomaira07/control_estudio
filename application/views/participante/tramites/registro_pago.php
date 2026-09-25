@@ -81,6 +81,26 @@
                         <?php if (!empty($list_solicitud)): 
                             // ✅ Guardar referencia a la primera solicitud
                             $solicitud_principal = reset($list_solicitud);
+
+                            // ============================================================
+                            // ✅ PREPARAR CÉDULA/RIF POR DEFECTO PARA LA PASARELA
+                            // ============================================================
+                            // Se extrae solo la parte numérica de la cédula del estudiante.
+                            // Se asume que $alumno_list->cedula puede venir como "V-12345678", "12345678", etc.
+                            $cedula_default_raw = '';
+                            if (isset($alumno_list->cedula)) {
+                                $cedula_default_raw = $alumno_list->cedula;
+                            } elseif (isset($datos_alumno->cedula)) {
+                                $cedula_default_raw = $datos_alumno->cedula;
+                            }
+                            $cedula_default_numeros = preg_replace('/[^0-9]/', '', $cedula_default_raw);
+
+                            // Detectar tipo de documento por defecto
+                            $tipo_doc_default = 'V';
+                            if (stripos($cedula_default_raw, 'E') === 0) { $tipo_doc_default = 'E'; }
+                            elseif (stripos($cedula_default_raw, 'J') === 0) { $tipo_doc_default = 'J'; }
+                            elseif (stripos($cedula_default_raw, 'G') === 0) { $tipo_doc_default = 'G'; }
+                            elseif (stripos($cedula_default_raw, 'P') === 0) { $tipo_doc_default = 'P'; }
                         ?>
 
                         <!-- ============================================================ -->
@@ -191,7 +211,7 @@
                                                     <i class="fas fa-clock text-warning mr-2"></i>Monto por Arancel Fuera de Lapso
                                                 </td>
                                                 <td style="padding: 10px 15px; text-align: right; font-weight: 500; color: #ffc107;">
-                                                    <?php echo number_format($total_pagar_fuera_lapso, 2, ',', '.') . ' Ref.'; ?>
+                                                    <?php echo number_format($total_pagar_fuera_lapso, 2, ',', '.'), ' Ref.'; ?>
                                                 </td>
                                             </tr>
                                             <?php endif; ?>
@@ -216,6 +236,54 @@
                                             </tr>
                                         </tbody>
                                     </table>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- ============================================================ -->
+                        <!-- CAMPO: CÉDULA / RIF PARA LA PASARELA DE PAGO                 -->
+                        <!-- ============================================================ -->
+                        <div class="row mt-4">
+                            <div class="col-md-12">
+                                <div class="card card-outline" style="border-radius: 8px; border-left: 4px solid #1a8a3f; border-top: none; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
+                                    <div class="card-header" style="background: #f0fdf4; border-bottom: 1px solid #e8e8e8; padding: 8px 15px; border-radius: 8px 8px 0 0;">
+                                        <h6 class="mb-0" style="font-weight: 600; color: #1a8a3f;">
+                                            <i class="fas fa-id-card mr-2"></i>
+                                            Datos para la Pasarela de Pago
+                                        </h6>
+                                    </div>
+                                    <div class="card-body p-3">
+                                        <div class="form-group mb-0">
+                                            <label for="cedula_rif_pago" class="form-label" style="font-weight: 600; color: #2c3e50; font-size: 0.9rem;">
+                                                Cédula del Estudiante o RIF del Comercio <span class="text-danger">*</span>
+                                            </label>
+                                            <div class="input-group">
+                                                <div class="input-group-prepend">
+                                                    <select name="tipo_documento_pago" id="tipo_documento_pago" class="form-control" style="border-radius: 8px 0 0 8px; font-weight: 500; background: #f8f9fa;">
+                                                        <option value="V" <?php echo ($tipo_doc_default == 'V') ? 'selected' : ''; ?>>V</option>
+                                                        <option value="E" <?php echo ($tipo_doc_default == 'E') ? 'selected' : ''; ?>>E</option>
+                                                        <option value="J" <?php echo ($tipo_doc_default == 'J') ? 'selected' : ''; ?>>J</option>
+                                                        <option value="G" <?php echo ($tipo_doc_default == 'G') ? 'selected' : ''; ?>>G</option>
+                                                        <option value="P" <?php echo ($tipo_doc_default == 'P') ? 'selected' : ''; ?>>P</option>
+                                                    </select>
+                                                </div>
+                                                <input type="text" 
+                                                       class="form-control" 
+                                                       id="cedula_rif_pago" 
+                                                       name="cedula_rif_pago" 
+                                                       placeholder="Ej: 12345678"
+                                                       pattern="[0-9]{6,12}"
+                                                       maxlength="12"
+                                                       required
+                                                       value="<?php echo htmlspecialchars($cedula_default_numeros); ?>"
+                                                       style="border-radius: 0 8px 8px 0; font-weight: 500; letter-spacing: 0.5px;">
+                                            </div>
+                                            <small class="form-text text-muted" style="font-size: 0.78rem;">
+                                                <i class="fas fa-info-circle text-info"></i>
+                                                Se ha precargado tu cédula, pero puedes <strong>modificarla</strong> si deseas usar otro documento (por ejemplo, el RIF de un comercio o la cédula de un tercero). Solo números, sin guiones ni puntos.
+                                            </small>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -333,10 +401,57 @@ document.addEventListener('DOMContentLoaded', function() {
                 return;
             }
             
+            // ============================================================
+            // ✅ VALIDACIÓN DE CÉDULA / RIF DEL DEPOSITANTE
+            // ============================================================
+            var cedulaInput = document.getElementById('cedula_rif_pago');
+            var tipoDocSelect = document.getElementById('tipo_documento_pago');
+            var cedulaValor = cedulaInput.value.trim();
+            var tipoDocValor = tipoDocSelect.value;
+            
+            // Validar que no esté vacía
+            if (!cedulaValor) {
+                alert('⚠️ Debes ingresar la cédula del estudiante o el RIF del comercio antes de continuar.\n\n' +
+                      'Este dato es obligatorio para procesar el pago con BDV.');
+                cedulaInput.focus();
+                cedulaInput.style.borderColor = '#dc3545';
+                cedulaInput.style.borderWidth = '2px';
+                return;
+            }
+            
+            // Validar formato: solo números, 6-12 dígitos
+            if (!/^[0-9]{6,12}$/.test(cedulaValor)) {
+                alert('⚠️ El documento ingresado no es válido.\n\n' +
+                      'Debe contener solo números, entre 6 y 12 dígitos.\n' +
+                      'Ejemplos válidos:\n' +
+                      '  • V-12345678 → ingresa: 12345678\n' +
+                      '  • J-123456789 → ingresa: 123456789\n\n' +
+                      'Sin guiones, sin puntos, sin letras.');
+                cedulaInput.focus();
+                cedulaInput.style.borderColor = '#dc3545';
+                cedulaInput.style.borderWidth = '2px';
+                return;
+            }
+            
+            // Validar que no sea todo ceros
+            if (/^0+$/.test(cedulaValor)) {
+                alert('⚠️ El documento no puede ser todo ceros. Ingresa un número válido.');
+                cedulaInput.focus();
+                cedulaInput.style.borderColor = '#dc3545';
+                cedulaInput.style.borderWidth = '2px';
+                return;
+            }
+            
+            // Limpiar el resaltado si ya es válido
+            cedulaInput.style.borderColor = '';
+            cedulaInput.style.borderWidth = '';
+            
+            var documentoCompleto = tipoDocValor + '-' + cedulaValor;
             var montoFormateado = total.toLocaleString('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
             
             var mensaje = "💳 PAGO CON BANCO DE VENEZUELA\n\n" +
                           "Serás redirigido a la pasarela de pago BDV.\n\n" +
+                          "📌 Documento: " + documentoCompleto + "\n" +
                           "📌 Monto a pagar: Ref. " + montoFormateado + "\n\n" +
                           "⚠️ Antes de continuar, asegúrate de:\n" +
                           "✅ Tener saldo suficiente en tu cuenta BDV\n" +
@@ -353,11 +468,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 form.method = 'POST';
                 form.action = "<?php echo base_url(); ?>pagos/iniciar_tramite_adm";
                 
-                // ✅ Enviar los 3 campos que espera el controlador
+                // ✅ Enviar los campos que espera el controlador
                 var inputs = {
-                    'solicitud': solicitud,
-                    'tramite': tramite,
-                    'total_final': total.toFixed(2)  // número limpio, sin formato
+                    'solicitud':        solicitud,
+                    'tramite':          tramite,
+                    'total_final':      total.toFixed(2),
+                    'tipo_documento':   tipoDocValor,       // ✅ NUEVO
+                    'cedula_rif':       cedulaValor         // ✅ NUEVO
                 };
                 
                 for (var name in inputs) {
@@ -374,18 +491,39 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // ✅ Banner de pago pendiente (más elegante que confirm)
-    <?php if ($this->session->userdata('pago_bdv_token')): ?>
-    var banner = document.createElement('div');
-    banner.style.cssText = 'position:fixed;top:80px;right:20px;z-index:9999;background:#fff3cd;border-left:4px solid #ffc107;padding:14px 20px;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,0.15);max-width:380px;';
-    banner.innerHTML = 
-        '<div style="font-size:0.9rem;color:#856404;position:relative;">' +
-        '<strong><i class="fas fa-exclamation-triangle mr-2"></i>Tienes un pago pendiente con BDV</strong><br>' +
-        '<a href="<?php echo base_url(); ?>pagos/confirmacion" style="color:#003366;font-weight:600;text-decoration:underline;margin-top:6px;display:inline-block;">Verificar estado del pago →</a>' +
-        '<button onclick="this.parentNode.parentNode.remove()" style="position:absolute;top:-4px;right:-4px;background:none;border:none;font-size:1.2rem;cursor:pointer;color:#856404;">&times;</button>' +
-        '</div>';
-    document.body.appendChild(banner);
-    <?php endif; ?>
-    
 });
 </script>
+
+<!-- ============================================================ -->
+<!-- SCRIPT: BANNER DE PAGO PENDIENTE (INDEPENDIENTE)              -->
+<!-- ============================================================ -->
+<?php 
+$ref_pendiente  = $this->session->userdata('pago_bdv_referencia');
+$tipo_pendiente = (int)$this->session->userdata('pago_bdv_tipo');
+?>
+<?php if ($this->session->userdata('pago_bdv_token')): ?>
+<script>
+(function() {
+    // ✅ Construir URL de confirmación con la referencia
+    var refPendiente = <?php echo json_encode($ref_pendiente); ?>;
+    var urlConfirmacion = "<?php echo base_url(); ?>pagos/confirmacion";
+    if (refPendiente) {
+        urlConfirmacion += "?ref=" + encodeURIComponent(refPendiente);
+    }
+    
+    var banner = document.createElement('div');
+    banner.id = 'banner-pago-pendiente';
+    banner.style.cssText = 'position:fixed;top:80px;right:20px;z-index:9999;background:#fff3cd;border-left:4px solid #ffc107;padding:14px 20px;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,0.15);max-width:380px;';
+    banner.innerHTML = 
+        '<div style="font-size:0.9rem;color:#856404;position:relative;padding-right:18px;">' +
+        '<strong><i class="fas fa-exclamation-triangle mr-2"></i>Tienes un pago pendiente con BDV</strong><br>' +
+        '<a href="' + urlConfirmacion + '" ' +
+        'style="color:#003366;font-weight:600;text-decoration:underline;margin-top:6px;display:inline-block;">' +
+        'Verificar estado del pago →</a>' +
+        '<button onclick="document.getElementById(\'banner-pago-pendiente\').remove();" ' +
+        'style="position:absolute;top:-8px;right:-8px;background:none;border:none;font-size:1.3rem;cursor:pointer;color:#856404;line-height:1;">&times;</button>' +
+        '</div>';
+    document.body.appendChild(banner);
+})();
+</script>
+<?php endif; ?>

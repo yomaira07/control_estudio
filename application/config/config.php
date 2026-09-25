@@ -26,7 +26,7 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 //$config['base_url'] = 'http://app.enf.edu.ve/control_estudio/';
 //$config['base_url'] = 'http://www.enf.edu.ve/control_estudio';
 //$config['base_url'] = 'http://172.16.38.143/control_estudio/';
-$config['base_url'] = 'http://localhost/control_estudio';
+//$config['base_url'] = 'http://localhost/control_estudio';
 //$config['base_url'] = 'https://agencies-classification-phrases-patch.trycloudflare.com/';
 /*
 |--------------------------------------------------------------------------
@@ -74,11 +74,8 @@ if (isset($_SERVER['HTTP_HOST']) && preg_match('/^[a-zA-Z0-9\.\-:]+$/', $_SERVER
 $base_path = '/control_estudio/';
 
 $config['base_url'] = $protocol . $host . $base_path;
-<<<<<<< HEAD
-=======
 
 
->>>>>>> develop
 /*
 |--------------------------------------------------------------------------
 | Index File
