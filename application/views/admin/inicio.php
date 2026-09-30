@@ -68,7 +68,7 @@
                 <div class="col-md-3 col-sm-6 col-12 mb-3">
                     <div class="info-box shadow-sm" style="border-radius: 12px; border: none; border-bottom: 4px solid #17a2b8; background: white; transition: transform 0.2s, box-shadow 0.2s; height: 100%;">
                         <span class="info-box-icon" style="background: linear-gradient(135deg, #17a2b8 0%, #0f7c8f 100%); border-radius: 12px 0 0 12px; min-width: 70px;">
-                            <i class="fas fa-graduation-cap" style="font-size: 1.8rem;"></i>
+                            <i class="fas fa-graduation-cap text-white" style="font-size: 1.8rem;"></i>
                         </span>
                         <div class="info-box-content p-3">
                             <span class="info-box-text" style="font-weight: 600; font-size: 0.85rem; text-transform: uppercase; color: #17a2b8; letter-spacing: 0.5px;">
@@ -103,7 +103,7 @@
                 <div class="col-md-3 col-sm-6 col-12 mb-3">
                     <div class="info-box shadow-sm" style="border-radius: 12px; border: none; border-bottom: 4px solid #28a745; background: white; transition: transform 0.2s, box-shadow 0.2s; height: 100%;">
                         <span class="info-box-icon" style="background: linear-gradient(135deg, #28a745 0%, #1e7e34 100%); border-radius: 12px 0 0 12px; min-width: 70px;">
-                            <i class="fas fa-file-alt" style="font-size: 1.8rem;"></i>
+                            <i class="fas fa-file-alt text-white" style="font-size: 1.8rem;"></i>
                         </span>
                         <div class="info-box-content p-3">
                             <span class="info-box-text" style="font-weight: 600; font-size: 0.85rem; text-transform: uppercase; color: #28a745; letter-spacing: 0.5px;">
@@ -154,7 +154,7 @@
                 <div class="col-md-3 col-sm-6 col-12 mb-3">
                     <div class="info-box shadow-sm" style="border-radius: 12px; border: none; border-bottom: 4px solid #6f42c1; background: white; transition: transform 0.2s, box-shadow 0.2s; height: 100%;">
                         <span class="info-box-icon" style="background: linear-gradient(135deg, #6f42c1 0%, #5a2d91 100%); border-radius: 12px 0 0 12px; min-width: 70px;">
-                            <i class="fas fa-info-circle" style="font-size: 1.8rem;"></i>
+                            <i class="fas fa-info-circle " style="font-size: 1.8rem;"></i>
                         </span>
                         <div class="info-box-content p-3">
                             <span class="info-box-text" style="font-weight: 600; font-size: 0.85rem; text-transform: uppercase; color: #6f42c1; letter-spacing: 0.5px;">

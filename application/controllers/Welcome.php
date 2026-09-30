@@ -23,6 +23,7 @@ class Welcome extends CI_Controller {
 		
 		$this->load->model("Programa_model"); 
 		$this->load->model("Periodo_model"); 
+		$this->load->model("Lugar_trabajo_model");
 
 		
 	}
@@ -36,23 +37,24 @@ class Welcome extends CI_Controller {
 	}
 		
 	public function registrarse()
-	{
-		if(!$this->Periodo_model->PeriodoActivo_asp()){?>
+{
+    if (!$this->Periodo_model->PeriodoActivo_asp()) { ?>
 
-			<script> alert ("El proceso de selección de Aspirantes esta cerrado. Este atento a las futuras publicaciones de nuestra página web www.enf.edu.ve, en relación al próximo proceso de selección.");
-							location.assign("<?php echo base_url(); ?>"); </script>
-			<?php
-		
-		}else{
-			$data["list_programa"] = $this->Programa_model->getPrograma_estatus_convocatoria();
-			$this->load->view('layouts/header_registro');
-			//$this->load->view('layouts/sidebar');
-			//$this->index();
+        <script>
+            alert("El proceso de selección de Aspirantes está cerrado. Esté atento a las futuras publicaciones de nuestra página web www.enf.edu.ve, en relación al próximo proceso de selección.");
+            location.assign("<?php echo base_url(); ?>");
+        </script>
 
-			$this->load->view('admin/registrarse',$data);
-			$this->load->view('layouts/footer');
-		}
-	}
+    <?php
+    } else {
+        $data["list_programa"]      = $this->Programa_model->getPrograma_estatus_convocatoria();
+        $data["list_lugar_trabajo"] = $this->Lugar_trabajo_model->getLugar_trabajo();
+
+        $this->load->view('layouts/header_registro');
+        $this->load->view('admin/registrarse', $data);
+        $this->load->view('layouts/footer');
+    }
+}
 	public function olvido_contrasena()
 	{	
 		$this->load->view('layouts/header_registro');

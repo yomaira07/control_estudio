@@ -12,64 +12,150 @@ class Auth extends CI_Controller {
 	}
 
 	public function index()
-	{
-		if ($this->session->userdata("login")) {
-			if ($this->session->userdata("rol")=='1') 
-				{
-				redirect(base_url()."admin/usuario/index"); // administrador sistema
-				}
-			if ($this->session->userdata("rol")=='2') 
-				{
-				redirect(base_url()."admin/oferta_academica"); // supervisor secretaria general
-				}
-			if ($this->session->userdata("rol")=='3') 
-				{
-				redirect(base_url()."dashboard02"); // 
-				}
-			if ($this->session->userdata("rol")=='4') 
-				{
-				redirect(base_url()."dashboard03"); // operador secretaria
-				}
-			if ($this->session->userdata("rol")=='5' or $this->session->userdata("rol")=='8') 
-				{
-					redirect(base_url()."dashboard04/home");	//estudiante regular
-				}
-			if( $this->session->userdata("rol")=='7')
-			{
-				redirect(base_url()."dashboard08");	// Aspirantes
-			}
-			if ($this->session->userdata("rol")=='6') 
-				{
-				redirect(base_url()."dashboard05");  // administracion 
-				}
-			if ($this->session->userdata("rol")=='9') 
-				{
-				redirect(base_url()."dashboard06"); // docente
-				}
-			if ($this->session->userdata("rol")=='10') 
-				{
-				redirect(base_url()."dashboard06/index_supervisor_docente");  // supervisor docente
-			}	
-			if ($this->session->userdata("rol")=='11') 
-				{
-				redirect(base_url()."admin/");  // RRHH plantilla docente
-			}	
-		}else{
-			$this->load->view('admin/login');
-		}
-	} 
+{
+    if (!$this->session->userdata("login")) {
+        $this->load->view('admin/login');
+        return;
+    }
 
-	public function login(){
+    if ($this->session->userdata("estado") != 1) {
+        $this->session->sess_destroy();
+        $this->session->set_flashdata("error", "Su cuenta está inactiva. Contacte al administrador.");
+        redirect(base_url());
+        return;
+    }
+
+    $rol = $this->session->userdata("rol");
+
+    switch ($rol) {
+        case '1':  redirect(base_url()."admin/usuario/index"); break;
+        case '2':  redirect(base_url()."admin/oferta_academica"); break;
+        case '3':  redirect(base_url()."dashboard02"); break;
+        case '4':  redirect(base_url()."dashboard03"); break;
+        case '5':
+        case '8':  redirect(base_url()."dashboard04/home"); break;
+        case '6':  redirect(base_url()."dashboard05"); break;
+        case '9':  redirect(base_url()."dashboard06"); break;
+        case '10': redirect(base_url()."dashboard06/index_supervisor_docente"); break;
+        case '11': redirect(base_url()."admin/"); break;
+        case '12': redirect(base_url()."dashboard05/notas_cargadas"); break;
+
+        case '7':
+        default:
+            $this->session->unset_userdata(array(
+                'id', 'nombre', 'apellido', 'rol', 'estado', 'login',
+                'username', 'idprograma', 'modalidad', 'trimestre',
+                'planilla', 'ruc', 'ruc_aprobadas', 'reincorporacion',
+                'egresado', 'tiempo_preinscripcion', 'tramite_fuera_lapso',
+                'fuera_lapso_tra_adm', 'inscripcion', 'seccion'
+            ));
+            $this->session->set_flashdata("error", "USUARIO NO REGISTRADO EN EL SISTEMA. Contacte al administrador.");
+            redirect(base_url());
+            break;
+    }
+}
+
+public function login()
+{
+    $username = $this->input->post("username");
+    $password = $this->input->post("password");
+
+    $res = $this->Usuarios_model->login($username, sha1($password));
+
+    // Caso 1: Usuario no existe
+    if (!$res) {
+        $this->session->set_flashdata("error", "El usuario y/o contraseña no estan registrados en el sistema. Contacte al administrador.");
+        redirect(base_url());
+        return;
+    }
+
+    // Caso 2: Usuario inactivo
+    if ($res->estado != 1) {
+        $this->session->set_flashdata("error", "Su cuenta está inactiva. Contacte al administrador.");
+        redirect(base_url());
+        return;
+    }
+
+    // Cargar datos en sesión
+    $data = array(
+        'id'                    => $res->id,
+        'nombre'                => $res->nombres,
+        'apellido'              => $res->apellidos,
+        'rol'                   => $res->rol_id,
+        'estado'                => $res->estado,
+        'login'                 => TRUE,
+        'username'              => $res->username,
+        'idprograma'            => $res->programa_id,
+        'modalidad'             => $res->modalidad,
+        'trimestre'             => $res->trimestre,
+        'planilla'              => $res->ver_planilla,
+        'ruc'                   => $res->ruc,
+        'ruc_aprobadas'         => $res->ruc_aprobadas,
+        'reincorporacion'       => $res->reincorporacion,
+        'egresado'              => $res->egresado,
+        'tiempo_preinscripcion' => $res->id_tiempo_preinscripcion,
+        'tramite_fuera_lapso'   => $res->tramite_fuera_lapso,
+        'fuera_lapso_tra_adm'   => $res->fuera_lapso_tra_adm,
+        'inscripcion'           => $res->inscripcion,
+        'seccion'               => $res->seccion
+    );
+    $this->session->set_userdata($data);
+
+    // Redirigir según rol
+    $rol = $this->session->userdata("rol");
+
+    switch ($rol) {
+        case '1':  redirect(base_url()."admin/usuario/index"); break;
+        case '2':  redirect(base_url()."admin/oferta_academica"); break;
+        case '3':  redirect(base_url()."dashboard02"); break;
+        case '4':  redirect(base_url()."dashboard03"); break;
+
+        case '5':
+        case '8':
+            if (!$this->Tiempo_preinscripcion_model->gettiempo_preinscripcion()) {
+                $this->session->sess_destroy();
+                $this->session->set_flashdata("error", "Tiempo de Preinscripción CERRADO");
+                redirect(base_url());
+            } else {
+                redirect(base_url()."dashboard04/home");
+            }
+            break;
+
+        case '6':  redirect(base_url()."dashboard05"); break;
+        case '9':  redirect(base_url()."dashboard06"); break;
+        case '10': redirect(base_url()."dashboard06/index_supervisor_docente"); break;
+        case '11': redirect(base_url()."admin/docente/index"); break;
+        case '12': redirect(base_url()."dashboard05/notas_cargadas"); break;
+
+        // =============================================
+        // ROL 7 (ASPIRANTE) y cualquier otro rol no válido
+        // =============================================
+        case '7':
+        default:
+            // Limpiar datos de sesión SIN destruirla (para que el flashdata sobreviva)
+            $this->session->unset_userdata(array(
+                'id', 'nombre', 'apellido', 'rol', 'estado', 'login',
+                'username', 'idprograma', 'modalidad', 'trimestre',
+                'planilla', 'ruc', 'ruc_aprobadas', 'reincorporacion',
+                'egresado', 'tiempo_preinscripcion', 'tramite_fuera_lapso',
+                'fuera_lapso_tra_adm', 'inscripcion', 'seccion'
+            ));
+            
+            $this->session->set_flashdata("error", "USUARIO NO REGISTRADO EN EL SISTEMA. Contacte al administrador.");
+            redirect(base_url());
+            break;
+    }
+}
+	public function loginaspirante(){
 		$username = $this->input->post("username");
 		$password = $this->input->post("password");
 		//realizamos el llamado del modelo y le enviamos la variables
-		$res = $this->Usuarios_model->login($username,sha1($password));
+		$res = $this->Usuarios_model->loginaspirante($username,sha1($password));
 		//verificamos si es veldadero el usuario
 		if (!$res){
-			$this->session->set_flashdata("error","El usuario y/o contraseña son incorrectos");
-redirect(base_url());
-		}
-		else{
+			$this->session->set_flashdata("error","El usuario y/o contraseña del aspirante son incorrectos.DEBE SER UN USUARIO REGISTRADO COMO ASPIRANTE.");
+			redirect(base_url()."auth/aspirante");
+		}else{
 			$data  = array(
 				'id' => $res->id, 
 				'nombre' => $res->nombres,
@@ -91,60 +177,19 @@ redirect(base_url());
 				'fuera_lapso_tra_adm'=>$res->fuera_lapso_tra_adm,
 				'inscripcion'=>$res->inscripcion,
 				'seccion'=>$res->seccion);
-			$this->session->set_userdata($data);
-			if ($this->session->userdata("rol")=='1') 
+				$this->session->set_userdata($data);
+				if ($this->session->userdata("rol")=='7' ) 
 				{
-				redirect(base_url()."admin/usuario/index");
-				}
-			if ($this->session->userdata("rol")=='2') 
-				{
-				redirect(base_url()."admin/oferta_academica");
-				}
-			if ($this->session->userdata("rol")=='3') 
-				{
-				redirect(base_url()."dashboard02");
-				}
-			if ($this->session->userdata("rol")=='4') 
-				{
-				redirect(base_url()."dashboard03");
-				}
-			if ($this->session->userdata("rol")=='5'  or $this->session->userdata("rol")=='8') 
-				{
-				if(!$this->Tiempo_preinscripcion_model->gettiempo_preinscripcion())
-				{
-					$this->session->set_flashdata("error","Tiempo de Preinscripción CERRADO");		
-					$this->load->view('admin/login');				
-				}else{
-					redirect(base_url()."dashboard04/home");
-				}
-			}		if ($this->session->userdata("rol")=='7' ) 
-			{
-			if(!$this->Tiempo_preinscripcion_model->gettiempo_preinscripcion())
-			{
-				$this->session->set_flashdata("error","Tiempo de Preinscripción CERRADO");		
-				$this->load->view('admin/login');				
-			}else{
-				redirect(base_url()."dashboard08");
-			}
-		}	
-
-			if ($this->session->userdata("rol")=='6') 
-				{
-				redirect(base_url()."dashboard05");
-				}
-			if ($this->session->userdata("rol")=='9') 
-				{
-				redirect(base_url()."dashboard06");
-				}
-				if ($this->session->userdata("rol")=='10' )
-				{
-				redirect(base_url()."dashboard06/index_supervisor_docente");
-				}
-				 if($this->session->userdata("rol")=='11') {
-				 	redirect(base_url()."admin/docente/index");
-				}
-				if($this->session->userdata("rol")=='12') {
-				 	redirect(base_url()."dashboard05/notas_cargadas");
+					if(!$this->Tiempo_preinscripcion_model->gettiempo_preinscripcion())
+					{
+						$this->session->set_flashdata("error","Tiempo de Preinscripción CERRADO");		
+						$this->load->view('admin/login_aspirante');				
+					}else{
+						redirect(base_url()."dashboard08");
+					}
+				}	else{
+					$this->session->set_flashdata("error","Usuario no Registrado como aspirante");
+					redirect(base_url()."auth/aspirante");
 				}
 		}
 	}
@@ -152,6 +197,10 @@ redirect(base_url());
 	public function logout(){
 		$this->session->sess_destroy();
 		redirect(base_url());
+	}
+	public function logoutaspirante(){
+		$this->session->sess_destroy();
+		redirect(base_url()."auth/aspirante");
 	}
 
 	public function cambio_clave(){
@@ -324,7 +373,24 @@ redirect(base_url());
 		
 	}
 
-	
+	/**
+ * Muestra el login exclusivo para aspirantes.
+ * Ruta: /auth/aspirante
+ */
+public function aspirante() {
+    // Si ya está logueado, redirigir según su rol
+    if ($this->session->userdata("login")) {
+        $rol = $this->session->userdata("rol");
+        if ($rol == '7') {
+            redirect(base_url() . "dashboard08");
+        }
+        // Si es otro rol, redirigir a su dashboard normal
+        redirect(base_url() . "auth");
+    }
+    
+    // Mostrar la vista del login de aspirantes
+    $this->load->view('admin/login_aspirante');
+}
 }
 
 

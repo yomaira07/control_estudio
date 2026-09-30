@@ -83,7 +83,7 @@ public function crear_usuario(){
 				if($this->Usuarios_model->save($data_usuario_nuevo)){
 					$this->session->set_flashdata("info","Usuario Registrado exitosamente!!. <br>  <br> Sus datos para ingresar son:</h2> <h1><b> Usuario: ".$cedula." Contraseña: ".$clave."</b></h1> <br>
 					<br>Correo Electrónico Registrado: <br> ".$correo."<br>Si desea cambiar el correo electronico debe 
-					comunicarse con la Dirección de Secretaria General de la ENFMP, a través del correo electrónico <i>procesodeseleccon2026@gmail.com</i><br><br><img src='/control_estudio/assets/img/Logoblanco.png'  width='100px' height='100px'/> Haz clic  <b><a href='/control_estudio' title='Ir a SCE-ENFMP'> AQUI </a> </b> para ingresar al Sistema Control de Estudios ENFMP e ingresar con el Usuario y Contraseña suministrado 
+					comunicarse con la Dirección de Secretaria General de la ENFMP, a través del correo electrónico <i>procesodeseleccon2027@gmail.com</i><br><br><img src='/control_estudio/assets/img/logo21.png'  width='100px' height='100px'/> Haz clic  <b><a href='/control_estudio/welcome/registrarse/0' title='Ir a SCE-ENFMP'> AQUI </a> </b> para ingresar al Proceso de Selecciòn de Aspirantes  ENFMP e ingresar con el Usuario y Contraseña suministrado 
 					para completar el registro en línea, documentos y el pago del arancel." );
 										redirect(base_url()."welcome/registrarse/1");
 				}else{
@@ -100,13 +100,13 @@ public function crear_usuario(){
 							$this->Usuarios_model->update_usuario($aspirante->id,$data_activar_usuario);
 							$this->session->set_flashdata("info","<b><h2>Ya existe Usuario Activo!!.</b> <br>  <br> Sus datos para ingresar son:</h2> <h1><b> Usuario: ".$aspirante->username." Contraseña: ".$clave."</b></h1> <br>
 							<br>Correo Electrónico Actualizado: <br> ".$correo."<br> Si desea cambiar el correo electronico debe 
-							comunicarse con la Dirección de Secretaria General de la ENFMP, a través del correo electrónico <i>procesodeseleccon2026@gmail.com</i><br><br><img src='/control_estudio/assets/img/Logoblanco.png'  width='100px' height='100px'/> Haz clic  <b><a href='/control_estudio' title='Ir a SCE-ENFMP'> AQUI </a> </b> para acceder al Sistema Control de Estudios ENFMP e ingresar con el Usuario y Contraseña suministrado 
+							comunicarse con la Dirección de Secretaria General de la ENFMP, a través del correo electrónico <i>procesodeseleccon2027@gmail.com</i><br><br><img src='/control_estudio/assets/img/logo21.png'  width='100px' height='100px'/> Haz clic  <b><a href='/control_estudio/auth/aspirante' title='Ir a SCE-ENFMP'> AQUI </a> </b> para acceder al Proceso de Selecciòn de Aspirantes  ENFMP e ingresar con el Usuario y Contraseña suministrado 
 							para completar el registro en línea, documentos y el pago del arancel." );
 											redirect(base_url()."welcome/registrarse/1");
 						}else{
 								$this->session->set_flashdata("info","<b><h2>Ya existe Usuario Activo!!.</b> <br>  <br> Sus datos para ingresar son:</h2> <h1><b> Usuario: ".$aspirante->username." Contraseña: ".$clave."</b></h1> <br>
 							<br>Correo Electrónico Actualizado: <br> ".$correo."<br> Si desea cambiar el correo electronico debe 
-							comunicarse con la Dirección de Secretaria General de la ENFMP, a través del correo electrónico <i>procesodeseleccon2026@gmail.com</i><br><br><img src='/control_estudio/assets/img/Logoblanco.png'  width='100px' height='100px'/> Haz clic  <b><a href='/control_estudio' title='Ir a SCE-ENFMP'> AQUI </a> </b> para acceder al Sistema Control de Estudios ENFMP e ingresar con el Usuario y Contraseña suministrado 
+							comunicarse con la Dirección de Secretaria General de la ENFMP, a través del correo electrónico <i>procesodeseleccon2026@gmail.com</i><br><br><img src='/control_estudio/assets/img/logo21.png'  width='100px' height='100px'/> Haz clic  <b><a href='/control_estudio/auth/aspirante' title='Ir a SCE-ENFMP'> AQUI </a> </b> para acceder al Proceso de Selecciòn de Aspirantes  ENFMP e ingresar con el Usuario y Contraseña suministrado 
 							para completar el registro en línea, documentos y el pago del arancel." );
 											redirect(base_url()."welcome/registrarse/1");
 						}
@@ -120,7 +120,7 @@ public function crear_usuario(){
 								if($validar_correo->id== $aspirante->id){		
 									if($this->Usuarios_model->update_usuario($aspirante->id,$data_activar_usuario )){							
 										$this->session->set_flashdata("info","<b><h2>Aspirante Registrado exitosamente!!.</b> <br>  <br> Sus datos para ingresar son: </h2> <h1><b> Usuario: ".$aspirante->username." 
-										Contraseña: ".$clave."</b></h1> <br>Correo Electrónico Registrado por el aspirante: <br> ".$correo."<br><br><img src='/control_estudio/assets/img/Logoblanco.png'  width='100px' height='100px'/> Haz clic  <b><a href='/control_estudio' title='Ir a SCE-ENFMP'> AQUI </a> </b> para acceder al Sistema Control de Estudios ENFMP e ingresar con el Usuario y Contraseña suministrado 
+										Contraseña: ".$clave."</b></h1> <br>Correo Electrónico Registrado por el aspirante: <br> ".$correo."<br><br><img src='/control_estudio/assets/img/logo21.png'  width='100px' height='100px'/> Haz clic  <b><a href='/control_estudio/auth/aspirante' title='Ir a SCE-ENFMP'> AQUI </a> </b> para acceder al Proceso de Selecciòn de Aspirantes  ENFMP e ingresar con el Usuario y Contraseña suministrado 
 										para completar el registro en línea, documentos y el pago del arancel." );
 										redirect(base_url()."welcome/registrarse/1");
 									}else{
@@ -134,7 +134,7 @@ public function crear_usuario(){
 						}else{
 							if($this->Usuarios_model->update_usuario($aspirante->id,$data_activar_usuario)){
 								$this->session->set_flashdata("info","<b><h2>Aspirante Registrado exitosamente!!.</b> <br>  <br> Sus datos para ingresar son: </h2> <h1><b> Usuario: ".$aspirante->username." 
-										Contraseña: ".$clave."</b></h1> <br>Correo Electrónico Registrado por el aspirante: <br> ".$correo."<br><br><img src='/control_estudio/assets/img/Logoblanco.png'  width='100px' height='100px'/> Haz clic  <b><a href='/control_estudio' title='Ir a SCE-ENFMP'> AQUI </a> </b> para acceder al Sistema Control de Estudios ENFMP e ingresar con el Usuario y Contraseña suministrado 
+										Contraseña: ".$clave."</b></h1> <br>Correo Electrónico Registrado por el aspirante: <br> ".$correo."<br><br><img src='/control_estudio/assets/img/logo21.png'  width='100px' height='100px'/> Haz clic  <b><a href='/control_estudio/auth/aspirante' title='Ir a SCE-ENFMP'> AQUI </a> </b> para acceder al Proceso de Selecciòn de Aspirantes  ENFMP e ingresar con el Usuario y Contraseña suministrado 
 										para completar el registro en línea, documentos y el pago del arancel." );
 								redirect(base_url()."welcome/registrarse/1");
 							}else{

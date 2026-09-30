@@ -3,6 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <link rel="icon" href="<?php echo base_url(); ?>assets/img/logo21.png" type="image/png" sizes="16x16">
   <title>SCE-ENFMP</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
@@ -97,15 +98,15 @@
         </a>
         <ul class="dropdown-menu dropdown-menu-right">
           <li class="user-body">
-            <div class="row">
-              <div class="col-xs-12 text-center">
-                <a href="<?php echo base_url(); ?>auth/logout">
-                  <i class="fas fa-sign-out-alt mr-2"></i>Cerrar Sesión
-                </a>
+              <div class="row">
+                  <div class="col-xs-12 text-center">
+                      <a href="<?php echo base_url() . 'auth/' . ($this->session->userdata('rol') == 7 ? 'logoutaspirante' : 'logout'); ?>">
+                          <i class="fas fa-sign-out-alt mr-2"></i>Cerrar Sesión
+                      </a>
+                  </div>
               </div>
-            </div>
           </li>
-        </ul>
+          </ul>
       </li>
     </ul>
   </nav>

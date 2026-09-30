@@ -1,231 +1,277 @@
-  <!-- Content Wrapper. Contains page content -->
+<!-- Content Wrapper. Contains page content -->
+<div class="content-wrapper" style="background: #f4f6f9;">
 
-  <div class="content-wrapper">
-    <!-- Content Header (Page header) -->
     <section class="content-header">
-    <!-- /.container-fluid -->
+        <div class="container-fluid">
+            <div class="row mb-2">
+                <div class="col-sm-6">
+                    <h1 class="m-0" style="font-weight: 300; color: #003366;">
+                        <i class="fas fa-user-edit" style="color: #003366; margin-right: 8px;"></i>
+                        <span style="color: #003366; font-weight: 600;">SCE-ENFMP</span>
+                        <span style="color: #2c3e50; font-weight: 300;"> - Actualizar Datos Personales</span>
+                    </h1>
+                </div>
+                <div class="col-sm-6">
+                    <ol class="breadcrumb float-sm-right" style="background: transparent;">
+                        <li class="breadcrumb-item"><a href="<?php echo base_url(); ?>dashboard08/index" style="color: #6c757d;">Inicio</a></li>                        
+                        <li class="breadcrumb-item active" style="color: #003366; font-weight: 600;">Datos Personales</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
     </section>
- 
-    <!-- Main content -->
+
     <section class="content">
 
-       <div class="card">
-          
-                    <div class="card-header">
-                      <h3 class="card-title"><strong>Actualizar Datos Personales del Aspirante
-                      </strong></h3>
+        <div class="card card-primary card-outline shadow-sm" style="border-radius: 10px; border-top: 4px solid #003366;">
+            <div class="card-body p-0">
+                <div class="card" style="border: none; border-radius: 10px;">
 
-                    </div>
-                           
-                    
-                     
-                      <div class="card-body">
-           
-                        <!-- Mensaje de Alerta-->
-                        <?php  if ($this->session->flashdata("error")): ?>
-                        <div class="alert alert-danger alert-dismissible">
-                          <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
-                          <p><i class="icon fa fa-ban"></i> <?php echo $this->session->flashdata("error"); ?> </p>
+                    <div class="card-header py-3" style="border-bottom: 1px solid #e8e8e8; border-radius: 10px 10px 0 0; background: #fafafa;">
+                        <div class="d-flex align-items-center">
+                            <div class="mr-3" style="width: 42px; height: 42px; background: #003366; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                                <i class="fas fa-user-edit text-white" style="font-size: 1.1rem;"></i>
+                            </div>
+                            <div>
+                                <h5 class="mb-0" style="font-weight: 600; color: #2c3e50;">
+                                    <strong>Actualizar Datos Personales del Aspirante</strong>
+                                </h5>
+                                <small class="text-muted" style="font-size: 0.75rem;">
+                                    <i class="fas fa-info-circle mr-1"></i>
+                                    Complete los campos requeridos
+                                </small>
+                            </div>
                         </div>
-                      <?php endif; ?>
-                        <!-- Fin Mensaje de Alerta-->
-                        <!-- Comienzo formulario -->
-                <form action="<?php echo base_url()?>dashboard08/actualizar/<?Php echo $this->session->userdata('id'); ?>" method="POST" >
-                  <input type="hidden" name="id_usuario" value="<?Php echo $this->session->userdata('id'); ?>">
-                  <input type="hidden" name="edad" value="<?Php echo $edad; ?>">
-                  <input type="hidden" name="id" value="<?php if ($datos_alumnos==false){echo "falso";}else{ echo $datos_alumnos->id;  } 
-
-                        ?>">
-                 <input type="hidden" name="no_encontrado" value="<?php if ($datos_alumnos==false){echo "falso";}else{ echo $datos_alumnos->id;  } 
-                        ?>"> 
-                <input type="hidden" name="fecha_actualizacion" value="<?php echo date('d-m-Y H:i:s'); ?>">
-            <div class="row">
-              <div class="col-md-6">
-                 <div class="form-group">
-                    <label for="primernombre" title="-Dato Obligatorio-">(*) Primer Nombre</label>
-                    <input type="text" class="form-control" id="primer_nombre" placeholder="Primer Nombre" name="primer_nombre" onkeyup="javascript:this.value=this.value.toUpperCase();" value="<?php if ($datos_alumnos==false){echo "";}else{ echo $datos_alumnos->nombre_primer;  } 
-                        ?>" required></div>
-                  <div class="form-group">
-                    <label for="primerapellido" title="-Dato Obligatorio-">(*) Primer Apellido</label>
-                    <input type="text" class="form-control" id="primer_apellido" placeholder="Primer Apellido" name="primer_apellido"  onkeyup="javascript:this.value=this.value.toUpperCase();" value="<?php if ($datos_alumnos==false){echo "";}else{ echo $datos_alumnos->apellido_primer;  } 
-                        ?>" required>
-                  </div>
-                  <div class="form-group">
-                    <label for="cedula" title="-Dato Obligatorio-">(*) Cedula </label>
-                    <div class="row"> 
-                      <div class="col-2">
-                       <select class="form-control" name="cod_nacionalidad" required>
-
-                              <option value="V" <?php  if($datos_alumnos->nacionalidad=='V') echo " selected";?> >V</option>
-                              <option value="E" <?php  if($datos_alumnos->nacionalidad=='E') echo " selected";?> >E</option>
-                            </select>
-                      </div>
-                      <div class="col-5">
-                        <input type="text" class="form-control" id="cedula" maxlength="8" minlength="6" name="cedula" onkeypress="return controltag(event)" value="<?php if ($datos_alumnos==false){echo "";}else{ echo $datos_alumnos->cedula;  } 
-                        ?>" required>
-                      </div>
                     </div>
-                  </div>
-                  <div class="form-group">
-                    <label for="estadocivil" title="-Dato Obligatorio-">(*) Estado Civil</label>
-                      <select class="form-control" name="estado_civil" id="estado_civil" required>
-                      <option value="">- Seleccione -</option>                                       
-                      <?php foreach($lista_estadocivil as $lista_estadocivil):?>
-                      <option value="<?php echo $lista_estadocivil->id;?>" 
-                      <?php 
-                      if( $datos_alumnos->id_estado_civil == $lista_estadocivil->id ){
-                      echo " selected>";
-                      }else{
-                      echo ">";
-                      } echo $lista_estadocivil->descripcion;?>
-                      </option>
-                      <?php endforeach; ?>
-                      </select>              
-                  </div>
-                  <div class="form-group">
-                    <label for="apellidos" title="-Dato Obligatorio-">(*)Teléfono de Habitación</label>
-                    <div class="row">
-                      <div class="col-3">
-                       <select class="form-control" name="codigo_telhab" id="codigo_telhab" required>
-                        <option value="">- Seleccione -</option>                                       
-                        <?php foreach($cod_hab as $cod_hab):?>
-                        <option value="<?php echo $cod_hab->id;?>" 
-                        <?php 
-                        if( $datos_alumnos->id_codigo_hab == $cod_hab->id ){
-                        echo " selected>";
-                        }else{
-                        echo ">";
-                        } echo $cod_hab->descripcion;?>
-                        </option>
-                        <?php endforeach; ?>
-                        </select>      
-                      </div>
-                      <div class="col-5">
-                        <input type="text" class="form-control" id="telefono_hab" placeholder="" name="telefono_hab" onkeypress="return controltagrequired(event)" maxlength="7"value="<?php if ($datos_alumnos==false){echo "";}else{ echo $tel_habitacion = $datos_alumnos->tel_habitacion;  } 
-                        ?>" required>
-                      </div>
-                    </div>
-                  </div>
-                  <div class="form-group">
-                    <label for="cod_telcelwhat" title="-Dato Obligatorio-">(*) Teléfono con Whatsapp</label>
-                    <div class="row">
-                      <div class="col-3">
-                        <select class="form-control" name="codigo_telcelwhat" id="codigo_telcelwhat" >
-                        <option value="">- Seleccione -</option>                                       
-                        <?php foreach($cod_celwhat as $cod_celwhat):?>
-                        <option value="<?php echo $cod_celwhat->id;?>" 
-                        <?php 
-                        if( $datos_alumnos->id_codigo_cel_whatsapp == $cod_celwhat->id ){
-                        echo " selected>";
-                        }else{
-                        echo ">";
-                        } echo $cod_celwhat->descripcion;?>
-                        </option>
-                        <?php endforeach; ?>
-                        </select>         
 
-                      </div>
-                      <div class="col-5">
-                        <input type="text" class="form-control" id="telefono_celwhat" placeholder="" onkeypress="return controltagrequired(event)" maxlength="7"name="telefono_celwhat" value="<?php if ($datos_alumnos==false){echo "";}else{ echo $tel_habitacion = $datos_alumnos->telefono_whatsapp;  } 
-                        ?>">
-                      </div>
-                    </div>
-                  </div>
+                    <div class="card-body p-4">
 
-                  
-                 
-                  
-              </div>
-              <!-- /.col -->
-                <div class="col-md-6">  
-                  <div class="form-group">
-                    <label for="segundo_nombre">Segundo Nombre</label>
-                    <input type="text" class="form-control" id="segundo_nombre" placeholder="Segundo nombre" name="segundo_nombre" onkeyup="javascript:this.value=this.value.toUpperCase();" value="<?php if ($datos_alumnos==false){echo "";}else{ echo $datos_alumnos->nombre_segundo;  } 
-                        ?>">
-                  </div>
-                  <div class="form-group">
-                    <label for="segundo_apellido">Segundo Apellido</label>
-                    <input type="text" class="form-control" id="segundo_apellido" placeholder="Segundo apellido" name="segundo_apellido" onkeyup="javascript:this.value=this.value.toUpperCase();" value="<?php if ($datos_alumnos==false){echo "";}else{ echo $datos_alumnos->apellido_segundo;  } 
-                        ?>">
-                  </div>
-                  <div class="form-group">
-                    <label for="sexo" title="-Dato Obligatorio-">(*) Sexo</label>
-                         <select class="form-control" name="sexo" id="sexo" required>
-                        <option value="">- Seleccione -</option>      
-                      
-                          <option value="1"     <?php if($datos_alumnos->id_sexo ==   1 ):  echo "selected"; endif;?>> Masculino  </option>
-                           <option value="2"     <?php if($datos_alumnos->id_sexo ==   2 ): echo "selected" ; endif;?>> Femenino  </option>
-                          
-                       
-                        </select>    
+                        <?php if ($this->session->flashdata("error")): ?>
+                            <div class="alert alert-danger alert-dismissible fade show flash-alert" role="alert">
+                                <div class="d-flex align-items-start">
+                                    <div class="flash-alert-icon flash-alert-icon-danger"><i class="fas fa-exclamation-triangle"></i></div>
+                                    <div class="flex-grow-1">
+                                        <h6 class="flash-alert-title">Error</h6>
+                                        <p class="flash-alert-text mb-0"><?php echo $this->session->flashdata("error"); ?></p>
+                                    </div>
+                                </div>
+                                <button type="button" class="close flash-alert-close" data-dismiss="alert"><span>&times;</span></button>
+                            </div>
+                        <?php endif; ?>
 
-                  </div>
-                  <div class="form-group">
-                    <label for="correo" title="-Dato Obligatorio-">(*) Correo</label>
-                    <input type="text" class="form-control" id="correo" placeholder="ejemplo@gmail.com" name="correo" onkeyup="javascript:this.value=this.value.toUpperCase();" value="<?php if ($datos_alumnos==false){ echo $correo_registro->email;}else{ echo $correo_registro->email; }?>" readonly required>
-                  </div>
-                  <div class="form-group">
-                    <label for="fec_nac" title="-Dato Obligatorio-">(*) Fecha de Nacimiento</label>
-                    <input type="date" class="form-control" id="fec_nac" placeholder="ejemplo@gmail.com" name="fec_nac" value="<?php if ($datos_alumnos==false){echo "";}else{ echo $datos_alumnos->fecha_nac ;  } 
-                        ?>" required>
-                  </div>
-                   <div class="form-group">
-                    <label for="codigo_telcel" title="-Dato Obligatorio-">(*) Teléfono Celular</label>
-                    <div class="row">
-                      <div class="col-3">
-                       <select class="form-control" name="codigo_telcel" id="codigo_telcel">
-                        <option value="">- Seleccione -</option>                                       
-                        <?php foreach($cod_cel as $cod_cel):?>
-                        <option value="<?php echo $cod_cel->id;?>" 
-                        <?php 
-                        if( $datos_alumnos->id_codigo_cel == $cod_cel->id ){
-                        echo " selected>";
-                        }else{
-                        echo ">";
-                        } echo $cod_cel->descripcion;?>
-                        </option>
-                        <?php endforeach; ?>
-                        </select>  
+                        <form action="<?php echo base_url() ?>dashboard08/actualizar/<?php echo $this->session->userdata('id'); ?>" method="POST">
+                            <input type="hidden" name="id_usuario" value="<?php echo $this->session->userdata('id'); ?>">
+                            <input type="hidden" name="edad" value="<?php echo $edad; ?>">
+                            <input type="hidden" name="id" value="<?php if ($datos_alumnos == false) { echo "falso"; } else { echo $datos_alumnos->id; } ?>">
+                            <input type="hidden" name="no_encontrado" value="<?php if ($datos_alumnos == false) { echo "falso"; } else { echo $datos_alumnos->id; } ?>">
+                            <input type="hidden" name="fecha_actualizacion" value="<?php echo date('d-m-Y H:i:s'); ?>">
 
-                      </div>
-                      <div class="col-5" >
-                        <input type="text" class="form-control" id="telefono_cel" placeholder=""onkeypress="return controltagrequired(event)" maxlength="7" name="telefono_cel" value="<?php if ($datos_alumnos==false){echo "";}else{ echo $tel_habitacion = $datos_alumnos->tel_celular;  } 
-                        ?>">
-                      </div>
-                    </div>
-                  </div> 
-                  
-</div>
+                            <div class="row">
+                                <!-- COLUMNA IZQUIERDA -->
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="primer_nombre" title="-Dato Obligatorio-">
+                                            <i class="fas fa-user" style="color: #003366; margin-right: 4px;"></i>
+                                            (*) Primer Nombre
+                                        </label>
+                                        <input type="text" class="form-control" id="primer_nombre" placeholder="Primer Nombre" name="primer_nombre" onkeyup="javascript:this.value=this.value.toUpperCase();" value="<?php if ($datos_alumnos == false) { echo ""; } else { echo $datos_alumnos->nombre_primer; } ?>" required style="border-radius: 8px;">
+                                    </div>
 
- 
-            
-             
-                <button type="submit" class="btn btn-primary"  title="-Hacer clic para Registrar Datos-"> Actualizar Información</button>
+                                    <div class="form-group">
+                                        <label for="primer_apellido" title="-Dato Obligatorio-">
+                                            <i class="fas fa-user" style="color: #003366; margin-right: 4px;"></i>
+                                            (*) Primer Apellido
+                                        </label>
+                                        <input type="text" class="form-control" id="primer_apellido" placeholder="Primer Apellido" name="primer_apellido" onkeyup="javascript:this.value=this.value.toUpperCase();" value="<?php if ($datos_alumnos == false) { echo ""; } else { echo $datos_alumnos->apellido_primer; } ?>" required style="border-radius: 8px;">
+                                    </div>
 
-   <br> <hr>
- <span ><b>(*) Dato Obligatorio</b></span>  
+                                    <div class="form-group">
+                                        <label for="cedula" title="-Dato Obligatorio-">
+                                            <i class="fas fa-id-card" style="color: #003366; margin-right: 4px;"></i>
+                                            (*) Cédula
+                                        </label>
+                                        <div class="row">
+                                            <div class="col-3">
+                                                <select class="form-control" name="cod_nacionalidad" required style="border-radius: 8px;">
+                                                    <option value="V" <?php if ($datos_alumnos->nacionalidad == 'V') echo " selected"; ?>>V</option>
+                                                    <option value="E" <?php if ($datos_alumnos->nacionalidad == 'E') echo " selected"; ?>>E</option>
+                                                </select>
+                                            </div>
+                                            <div class="col-9">
+                                                <input type="text" class="form-control" id="cedula" maxlength="8" minlength="6" name="cedula" onkeypress="return controltag(event)" value="<?php if ($datos_alumnos == false) { echo ""; } else { echo $datos_alumnos->cedula; } ?>" required style="border-radius: 8px;">
+                                            </div>
+                                        </div>
+                                    </div>
 
-                </div>
-              <!-- /.col -->
-            </div>
-            <!-- /.row -->
-            <!-- /.row -->
-           
-                  
-                
-            </form>
-                
-          </div>
+                                    <div class="form-group">
+                                        <label for="estado_civil" title="-Dato Obligatorio-">
+                                            <i class="fas fa-heart" style="color: #003366; margin-right: 4px;"></i>
+                                            (*) Estado Civil
+                                        </label>
+                                        <select class="form-control" name="estado_civil" id="estado_civil" required style="border-radius: 8px;">
+                                            <option value="">- Seleccione -</option>
+                                            <?php foreach ($lista_estadocivil as $lista_estadocivil): ?>
+                                                <option value="<?php echo $lista_estadocivil->id; ?>" <?php if ($datos_alumnos->id_estado_civil == $lista_estadocivil->id) { echo " selected>"; } else { echo ">"; } echo $lista_estadocivil->descripcion; ?>
+                                                </option>
+                                            <?php endforeach; ?>
+                                        </select>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label for="codigo_telhab" title="-Dato Obligatorio-">
+                                            <i class="fas fa-phone" style="color: #003366; margin-right: 4px;"></i>
+                                            (*) Teléfono de Habitación
+                                        </label>
+                                        <div class="row">
+                                            <div class="col-4">
+                                                <select class="form-control" name="codigo_telhab" id="codigo_telhab" required style="border-radius: 8px;">
+                                                    <option value="">- Seleccione -</option>
+                                                    <?php foreach ($cod_hab as $cod_hab): ?>
+                                                        <option value="<?php echo $cod_hab->id; ?>" <?php if ($datos_alumnos->id_codigo_hab == $cod_hab->id) { echo " selected>"; } else { echo ">"; } echo $cod_hab->descripcion; ?>
+                                                        </option>
+                                                    <?php endforeach; ?>
+                                                </select>
+                                            </div>
+                                            <div class="col-8">
+                                                <input type="text" class="form-control" id="telefono_hab" placeholder="" name="telefono_hab" onkeypress="return controltagrequired(event)" maxlength="7" value="<?php if ($datos_alumnos == false) { echo ""; } else { echo $tel_habitacion = $datos_alumnos->tel_habitacion; } ?>" required style="border-radius: 8px;">
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label for="codigo_telcelwhat" title="-Dato Obligatorio-">
+                                            <i class="fab fa-whatsapp" style="color: #28a745; margin-right: 4px;"></i>
+                                            (*) Teléfono con Whatsapp
+                                        </label>
+                                        <div class="row">
+                                            <div class="col-4">
+                                                <select class="form-control" name="codigo_telcelwhat" id="codigo_telcelwhat" style="border-radius: 8px;">
+                                                    <option value="">- Seleccione -</option>
+                                                    <?php foreach ($cod_celwhat as $cod_celwhat): ?>
+                                                        <option value="<?php echo $cod_celwhat->id; ?>" <?php if ($datos_alumnos->id_codigo_cel_whatsapp == $cod_celwhat->id) { echo " selected>"; } else { echo ">"; } echo $cod_celwhat->descripcion; ?>
+                                                        </option>
+                                                    <?php endforeach; ?>
+                                                </select>
+                                            </div>
+                                            <div class="col-8">
+                                                <input type="text" class="form-control" id="telefono_celwhat" placeholder="" onkeypress="return controltagrequired(event)" maxlength="7" name="telefono_celwhat" value="<?php if ($datos_alumnos == false) { echo ""; } else { echo $tel_habitacion = $datos_alumnos->telefono_whatsapp; } ?>" style="border-radius: 8px;">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- COLUMNA DERECHA -->
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="segundo_nombre">
+                                            <i class="fas fa-user" style="color: #6c757d; margin-right: 4px;"></i>
+                                            Segundo Nombre
+                                        </label>
+                                        <input type="text" class="form-control" id="segundo_nombre" placeholder="Segundo nombre" name="segundo_nombre" onkeyup="javascript:this.value=this.value.toUpperCase();" value="<?php if ($datos_alumnos == false) { echo ""; } else { echo $datos_alumnos->nombre_segundo; } ?>" style="border-radius: 8px;">
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label for="segundo_apellido">
+                                            <i class="fas fa-user" style="color: #6c757d; margin-right: 4px;"></i>
+                                            Segundo Apellido
+                                        </label>
+                                        <input type="text" class="form-control" id="segundo_apellido" placeholder="Segundo apellido" name="segundo_apellido" onkeyup="javascript:this.value=this.value.toUpperCase();" value="<?php if ($datos_alumnos == false) { echo ""; } else { echo $datos_alumnos->apellido_segundo; } ?>" style="border-radius: 8px;">
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label for="sexo" title="-Dato Obligatorio-">
+                                            <i class="fas fa-venus-mars" style="color: #003366; margin-right: 4px;"></i>
+                                            (*) Sexo
+                                        </label>
+                                        <select class="form-control" name="sexo" id="sexo" required style="border-radius: 8px;">
+                                            <option value="">- Seleccione -</option>
+                                            <option value="1" <?php if ($datos_alumnos->id_sexo == 1): echo "selected"; endif; ?>>Masculino</option>
+                                            <option value="2" <?php if ($datos_alumnos->id_sexo == 2): echo "selected"; endif; ?>>Femenino</option>
+                                        </select>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label for="correo" title="-Dato Obligatorio-">
+                                            <i class="fas fa-envelope" style="color: #003366; margin-right: 4px;"></i>
+                                            (*) Correo
+                                        </label>
+                                        <input type="text" class="form-control" id="correo" placeholder="ejemplo@gmail.com" name="correo" onkeyup="javascript:this.value=this.value.toUpperCase();" value="<?php if ($datos_alumnos == false) { echo $correo_registro->email; } else { echo $correo_registro->email; } ?>" readonly required style="border-radius: 8px; background: #f0f0f0;">
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label for="fec_nac" title="-Dato Obligatorio-">
+                                            <i class="fas fa-calendar-alt" style="color: #003366; margin-right: 4px;"></i>
+                                            (*) Fecha de Nacimiento
+                                        </label>
+                                        <input type="date" class="form-control" id="fec_nac" name="fec_nac" value="<?php if ($datos_alumnos == false) { echo ""; } else { echo $datos_alumnos->fecha_nac; } ?>" required style="border-radius: 8px;">
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label for="codigo_telcel" title="-Dato Obligatorio-">
+                                            <i class="fas fa-mobile-alt" style="color: #003366; margin-right: 4px;"></i>
+                                            (*) Teléfono Celular
+                                        </label>
+                                        <div class="row">
+                                            <div class="col-4">
+                                                <select class="form-control" name="codigo_telcel" id="codigo_telcel" style="border-radius: 8px;">
+                                                    <option value="">- Seleccione -</option>
+                                                    <?php foreach ($cod_cel as $cod_cel): ?>
+                                                        <option value="<?php echo $cod_cel->id; ?>" <?php if ($datos_alumnos->id_codigo_cel == $cod_cel->id) { echo " selected>"; } else { echo ">"; } echo $cod_cel->descripcion; ?>
+                                                        </option>
+                                                    <?php endforeach; ?>
+                                                </select>
+                                            </div>
+                                            <div class="col-8">
+                                                <input type="text" class="form-control" id="telefono_cel" placeholder="" onkeypress="return controltagrequired(event)" maxlength="7" name="telefono_cel" value="<?php if ($datos_alumnos == false) { echo ""; } else { echo $tel_habitacion = $datos_alumnos->tel_celular; } ?>" style="border-radius: 8px;">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                             <!-- Botón de Envío -->
+                            <div class="row mt-4">
+                                <div class="col-md-12 text-center">
+                                    <button type="submit" class="btn btn-primary" style="border-radius: 10px; padding: 10px 40px; font-weight: 500; transition: all 0.3s;" title="Hacer clic para Registrar Datos">
+                                        <i class="fas fa-save mr-2"></i>
+                                        Actualizar Información
+                                    </button>
+                                    <a href="<?php echo base_url(); ?>dashboard08/" class="btn btn-default" style="border-radius: 10px; padding: 10px 30px; font-weight: 500; margin-left: 8px; transition: all 0.3s;">
+                                        <i class="fas fa-arrow-left mr-2"></i>
+                                        Volver
+                                    </a>
+                                </div>
+                            </div>
+
+                            <hr style="border-color: #e8e8e8; margin: 15px 0;">
+                            <div style="text-align: center;">
+                                <small style="font-size: 0.75rem; color: #6c757d;"><b>(*) Dato Obligatorio</b></small>
+                            </div>
+                        </form>
+
+                    </div><!-- /.card-body -->
                 </div><!-- /.card -->
-
-
-
-
+            </div><!-- /.card-body -->
+        </div><!-- /.card -->
 
     </section>
-    <!-- /.content -->
+</div>
 
+<style>
+    .form-control:focus { border-color: #003366; box-shadow: 0 0 0 0.2rem rgba(0,51,102,0.25); }
+    .btn-primary { background-color: #003366; border-color: #003366; color: #fff; transition: all 0.2s ease; }
+    .btn-primary:hover { background-color: #002244; border-color: #002244; box-shadow: 0 2px 8px rgba(0,51,102,0.3); transform: translateY(-2px); }
 
+    .flash-alert { position: relative; border: none; border-left: 4px solid transparent; border-radius: 10px !important; padding: 12px 16px 12px 14px; box-shadow: 0 4px 12px rgba(0,51,102,0.08); animation: flashSlideIn 0.35s ease-out; margin-bottom: 16px; }
+    .flash-alert.alert-danger { background: #fdecea; border-left-color: #dc3545; color: #721c24; }
+    .flash-alert-icon { width: 32px; height: 32px; min-width: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 12px; color: #fff; font-size: 0.85rem; flex-shrink: 0; }
+    .flash-alert-icon-danger { background: linear-gradient(135deg, #dc3545 0%, #a71d2a 100%); box-shadow: 0 3px 8px rgba(220,53,69,0.35); }
+    .flash-alert-title { font-size: 0.78rem; font-weight: 700; margin-bottom: 1px; color: inherit; }
+    .flash-alert-text { font-size: 0.72rem; line-height: 1.4; color: inherit; opacity: 0.92; }
+    .flash-alert-close { position: absolute; top: 8px; right: 10px; font-size: 1rem; opacity: 0.5; color: inherit; padding: 0; line-height: 1; }
+    .flash-alert-close:hover { opacity: 1; }
+    @keyframes flashSlideIn { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
 
-  </div>
-  <!-- /.content-wrapper -->
+    .card { transition: box-shadow 0.25s ease; }
+    .card:hover { box-shadow: 0 6px 18px rgba(0,51,102,0.08) !important; }
+</style>

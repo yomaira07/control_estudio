@@ -217,7 +217,7 @@ class Dashboard08 extends CI_Controller { // controlador Aspirante
 			'tiempo_pre' => $this->Tiempo_preinscripcion_model->gettiempo_preinscripcion(),
 
 		);
-		//var_dump($data['datos_trabajo_ant']);
+
 		$this->load->view('layouts/header');
 		$this->load->view('layouts/sidebar',$data2);
 		$this->load->view('aspirante/datos/trabajo',$data);
@@ -1530,89 +1530,306 @@ $fec_nac = $this->input->post("fec_nac");
 		}
 		
 	}
-	public function trabajo_store($id_usuario,$actual)
-	{
-		
-		$no_encontrado = $this->input->post("no_encontrado");
-		$id_usuario = $this->input->post("id_usuario");
+	
+	public function trabajo_store($id_usuario)
+{
+    // Cargar librerías necesarias
+    $this->load->library('upload');
+    $this->load->helper('file');
 
-		$lugar_trabajo = $this->input->post("lugar_trabajo");
-		$cargo_desempena = $this->input->post("cargo_desempena");
-			$codigo_teltrab = $this->input->post("codigo_teltrab");
-			$telefono_teltrab = $this->input->post("telefono_teltrab");
-		$telefono_trabajo = $codigo_teltrab.$telefono_teltrab;
-		$jubilado = $this->input->post("radio_jub");
-		$estado_postgrado = $this->input->post("estado_postgrado");
-        $institucion = $this->input->post("institucion");
-        $direccion = $this->input->post("direccion_adscripcion_actual");
-        $circunscripcion = $this->input->post("circunscripcion");
-        $funciones = $this->input->post("funciones_desempena");
-        $ingreso = $this->input->post("anno_ingreso");
-		$postulado = $this->input->post("radio_pos");
-		 $est_circunscripcion = $this->input->post("comboestado");
+    $no_encontrado       = $this->input->post("no_encontrado");
+    $id_usuario          = $this->input->post("id_usuario");
+    $lugar_trabajo       = $this->input->post("lugar_trabajo");
+    $cargo_desempena     = $this->input->post("cargo_desempena");
+    $codigo_teltrab      = $this->input->post("codigo_teltrab");
+    $telefono_teltrab    = $this->input->post("telefono_teltrab");
+    $telefono_trabajo    = $codigo_teltrab . $telefono_teltrab;
+    $jubilado            = $this->input->post("radio_jub");
+    $estado_postgrado    = $this->input->post("estado_postgrado");
+    $institucion         = $this->input->post("institucion");
+    $direccion           = $this->input->post("direccion_adscripcion_actual");
+    $circunscripcion     = $this->input->post("circunscripcion");
+    $funciones           = $this->input->post("funciones_desempena");
+    $ingreso             = $this->input->post("anno_ingreso");
+    $postulado           = $this->input->post("radio_pos");
+    $est_circunscripcion = $this->input->post("comboestado");
 
-		if( $lugar_trabajo==1){
-		$data  = array(
-			'id_usuario' => $id_usuario, 
-			'id_lugar_trabajo' => $lugar_trabajo,
-			'cargo' => $cargo_desempena,
-			'tel_trabajo' => $telefono_trabajo,
-			'jubilado' => $jubilado,
-			'id_estado_inscribio' => 24 ,
-            'institucion' => $institucion,
-            'direccion_adscripcion' => $direccion,
-            'circunscripcion' => $circunscripcion,
-            'funciones' => $funciones,
-            'actual' => $actual,
-            'anno_ingreso' => $ingreso,
-			'postulado'=>$postulado,
-			'estado_circunscripcion'=> $est_circunscripcion,
-		);
-	}else{
-		$data  = array(
-			'id_usuario' => $id_usuario, 
-			'id_lugar_trabajo' => $lugar_trabajo,
-			'cargo' => $cargo_desempena,
-			'tel_trabajo' => $telefono_trabajo,
-			'jubilado' => $jubilado,
-			'id_estado_inscribio' => 24 ,
-            'institucion' => $institucion,
-            'direccion_adscripcion' => $direccion,
-            'circunscripcion' => '',
-            'funciones' => $funciones,
-            'actual' => $actual,
-            'anno_ingreso' => $ingreso,
-			'postulado'=>0,
-			'estado_circunscripcion'=> 0,
-		);
-	}
-          $fecha_actual = date("Y-m-d");
-          $hora_actual = date("H:i:s");
-          //var_dump($data);
-	if($this->session->userdata('rol')==7){
-		if($no_encontrado!='falso' ){
-        ///    var_dump($data);
-			if ($this->Trabajo_model->update($no_encontrado,$data)) {
-				$this->session->set_flashdata("warning","Trabajo Actual actualizado con éxito.");
-				redirect(base_url()."dashboard08/inscripcion");
-				
-			}else{
-				$this->session->set_flashdata("error","No se pudo guardar la información");
-				redirect(base_url()."dashboard08/datos2");
-			}
-		}else{
-			if ($this->Trabajo_model->save($data)) {
-			
-				$this->session->set_flashdata("succes","Trabajo Actual registrado con éxito.");
-				redirect(base_url()."dashboard08/inscripcion");
-				
-			}else{
-				$this->session->set_flashdata("error","No se pudo guardar la informacion");
-			    redirect(base_url()."dashboard08/datos2");
-			}
-		}
-	}
+    // ================================================
+    // VALIDACIÓN Y SUBIDA DEL CARNET DE TRABAJO
+    // ================================================
+    $valores_requieren_carnet = array(1, 2, 5, 20, 21, 22);
+    $carnet_subido = false;
+    $error_carnet  = "";
+
+    if (in_array($lugar_trabajo, $valores_requieren_carnet)) {
+
+        $carnet_path    = FCPATH . 'assets/carnet/';
+        $nombre_archivo = $id_usuario . '_carnet.jpg';
+        $ruta_completa  = $carnet_path . $nombre_archivo;
+
+        $carnet_existe = file_exists($ruta_completa);
+
+        $periodo = $this->Periodo_model->PeriodoActivo_asp();
+
+        $control_requisito = $this->Control_requisitos_model->getControl_requisitos(
+            $periodo->id,
+            6,
+            $id_usuario
+        );
+
+        // --------------------------------------------------
+        // CASO A: NO existe carnet → es OBLIGATORIO subirlo
+        // --------------------------------------------------
+        if (!$carnet_existe) {
+
+            if (empty($_FILES['userfile']['name'])) {
+                $this->session->set_flashdata("error", "Debe adjuntar el carnet de trabajo o nombramiento (archivo obligatorio).");
+                redirect(base_url() . "dashboard08/datos2");
+                return;
+            }
+
+            $config['upload_path']   = $carnet_path;
+            $config['allowed_types'] = 'jpg|jpeg|png';
+            $config['max_size']      = 1024;
+            $config['file_name']     = $id_usuario . '_carnet';
+            $config['overwrite']     = true;
+
+            $this->upload->initialize($config);
+
+            if ($this->upload->do_upload('userfile')) {
+
+                $upload_data = $this->upload->data();
+
+                if ($upload_data['file_ext'] == '.png') {
+                    $this->convertir_png_a_jpg($upload_data['full_path']);
+                }
+
+                if ($upload_data['file_ext'] != '.jpg' && $upload_data['file_ext'] != '.jpeg') {
+                    $ruta_jpg = str_replace($upload_data['file_ext'], '.jpg', $upload_data['full_path']);
+                    rename($upload_data['full_path'], $ruta_jpg);
+                }
+
+                $carnet_subido = true;
+
+                if ($control_requisito == NULL) {
+                    $data_control = array(
+                        'id_usuario'          => $id_usuario,
+                        'id_requisito'        => 6,
+                        'id_periodo'          => $periodo->id,
+                        'fecha_actualizacion' => date("Y-m-d H:i:s")
+                    );
+                    $this->Control_requisitos_model->save($data_control);
+                } else {
+                    $data_control = array(
+                        'fecha_actualizacion' => date("Y-m-d H:i:s")
+                    );
+                    $this->Control_requisitos_model->update($id_usuario, $periodo->id, 6, $data_control);
+                }
+
+            } else {
+                $error = $this->upload->display_errors('', '');
+                $this->session->set_flashdata("error", "Error al subir el carnet: " . $error);
+                redirect(base_url() . "dashboard08/datos2");
+                return;
+            }
+
+        // --------------------------------------------------
+        // CASO B: YA existe carnet en el directorio
+        // --------------------------------------------------
+        } else {
+
+            if (!empty($_FILES['userfile']['name'])) {
+
+                $config['upload_path']   = $carnet_path;
+                $config['allowed_types'] = 'jpg|jpeg|png';
+                $config['max_size']      = 1024;
+                $config['file_name']     = $id_usuario . '_carnet';
+                $config['overwrite']     = true;
+
+                $this->upload->initialize($config);
+
+                if ($this->upload->do_upload('userfile')) {
+
+                    $upload_data = $this->upload->data();
+
+                    if ($upload_data['file_ext'] == '.png') {
+                        $this->convertir_png_a_jpg($upload_data['full_path']);
+                    }
+
+                    if ($upload_data['file_ext'] != '.jpg' && $upload_data['file_ext'] != '.jpeg') {
+                        $ruta_jpg = str_replace($upload_data['file_ext'], '.jpg', $upload_data['full_path']);
+                        rename($upload_data['full_path'], $ruta_jpg);
+                    }
+
+                    $carnet_subido = true;
+
+                    if ($control_requisito != NULL) {
+                        $data_control = array(
+                            'fecha_actualizacion' => date("Y-m-d H:i:s")
+                        );
+                        $this->Control_requisitos_model->update($id_usuario, $periodo->id, 6, $data_control);
+                    } else {
+                        $data_control = array(
+                            'id_usuario'          => $id_usuario,
+                            'id_requisito'        => 6,
+                            'id_periodo'          => $periodo->id,
+                            'fecha_actualizacion' => date("Y-m-d H:i:s")
+                        );
+                        $this->Control_requisitos_model->save($data_control);
+                    }
+
+                } else {
+                    $error = $this->upload->display_errors('', '');
+                    $this->session->set_flashdata("warning", "No se pudo actualizar el carnet: " . $error . " - Se mantiene el anterior.");
+                }
+
+            } else {
+                // Carnet existe y no se subió uno nuevo
+                if ($control_requisito == NULL) {
+                    $data_control = array(
+                        'id_usuario'          => $id_usuario,
+                        'id_requisito'        => 6,
+                        'id_periodo'          => $periodo->id,
+                        'fecha_actualizacion' => date("Y-m-d H:i:s")
+                    );
+                    $this->Control_requisitos_model->save($data_control);
+                }
+                $carnet_subido = true;
+            }
+        }
+    }
+    // ================================================
+    // FIN VALIDACIÓN DEL CARNET
+    // ================================================
+
+    // ================================================
+    // PREPARAR DATOS PARA GUARDAR
+    // ================================================
+    if ($lugar_trabajo == 1) {
+        $data = array(
+            'id_usuario'             => $id_usuario,
+            'id_lugar_trabajo'       => $lugar_trabajo,
+            'cargo'                  => $cargo_desempena,
+            'tel_trabajo'            => $telefono_trabajo,
+            'jubilado'               => $jubilado,
+            'id_estado_inscribio'    => 24,
+            'institucion'            => $institucion,
+            'direccion_adscripcion'  => $direccion,
+            'circunscripcion'        => $circunscripcion,
+            'funciones'              => $funciones,
+            'actual'                 => 1,
+            'anno_ingreso'           => $ingreso,
+            'estado_circunscripcion' => $est_circunscripcion,
+            'dactualizacion'         => date("Y-m-d H:i:s"),
+            'quien_actualizo'        => $this->session->userdata('id')
+        );
+    } else {
+        $data = array(
+            'id_usuario'             => $id_usuario,
+            'id_lugar_trabajo'       => $lugar_trabajo,
+            'cargo'                  => $cargo_desempena,
+            'tel_trabajo'            => $telefono_trabajo,
+            'jubilado'               => $jubilado,
+            'id_estado_inscribio'    => 24,
+            'institucion'            => $institucion,
+            'direccion_adscripcion'  => $direccion,
+            'circunscripcion'        => '',
+            'funciones'              => $funciones,
+            'actual'                 => 1,
+            'anno_ingreso'           => $ingreso,
+            'estado_circunscripcion' => 0,
+            'dactualizacion'         => date("Y-m-d H:i:s"),
+            'quien_actualizo'        => $this->session->userdata('id')
+        );
+    }
+
+    // ================================================
+    // GUARDAR SEGÚN ROL Y TIPO DE ACCIÓN
+    // ================================================
+    if ($this->session->userdata('rol') == 7) {
+
+        // ------------------------------------------------
+        // CASO 1: UPDATE (registro ya existe)
+        // ------------------------------------------------
+        if ($no_encontrado != 'falso') {
+
+            if ($this->Trabajo_model->update($no_encontrado, $data)) {
+                // ✅ Redirige a requisitos al actualizar correctamente
+                redirect(base_url() . "dashboard08/requisitos");
+            } else {
+                $this->session->set_flashdata("error", "No se pudo actualizar la informacion");
+                redirect(base_url() . "dashboard08/datos2");
+            }
+
+        // ------------------------------------------------
+        // CASO 2: SAVE (registro nuevo)
+        // ------------------------------------------------
+        } else {
+
+            if ($this->Trabajo_model->save($data)) {
+                // ✅ Redirige a requisitos al guardar correctamente
+                redirect(base_url() . "dashboard08/requisitos");
+            } else {
+                $this->session->set_flashdata("error", "No se pudo guardar la informacion");
+                redirect(base_url() . "dashboard08/datos2");
+            }
+        }
+    }
 }
+
+// ================================================
+// FUNCIÓN AUXILIAR PARA CONVERTIR PNG A JPG
+// ================================================
+private function convertir_png_a_jpg($ruta_png)
+{
+    if (!file_exists($ruta_png)) {
+        return false;
+    }
+    
+    try {
+        $imagen = imagecreatefrompng($ruta_png);
+        $ruta_jpg = str_replace('.png', '.jpg', $ruta_png);
+        imagejpeg($imagen, $ruta_jpg, 90);
+        imagedestroy($imagen);
+        unlink($ruta_png);
+        return true;
+    } catch (Exception $e) {
+        log_message('error', 'Error al convertir PNG a JPG: ' . $e->getMessage());
+        return false;
+    }
+}
+
+// ================================================
+// FUNCIÓN PARA VERIFICAR SI EXISTE CARNET (para AJAX)
+// ================================================
+public function verificar_imagen_carnet()
+{
+    $this->output->set_content_type('application/json');
+    
+    $id_usuario = $this->input->post('id_usuario');
+    if (empty($id_usuario)) {
+        $id_usuario = $this->session->userdata('id');
+    }
+    
+    // Verificar existencia del archivo
+    $ruta_imagen = FCPATH . 'assets/carnet/' . $id_usuario . '_carnet.jpg';
+    $existe_archivo = file_exists($ruta_imagen);
+    
+    // También verificar si tiene registro en control_requisitos
+    $periodo = $this->Periodo_model->PeriodoActivo_asp();
+    $control_requisito = $this->Control_requisitos_model->getControl_requisitos(
+        $periodo->id, 
+        6, 
+        $id_usuario
+    );
+    
+    $existe_registro = ($control_requisito != NULL);
+    
+    echo json_encode([
+        'existe' => ($existe_archivo && $existe_registro)
+    ]);
+}
+
 	public function trabajo_ant_store ($id_usuario,$actual)
 	{
 		
@@ -1958,49 +2175,91 @@ public function inscripcion()
 	 }
 	
 /*Actualizado 31-03-2022*/
-	public function proceso()
-	{
-		$id_usuario = $this->session->userdata("id");
-		 $idprograma=$this->session->userdata("idprograma");
-		 $rol=$this->session->userdata("rol");
-//		$idprograma = explode(",", $idprograma);
+/*Actualizado 31-03-2022*/
+public function proceso()
+{
+    $id_usuario  = $this->session->userdata("id");
+    $idprograma  = $this->session->userdata("idprograma");
+    $rol         = $this->session->userdata("rol");
 
-		//var_dump($idprograma);
-		
-		$id_periodo = $this->Periodo_model->PeriodoActivo_asp();
-		$data = array(
-		'actualizar' => $this->Trabajo_model->RegistradoTrabajo($id_usuario),
-	
-		'pago_aspirante' => $this->Registro_pago_model->RegistradoPago_asp($id_usuario,$id_periodo->id),
-		
-		'result_conciliado' => $this->Registro_pago_model->ConciliacionPago($id_usuario,$id_periodo->id),
-		'periodo' => $this->Periodo_model->PeriodoActivo_asp(),
-		'estadoconciliacion' => $this->Registro_pago_model->Verificacion_conciliacion($id_usuario,$id_periodo->id),
-		'revicion_academica' => $this->Materias_preinscrita_model->Revicion_academica($id_usuario,$id_periodo->id),
-		'revision_documentos' => $this->Registro_pago_model->Revision_documentos($id_usuario,$id_periodo->id),
-		'programa_aprobado'  => $this->Programa_model->getProgramaAprobado($idprograma),
-		'requisito'  => 	$this->Control_requisitos_model->getControl_requisitos1($id_periodo->id,$id_usuario),
-		'documentos'=> 		$this->Control_requisitos_model->getRequisitos(),
-		'academico'=> $this->Academico_model->getusuario_Academico_asp($id_usuario,1),
-		'trabajo'=> $this->Trabajo_model->getListaTrabajo($id_usuario,1),
-		'interes' => $this->De_ser_admitido_model->getusuario_de_ser_admitido($id_usuario),
-'direccion'=> $this->Direccion_model->getListaDireccion($id_usuario)
+    $id_periodo  = $this->Periodo_model->PeriodoActivo_asp();
 
-		);
-//		var_dump($data['periodo']);
-		$data2 = array(
-			'tiempo_pre' => $this->Tiempo_preinscripcion_model->gettiempo_preinscripcion(),
+    // =============================================
+    // Obtener los datos como arrays
+    // =============================================
+    $trabajo_lista   = $this->Trabajo_model->getListaTrabajo($id_usuario, 1);
+    $academico_lista = $this->Academico_model->getusuario_Academico_asp($id_usuario, 1);
+    $direccion_lista = $this->Direccion_model->getListaDireccion($id_usuario);
 
-		);
-	//echo count($data3);
-		$this->load->view('layouts/header');
-		$this->load->view('layouts/sidebar',$data2);
-		
-		if ($rol==7 )$this->load->view('aspirante/datos/list_proceso_aspirante',$data);
-	
-		
-		$this->load->view('layouts/footer');		
-	}
+    // =============================================
+    // Convertir a booleanos para la vista
+    // (true = tiene datos registrados, false = no)
+    // =============================================
+    $trabajo   = !empty($trabajo_lista);
+    $academico = !empty($academico_lista);
+    $direccion = !empty($direccion_lista);
+
+    // =============================================
+    // Pago y conciliación
+    // =============================================
+    $pago_aspirante = $this->Registro_pago_model->RegistradoPago_asp($id_usuario, $id_periodo->id);
+    $pago           = ($pago_aspirante == true); // booleano limpio
+
+    // =============================================
+    // Requisitos y conteo
+    // =============================================
+    $requisito = $this->Control_requisitos_model->getControl_requisitos1($id_periodo->id, $id_usuario);
+
+    $cuenta = 0;
+    if (!empty($requisito)) {
+        foreach ($requisito as $req) {
+            if ($req->id_requisito == 1) $cuenta++;
+            if ($req->id_requisito == 2) $cuenta++;
+        }
+    }
+
+    // =============================================
+    // Conciliación y revisión
+    // =============================================
+    $result_conciliado   = $this->Registro_pago_model->ConciliacionPago($id_usuario, $id_periodo->id);
+    $revision_documentos = $this->Registro_pago_model->Revision_documentos($id_usuario, $id_periodo->id);
+    $programa_aprobado   = $this->Programa_model->getProgramaAprobado($idprograma);
+
+    // =============================================
+    // Data para la vista
+    // =============================================
+    $data = array(
+        'actualizar'           => $this->Trabajo_model->RegistradoTrabajo($id_usuario),
+        'pago_aspirante'       => $pago_aspirante,
+        'pago'                 => $pago,
+        'result_conciliado'    => $result_conciliado,
+        'periodo'              => $id_periodo,
+        'estadoconciliacion'   => $this->Registro_pago_model->Verificacion_conciliacion($id_usuario, $id_periodo->id),
+        'revicion_academica'   => $this->Materias_preinscrita_model->Revicion_academica($id_usuario, $id_periodo->id),
+        'revision_documentos'  => $revision_documentos,
+        'programa_aprobado'    => $programa_aprobado,
+        'requisito'            => $requisito,
+        'documentos'           => $this->Control_requisitos_model->getRequisitos(),
+        'academico'            => $academico,
+        'trabajo'              => $trabajo,
+        'direccion'            => $direccion,
+        'interes'              => $this->De_ser_admitido_model->getusuario_de_ser_admitido($id_usuario),
+        'cuenta'               => $cuenta, // ← IMPORTANTE: enviar $cuenta
+    );
+
+    $data2 = array(
+        'tiempo_pre' => $this->Tiempo_preinscripcion_model->gettiempo_preinscripcion(),
+    );
+
+    $this->load->view('layouts/header');
+    $this->load->view('layouts/sidebar', $data2);
+
+    if ($rol == 7) {
+        $this->load->view('aspirante/datos/list_proceso_aspirante', $data);
+    }
+
+    $this->load->view('layouts/footer');
+}
 
 
 public function registropago_store()

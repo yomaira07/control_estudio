@@ -21,7 +21,23 @@ class Usuarios_model extends CI_Model {
 			return false;
 		}
 	}
-
+public function loginaspirante($username,$password)
+	{
+		//consultados el usuario y password
+		$this->db->where("username",$username);
+		$this->db->where("password",$password);
+		$this->db->where("estado",1);
+		$this->db->where("rol_id",7);
+		// se consulta con la tabla usuarios
+		$resultados = $this->db->get("usuarios");
+		// verificamos que trae valor
+		if ($resultados->num_rows() > 0){
+			return $resultados->row();
+		}
+		else{
+			return false;
+		}
+	}
 	public function cambio($id_usuario,$data)
 	{
 
@@ -249,6 +265,20 @@ public function buscar_usuario_correo($correo,$cedula){//verifica si existe el e
 
 public function buscar_usuario_correo1($correo){//muestra los valores del usuario asociado al correo
 		$this->db->where("email",$correo);
+		$resultado = $this->db->get("usuarios");
+		//var_dump($this->db->queries);
+
+		if ($resultado->num_rows() > 0) {
+			return$resultado->row();
+		}
+		else{
+			return false;
+		}
+
+	}
+public function buscar_usuario_correoregular($correo){//muestra los valores del usuario asociado al correo
+		$this->db->where("email",$correo);
+		$this->db->where_in("rol_id", array(5,8)); // Ajusta el rol_id según sea necesario
 		$resultado = $this->db->get("usuarios");
 		//var_dump($this->db->queries);
 

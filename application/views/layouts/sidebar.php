@@ -1290,13 +1290,21 @@
                         <p>Cambio de Clave</p>
                     </a>
                 </li>
+                <?php if($this->session->userdata("rol")== 7){?>
+                <li class="nav-item">
+                    <a href="<?php echo base_url(); ?>auth/logoutaspirante" class="nav-link nav-link-salir">
+                        <i class="fas fa-sign-out-alt nav-icon"></i>
+                        <p>Salir</p>
+                    </a>
+                </li>
+                <?php } else { ?>
                 <li class="nav-item">
                     <a href="<?php echo base_url(); ?>auth/logout" class="nav-link nav-link-salir">
                         <i class="fas fa-sign-out-alt nav-icon"></i>
                         <p>Salir</p>
                     </a>
                 </li>
-
+                <?php } ?>
             </ul>
         </nav>
         <!-- /.sidebar-menu -->
