@@ -112,12 +112,16 @@
                                         </thead>
                                         <tbody>
                                             <?php 
+                                            // ============================================================
+                                            // INICIALIZAR VARIABLES (siempre, aunque no haya UC)
+                                            // ============================================================
+                                            $total_uc = 0;
+                                            $total_ucredito_gen = 0;
+                                            $valor_ucredito = 0;
+                                            $programas_list = [];
+                                            $nombre_programa = '';
+                                            
                                             if(!empty($list_registro)): 
-                                                $total_uc = 0;                  // Total de unidades de crédito
-                                                $total_ucredito_gen = 0;        // Total en monto de UC
-                                                $valor_ucredito = 0;            // Valor de la unidad de crédito
-                                                $programas_list = [];    // Array para almacenar todos los programas
-                                                
                                                 foreach($list_registro as $registro):
                                                     // Obtener valor UC según descuento
                                                     if ($lista_trabajo->descuento > 0) {
@@ -170,7 +174,7 @@
                                             ?>
                                             <tr style="background: #f8f9fa; font-weight: 600; border-top: 2px solid #003366;">
                                                 <td colspan="4" style="padding: 10px 15px; text-align: right; font-size: 0.9rem; color: #2c3e50;">
-                                                    <i class="fas fa-calculator" style="color: #003366; margin-right: 8px;"></i>Total U.C: 
+                                                    <i class="fas fa-calculator" style="color: #003366; margin-right: 8px;"></i>Total a pagar por U.C: 
                                                     <span class="badge" style="font-size: 0.85rem; padding: 4px 14px; border-radius: 20px; background: #003366; color: white;">
                                                         <?php echo $total_uc; ?>
                                                     </span>
@@ -229,40 +233,71 @@
                                                     <?php 
                                                     $ucreditoE = 0;
                                                     $total_ucredito_gen_exonerados = 0;
+                                                    
                                                     foreach($exonerados as $exonerado):
-                                                        if ($lista_trabajo->descuento > 0) {
-                                                            $valor_ucredito_exo = $exonerado->valorpubmp;
-                                                        } else {
-                                                            $valor_ucredito_exo = $exonerado->valorpubgen;
-                                                        }
+                                                        $tipo_ex = isset($exonerado->tipo_exoneracion) ? (int)$exonerado->tipo_exoneracion : 0;
+                                                        
+                                                        if($tipo_ex === 0):
+                                                            // Exoneración PARCIAL: solo la UC de esa materia
+                                                            $uc_fila = isset($exonerado->uc) ? (int)$exonerado->uc : 0;
+                                                            $monto_fila = $uc_fila * $valor_ucredito;
+                                                            $ucreditoE += $uc_fila;
+                                                            $total_ucredito_gen_exonerados += $monto_fila;
                                                     ?>
                                                     <tr style="border-bottom: 1px solid #f0f0f0;">
                                                         <td style="padding: 8px 15px; font-size: 0.8rem; color: #2c3e50;">
-                                                            <?php echo $exonerado->programa; ?>
+                                                            <?php echo !empty($exonerado->programa) ? $exonerado->programa : 'N/D'; ?>
                                                         </td>
                                                         <td style="padding: 8px 15px; text-align: center; font-size: 0.8rem;">
                                                             <span class="badge" style="font-size: 0.7rem; padding: 2px 10px; border-radius: 20px; background: #ffc107; color: #856404;">
-                                                                <?php echo $exonerado->uc; ?>
+                                                                <?php echo $uc_fila; ?>
                                                             </span>
-                                                            <?php $ucreditoE += $exonerado->uc; ?>
                                                         </td>
                                                         <td style="padding: 8px 15px; font-size: 0.8rem; color: #2c3e50;">
-                                                            <?php echo $exonerado->unidad_curricular; ?>
+                                                            <?php echo !empty($exonerado->unidad_curricular) ? $exonerado->unidad_curricular : 'N/D'; ?>
                                                         </td>
                                                         <td style="padding: 8px 15px; text-align: center; font-size: 0.8rem;">
                                                             <span class="badge" style="background: #e9ecef; color: #495057; padding: 2px 10px; border-radius: 20px; font-size: 0.7rem;">
-                                                                <?php echo $exonerado->trimestre; ?>
+                                                                <?php echo !empty($exonerado->trimestre) ? $exonerado->trimestre : 'N/D'; ?>
                                                             </span>
                                                         </td>
                                                         <td style="padding: 8px 15px; text-align: right; font-size: 0.8rem; color: #856404; font-weight: 500;">
-                                                            <?php 
-                                                                $total_ucredito_exo = $exonerado->uc * $valor_ucredito_exo;
-                                                                $total_ucredito_gen_exonerados += $total_ucredito_exo;
-                                                                echo number_format($total_ucredito_exo, 2, ',', '.') . ' Ref.';
-                                                            ?>
+                                                            <?php echo number_format($monto_fila, 2, ',', '.') . ' Ref.'; ?>
                                                         </td>
                                                     </tr>
-                                                    <?php endforeach; ?>
+                                                    
+                                                    <?php 
+                                                        elseif($tipo_ex === 1):
+                                                            // Exoneración TOTAL: todas las UC inscritas
+                                                            $ucreditoE += $total_uc;
+                                                            $total_ucredito_gen_exonerados += $total_ucredito_gen;
+                                                    ?>
+                                                    <tr style="border-bottom: 1px solid #f0f0f0; background: #fffdf5;">
+                                                        <td style="padding: 8px 15px; font-size: 0.8rem; color: #2c3e50;">
+                                                            <?php echo !empty($exonerado->programa) ? $exonerado->programa : 'Todos los programas'; ?>
+                                                        </td>
+                                                        <td style="padding: 8px 15px; text-align: center; font-size: 0.8rem;">
+                                                            <span class="badge" style="font-size: 0.7rem; padding: 2px 10px; border-radius: 20px; background: #ffc107; color: #856404;">
+                                                                <?php echo $total_uc; ?>
+                                                            </span>
+                                                        </td>
+                                                        <td style="padding: 8px 15px; font-size: 0.8rem; color: #2c3e50;">
+                                                            Todas las Unidades Curriculares inscritas
+                                                        </td>
+                                                        <td style="padding: 8px 15px; text-align: center; font-size: 0.8rem;">
+                                                            <span class="badge" style="background: #e9ecef; color: #495057; padding: 2px 10px; border-radius: 20px; font-size: 0.7rem;">
+                                                                Todos
+                                                            </span>
+                                                        </td>
+                                                        <td style="padding: 8px 15px; text-align: right; font-size: 0.8rem; color: #856404; font-weight: 500;">
+                                                            <?php echo number_format($total_ucredito_gen, 2, ',', '.') . ' Ref.'; ?>
+                                                        </td>
+                                                    </tr>
+                                                    <?php 
+                                                        endif;
+                                                    endforeach; 
+                                                    ?>
+                                                                                                        
                                                     <tr style="background: #fff8e1; font-weight: 600; border-top: 2px solid #ffc107;">
                                                         <td colspan="4" style="padding: 8px 15px; text-align: right; font-size: 0.8rem; color: #856404;">
                                                             <i class="fas fa-calculator text-warning mr-2"></i>Total U.C Exoneradas: 
@@ -374,28 +409,53 @@
                             $monto_uc = isset($total_ucredito_gen) ? $total_ucredito_gen : 0;
                             $total_pagar_gen = $monto_uc + $total_arancel_ins;
 
-                            // Calcular exoneración
-                            $monto_exonerar = 0;
-                            if(isset($total_ucredito_gen_exonerados) && $total_ucredito_gen_exonerados > 0) {
-                                $monto_exonerar = ($total_ucredito_gen_exonerados + $total_arancel_ins + $arancel_fuera_lapso + $total_arancel_permanencia_gen);
+                            // ============================================================
+                            // DETECTAR SI HAY EXONERACIÓN TOTAL (tipo_exoneracion == 1)
+                            // ============================================================
+                            $exoneracion_total = false;
+                            if (!empty($exonerados)) {
+                                foreach ($exonerados as $ex) {
+                                    if (isset($ex->tipo_exoneracion) && (int)$ex->tipo_exoneracion === 1) {
+                                        $exoneracion_total = true;
+                                        break;
+                                    }
+                                }
                             }
 
-                            // Total final
+                            // ============================================================
+                            // CÁLCULO DEL MONTO A EXONERAR
+                            // ============================================================
+                            $monto_exonerar = 0;
+
+                            // Exoneración de UC (siempre que exista)
+                            if (isset($total_ucredito_gen_exonerados) && $total_ucredito_gen_exonerados > 0) {
+                                $monto_exonerar += $total_ucredito_gen_exonerados;
+                            }
+
+                            // Si es exoneración TOTAL, sumar también los aranceles
+                            if ($exoneracion_total) {
+                                $monto_exonerar += $total_arancel_ins;
+                                $monto_exonerar += $total_arancel_permanencia_gen;
+                                $monto_exonerar += $arancel_fuera_lapso;
+                            }
+
+                            // ============================================================
+                            // TOTAL FINAL
+                            // ============================================================
                             $total_final = $total_pagar_gen + $total_arancel_permanencia_gen + $arancel_fuera_lapso - $monto_exonerar;
+
+                            if ($total_final < 0) {
+                                $total_final = 0;
+                            }
 
                             // ============================================================
                             // PREPARAR CÉDULA/RIF POR DEFECTO PARA LA PASARELA
                             // ============================================================
-                            // Se extrae solo la parte numérica de la cédula del estudiante.
-                            // Se asume que $datos_alumno->cedula puede venir como "V-12345678", "12345678", etc.
                             $cedula_default_raw = isset($datos_alumno->cedula) ? $datos_alumno->cedula : '';
                             $cedula_default_numeros = preg_replace('/[^0-9]/', '', $cedula_default_raw);
-                            // Detectar tipo de documento por defecto (V para venezolanos, E para extranjeros)
                             $tipo_doc_default = 'V';
                             if (stripos($cedula_default_raw, 'E') === 0) { $tipo_doc_default = 'E'; }
-                            elseif (stripos($cedula_default_raw, 'J') === 0) { $tipo_doc_default = 'J'; }
-                            elseif (stripos($cedula_default_raw, 'G') === 0) { $tipo_doc_default = 'G'; }
-                            elseif (stripos($cedula_default_raw, 'P') === 0) { $tipo_doc_default = 'P'; }
+                           
                             ?>
 
                             <!-- ============================================================ -->
@@ -409,6 +469,7 @@
                             <input type="hidden" name="id_periodo" value="<?php echo $periodo->id; ?>">
                             <input type="hidden" name="valor_ucredito2" id="valor" value="<?php echo isset($valor_ucredito) ? number_format($valor_ucredito, 2, ",", ".") : '0,00'; ?>">
                             <input type="hidden" name="id_usuario" value="<?php echo $this->session->userdata('id'); ?>">
+                            <input type="hidden" name="monto_exoneracion" value="<?php echo $monto_exonerado?>">
 
                             <!-- ============================================================ -->
                             <!-- Tabla de Resumen de Pagos                                   -->
@@ -419,7 +480,7 @@
                                         <div class="card-header" style="background: #f0f9ff; border-bottom: 1px solid #e8e8e8; padding: 8px 15px; border-radius: 8px 8px 0 0;">
                                             <h6 class="mb-0" style="font-weight: 600; color: #0c5460;">
                                                 <i class="fas fa-calculator text-info mr-2"></i>
-                                                Resumen de Pago
+                                                Resúmen de Pago
                                             </h6>
                                         </div>
                                         <div class="card-body p-0">
@@ -474,7 +535,13 @@
                                                         <?php if($monto_exonerar > 0): ?>
                                                         <tr style="border-bottom: 1px solid #f0f0f0; background: #fffbf0;">
                                                             <td style="padding: 8px 15px; font-weight: 500; color: #856404; font-size: 0.85rem;">
-                                                                <i class="fas fa-star text-warning mr-2"></i>Monto a Exonerar
+                                                                <i class="fas fa-star text-warning mr-2"></i>
+                                                                Monto a Exonerar
+                                                                <?php if($exoneracion_total): ?>
+                                                                    <small class="d-block text-muted" style="font-size: 0.72rem;">
+                                                                        (UC + aranceles administrativos)
+                                                                    </small>
+                                                                <?php endif; ?>
                                                             </td>
                                                             <td style="padding: 8px 15px; text-align: right; font-weight: 500; color: #856404; font-size: 0.85rem;">
                                                                 - <?php echo number_format($monto_exonerar, 2, ',', '.') . ' Ref.'; ?>
@@ -490,7 +557,7 @@
                                                             </td>
                                                             <td style="padding: 12px 15px; text-align: right; font-weight: 700; color: #28a745; font-size: 1.2rem;">
                                                                 <?php echo number_format($total_final, 2, ',', '.') . ' Ref.'; ?>
-                                                                <input type="hidden" name="total_pagar_final" value="<?php echo number_format($total_pagar, 2, ',', '.') ?>">
+                                                                <input type="hidden" name="total_pagar_final" value="<?php echo number_format($total_final, 2, ',', '.') ?>">
                                                             </td>
                                                         </tr>
                                                     </tbody>
@@ -500,7 +567,8 @@
                                     </div>
                                 </div>
                             </div>
-
+                          
+                        <?php if(!$exoneracion_total): ?>
                             <!-- ============================================================ -->
                             <!-- NOTA INFORMATIVA - ACTUALIZACIÓN DE INSCRIPCIÓN              -->
                             <!-- ============================================================ -->
@@ -540,11 +608,7 @@
                                                     </span>
                                                 </div>
                                             </div>
-                                            <div style="flex-shrink: 0; margin-left: 15px;">
-                                                <span class="badge" style="background: #e67e22; color: white; padding: 6px 14px; border-radius: 20px; font-size: 0.7rem; font-weight: 600;">
-                                                    <i class="fas fa-hourglass-half"></i> Pendiente
-                                                </span>
-                                            </div>
+                                            
                                         </div>
                                     </div>
                                 </div>
@@ -559,38 +623,38 @@
                                         <div class="card-header" style="background: #f0fdf4; border-bottom: 1px solid #e8e8e8; padding: 8px 15px; border-radius: 8px 8px 0 0;">
                                             <h6 class="mb-0" style="font-weight: 600; color: #1a8a3f;">
                                                 <i class="fas fa-id-card mr-2"></i>
-                                                Datos para la Pasarela de Pago
+                                                Datos para el Botón de PagoBDV
                                             </h6>
                                         </div>
                                         <div class="card-body p-3">
                                             <div class="form-group mb-0">
                                                 <label for="cedula_rif_pago" class="form-label" style="font-weight: 600; color: #2c3e50; font-size: 0.9rem;">
-                                                    Cédula del Estudiante o RIF del Comercio <span class="text-danger">*</span>
+                                                    Cédula del Estudiante o Depositante <span class="text-danger">*</span>
                                                 </label>
                                                 <div class="input-group">
                                                     <div class="input-group-prepend">
                                                         <select name="tipo_documento_pago" id="tipo_documento_pago" class="form-control" style="border-radius: 8px 0 0 8px; font-weight: 500; background: #f8f9fa;">
                                                             <option value="V" <?php echo ($tipo_doc_default == 'V') ? 'selected' : ''; ?>>V</option>
                                                             <option value="E" <?php echo ($tipo_doc_default == 'E') ? 'selected' : ''; ?>>E</option>
-                                                            <option value="J" <?php echo ($tipo_doc_default == 'J') ? 'selected' : ''; ?>>J</option>
-                                                            <option value="G" <?php echo ($tipo_doc_default == 'G') ? 'selected' : ''; ?>>G</option>
-                                                            <option value="P" <?php echo ($tipo_doc_default == 'P') ? 'selected' : ''; ?>>P</option>
+                                                            
                                                         </select>
                                                     </div>
                                                     <input type="text" 
                                                            class="form-control" 
                                                            id="cedula_rif_pago" 
                                                            name="cedula_rif_pago" 
-                                                           placeholder="Ej: 12345678"
-                                                           pattern="[0-9]{6,12}"
-                                                           maxlength="12"
+                                                           placeholder="Ej: 12345678" 
+                                                            pattern="[0-9]{6,8}"
+                                                            maxlength="8"
+                                                            minlength="6"
+                                                            inputmode="numeric"
                                                            required
                                                            value="<?php echo htmlspecialchars($cedula_default_numeros); ?>"
                                                            style="border-radius: 0 8px 8px 0; font-weight: 500; letter-spacing: 0.5px;">
                                                 </div>
                                                 <small class="form-text text-muted" style="font-size: 0.78rem;">
                                                     <i class="fas fa-info-circle text-info"></i>
-                                                    Se ha precargado tu cédula, pero puedes <strong>modificarla</strong> si deseas usar otro documento (por ejemplo, el RIF de un comercio o tercero). Solo números, sin guiones ni puntos.
+                                                    Se ha precargado tu cédula, pero puedes <strong>modificarla</strong> si deseas usar otro documento que posea cuenta en el Banco de Venezuela. Solo números, sin guiones ni puntos.
                                                 </small>
                                             </div>
                                         </div>
@@ -614,11 +678,11 @@
                                         data-monto="<?php echo $total_final; ?>"
                                         style="border-radius: 10px; padding: 12px 45px; font-weight: 600; transition: all 0.3s; min-width: 220px; font-size: 16px; background: #1a8a3f; border-color: #1a8a3f;">
                                             <i class="fas fa-credit-card mr-2"></i>
-                                            Pagar con BDV
+                                            Pagar con Botón de PagoBDV
                                         </a>
       
                                         <!-- BOTÓN CANCELAR -->
-                                        <a href="<?php echo base_url(); ?>dashboard04/index" 
+                                        <a href="<?php echo base_url(); ?>dashboard04/proceso" 
                                         class="btn btn-default" 
                                         style="border-radius: 10px; padding: 12px 30px; font-weight: 500; transition: all 0.3s; min-width: 150px;">
                                             <i class="fas fa-times mr-2"></i>
@@ -663,10 +727,99 @@
                                     </div>
                                 </div>
                             </div>
-
+                            <?php endif; ?>
 
                         </form>
+  <?php if($exoneracion_total): ?>
+                                  <!-- ============================================================ -->
+                            <!-- MENSAJE: EXONERACIÓN TOTAL - NO REQUIERE PAGO                -->
+                            <!-- ============================================================ -->
+                            <div class="row mt-4">
+                                <div class="col-md-12">
+                                    <div class="alert alert-success" style="border-radius: 10px; border-left: 6px solid #1a8a3f; background: #f0fdf4; color: #2c3e50; box-shadow: 0 2px 10px rgba(0,0,0,0.08); padding: 20px 24px;">
+                                        <div class="d-flex align-items-start flex-wrap">
+                                            <div style="flex-shrink: 0; margin-right: 18px; margin-top: 2px;">
+                                                <i class="fas fa-check-circle" style="color: #1a8a3f; font-size: 38px;"></i>
+                                            </div>
+                                            <div style="flex-grow: 1;">
+                                                <h5 style="font-weight: 700; color: #1a8a3f; margin-bottom: 8px; font-size: 1.1rem;">
+                                                    <i class="fas fa-star" style="margin-right: 8px;"></i>
+                                                    ¡Felicidades! Tienes Exoneración Total
+                                                </h5>
+                                                <p style="margin-bottom: 8px; color: #2c3e50; font-size: 0.95rem;">
+                                                    Has sido beneficiado con una <strong>exoneración del 100%</strong> de los conceptos 
+                                                    de tu inscripción: <strong>Unidades de Crédito</strong>, <strong>Arancel de Inscripción</strong>, 
+                                                    <strong>Arancel por Permanencia</strong> y <strong>Arancel Fuera de Lapso</strong> (si aplica).
+                                                </p>
+                                                <p style="margin-bottom: 8px; color: #2c3e50; font-size: 0.95rem;">
+                                                    <i class="fas fa-info-circle" style="color: #1a8a3f;"></i>
+                                                    <strong>No se requiere realizar ningún pago</strong> a través del Botón de Pago BDV.
+                                                </p>
+                                                <p style="margin-bottom: 0; color: #2c3e50; font-size: 0.9rem;">
+                                                    Si tienes alguna duda, puedes consultar a la Dirección de Secretaría General.
+                                                </p>
+                                                <div style="margin-top: 16px;">
+    <form action="<?php echo base_url(); ?>dashboard04/registropago_store" 
+          method="POST" 
+          enctype="multipart/form-data" 
+          id="formRegistroExoneracion">
+        
+        <!-- Campos ocultos necesarios para el registro -->
+        <input type="text" name="ex_id_estudiante" value="<?php echo $datos_alumno->id; ?>">
+        <input type="text" name="ex_id_estado_estudio" value="<?php echo isset($estado_estudio->id_estado_inscribio) ? $estado_estudio->id_estado_inscribio : ''; ?>">
+        <input type="text" name="ex_id_periodo" value="<?php echo $periodo->id; ?>">
+        <input type="text" name="ex_id_usuario" value="<?php echo $this->session->userdata('id'); ?>">
+        <input type="text" name="ex_postgrado" value="<?php echo isset($nombre_programa) ? $nombre_programa : ''; ?>">
+        <input type="text" name="ex_total_ucredito" value="<?php echo isset($total_uc) ? $total_uc : 0; ?>">
+        <input type="text" name="ex_total_pagar" value="<?php echo $total_final; ?>">
+        <input type="text" name="ex_tipo_registro" value="exoneracion_total">
+        <input type="text" name="ex_monto_exoneracion" value="<?php echo $monto_exonerar; ?>">
 
+        <!-- Bloque de carga de archivo obligatorio -->
+        <div class="card" style="border-radius: 10px; border: 2px dashed #1a8a3f; background: #ffffff; margin-bottom: 16px;">
+            <div class="card-body p-3">
+                <label for="avale_exoneracion" style="font-weight: 600; color: #1a8a3f; font-size: 0.95rem; display: block; margin-bottom: 8px;">
+                    <i class="fas fa-file-upload mr-2"></i>
+                    Documento que avala la exoneración <span class="text-danger">*</span>
+                </label>
+                <div class="custom-file">
+                    <input type="file" 
+                           class="custom-file-input" 
+                           id="avale_exoneracion" 
+                           name="avale_exoneracion" 
+                           accept=".pdf,.jpg,.jpeg,.png"
+                           required>
+                    <label class="custom-file-label" for="avale_exoneracion" style="border-radius: 8px;">
+                        Seleccionar archivo...
+                    </label>
+                </div>
+                <small class="form-text text-muted" style="font-size: 0.78rem; margin-top: 6px;">
+                    <i class="fas fa-info-circle text-info"></i>
+                    Formatos permitidos: PDF, JPG, JPEG, PNG. Tamaño máximo: 5 MB.
+                    Este documento es <strong>obligatorio</strong> para registrar tu inscripción con exoneración.
+                </small>
+            </div>
+        </div>
+
+        <!-- Botones -->
+        <div class="d-flex flex-wrap" style="gap: 10px;">
+            <button type="submit" 
+                    class="btn btn-success" 
+                    id="btnRegistrarExoneracion"
+                    style="border-radius: 20px; padding: 8px 26px; font-weight: 600; background: #1a8a3f; border-color: #1a8a3f; color: white;">
+                <i class="fas fa-save mr-2"></i>
+                Registrar Inscripción
+            </button>
+            <a href="<?php echo base_url(); ?>dashboard04/proceso" 
+                class="btn btn-default" 
+                style="border-radius: 20px; padding: 8px 24px; font-weight: 500;">
+                <i class="fas fa-arrow-left mr-2"></i>
+                Volver al proceso
+            </a>
+        </div>
+        </form>
+        </div>
+          <?php endif; ?>
                     </div><!-- /.card-body -->
                 </div><!-- /.card -->
             </div><!-- /.card-body -->
@@ -795,9 +948,9 @@
                 var mensaje = "🔒 ¿CONFIRMAR PAGO?\n\n" +
                               "Esta acción es irreversible.\n\n" +
                               "Antes de confirmar, verifica:\n" +
-                              "✅ Unidades curriculares correctas\n" +
+                              "✅ Unidades curriculares y pagos de aranceles correctas\n" +
                               "✅ Monto adecuado\n" +
-                              "✅ Datos bancarios y comprobante correctos\n\n" +
+                              "✅ Cèdula de Identidad del Depositante\n\n" +
                               "⚠️ Una vez confirmado, NO podrás modificar tu inscripción.\n\n" +
                               "¿Estás seguro de continuar?";
                 
@@ -814,7 +967,7 @@
 // Si hay un pago BDV pendiente, mostrar alerta
 <?php if ($this->session->userdata('pago_bdv_token')): ?>
     setTimeout(function() {
-        var mensaje = "⚠️ Tienes un pago pendiente con BDV.\n" +
+        var mensaje = "⚠️ Tienes un pago pendiente con Botón de PagoBDV.\n" +
                       "¿Deseas verificar el estado del pago?";
         if (confirm(mensaje)) {
             window.location.href = '<?php echo base_url(); ?>pagos/confirmacion';
@@ -837,9 +990,9 @@ document.addEventListener('DOMContentLoaded', function() {
             var cedulaInput = document.getElementById('cedula_rif_pago');
             var cedulaValor = cedulaInput.value.trim();
             
-            if (!cedulaValor || !/^[0-9]{6,12}$/.test(cedulaValor)) {
-                alert('⚠️ Debes ingresar una cédula o RIF válido antes de continuar.\n\n' +
-                      'Solo números, entre 6 y 12 dígitos.\n' +
+             if (!/^[0-9]{6,8}$/.test(cedulaValor)) {
+                alert('⚠️ Debes ingresar una cédula válido antes de continuar.\n\n' +
+                      'Solo números, entre 6 y 8 dígitos.\n' +
                       'Ejemplo: 12345678');
                 cedulaInput.focus();
                 cedulaInput.style.borderColor = '#dc3545';
@@ -852,13 +1005,13 @@ document.addEventListener('DOMContentLoaded', function() {
             
             var monto = '<?php echo number_format($total_final, 2, ",", "."); ?>';
             var tipoDoc = document.getElementById('tipo_documento_pago').value;
-            var mensaje = "💳 PAGO CON BANCO DE VENEZUELA\n\n" +
-                          "Serás redirigido a la pasarela de pago BDV.\n\n" +
+            var mensaje = "💳 PAGO CON BOTON DE PagoBDV\n\n" +
+                          "Serás redirigido al botón de PagoBDV.\n\n" +
                           "📌 Documento: " + tipoDoc + "-" + cedulaValor + "\n" +
                           "📌 Monto a pagar: Ref. " + monto + "\n\n" +
                           "⚠️ Antes de continuar, asegúrate de:\n" +
                           "✅ Tener saldo suficiente en tu cuenta BDV\n" +
-                          "✅ Tener a la mano los datos de tu tarjeta\n" +
+                          "✅ Tener a la mano los datos de tus productos y servicios del banco\n" +
                           "✅ Conexión estable a internet\n\n" +
                           "¿Continuar con el pago?";
             
@@ -901,6 +1054,72 @@ document.addEventListener('DOMContentLoaded', function() {
                 // 3. Añadir el formulario al documento y enviarlo
                 document.body.appendChild(form);
                 form.submit();
+            }
+        });
+    }
+});
+// ============================================================
+// MANEJO DEL FORMULARIO DE EXONERACIÓN TOTAL
+// ============================================================
+document.addEventListener('DOMContentLoaded', function() {
+    // Mostrar nombre del archivo seleccionado
+    var inputAval = document.getElementById('avale_exoneracion');
+    if (inputAval) {
+        inputAval.addEventListener('change', function(e) {
+            var fileName = e.target.files[0]?.name || 'Seleccionar archivo...';
+            var label = e.target.nextElementSibling;
+            if (label) label.innerHTML = fileName;
+        });
+    }
+
+    // Validación antes de enviar
+    var formExo = document.getElementById('formRegistroExoneracion');
+    if (formExo) {
+        formExo.addEventListener('submit', function(e) {
+            var inputAval = document.getElementById('avale_exoneracion');
+            var archivo = inputAval.files[0];
+
+            if (!archivo) {
+                e.preventDefault();
+                alert('⚠️ Debes cargar el documento que avala la exoneración antes de registrar tu inscripción.');
+                inputAval.focus();
+                inputAval.style.borderColor = '#dc3545';
+                return false;
+            }
+
+            // Validar extensión
+            var extensionesPermitidas = ['pdf', 'jpg', 'jpeg', 'png'];
+            var extension = archivo.name.split('.').pop().toLowerCase();
+            if (!extensionesPermitidas.includes(extension)) {
+                e.preventDefault();
+                alert('⚠️ Solo se permiten archivos PDF, JPG, JPEG o PNG.');
+                inputAval.value = '';
+                inputAval.nextElementSibling.innerHTML = 'Seleccionar archivo...';
+                return false;
+            }
+
+            // Validar tamaño (5 MB)
+            var maxSize = 5 * 1024 * 1024;
+            if (archivo.size > maxSize) {
+                e.preventDefault();
+                alert('⚠️ El archivo no debe superar los 5 MB.');
+                inputAval.value = '';
+                inputAval.nextElementSibling.innerHTML = 'Seleccionar archivo...';
+                return false;
+            }
+
+            // Confirmación final
+            if (!confirm('📄 ¿Confirmar el registro de tu inscripción con exoneración total?\n\n' +
+                         'Una vez registrado, no podrás modificar tu inscripción.')) {
+                e.preventDefault();
+                return false;
+            }
+
+            // Deshabilitar botón para evitar doble envío
+            var btn = document.getElementById('btnRegistrarExoneracion');
+            if (btn) {
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Registrando...';
             }
         });
     }

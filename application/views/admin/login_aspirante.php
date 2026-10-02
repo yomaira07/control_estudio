@@ -504,7 +504,7 @@
                 <div class="form-group">
                     <label for="username">
                         <i class="fas fa-user mr-1"></i>
-                        Cédula de Identidad o RIF
+                        Cédula de Identidad o RIF personal
                     </label>
                     <div class="input-group">
                         <div class="input-group-prepend">
@@ -516,7 +516,7 @@
                                class="form-control" 
                                id="username" 
                                name="username" 
-                               placeholder="Ej: V12345678 ó J123456789"
+                               placeholder="Ej: V12345678 ó 123456789"
                                maxlength="15"
                                required
                                autofocus
@@ -524,7 +524,7 @@
                     </div>
                     <small class="form-text">
                         <i class="fas fa-info-circle"></i>
-                        Puede ingresar su cédula solo números o RIF (V/E) seguido de números. Sin puntos ni guiones.
+                        Puede ingresar su cédula solo números o RIF personal (V/E) seguido de números. Sin puntos ni guiones.
                     </small>
                 </div>
 
@@ -624,7 +624,7 @@
         $('#username').on('input', function() {
             var val = this.value.toUpperCase();
             
-            if (/^[VEJGP]/.test(val)) {
+            if (/^[VE]/.test(val)) {
                 val = val.charAt(0) + val.slice(1).replace(/[^0-9]/g, '');
             } else {
                 val = val.replace(/[^0-9]/g, '');
@@ -650,12 +650,12 @@
             }
 
             // ✅ Formato: [VEJGP]?[0-9]{6,10}
-            if (!/^[VEJGP]?[0-9]{6,10}$/.test(username)) {
+            if (!/^[VE]?[0-9]{6,10}$/.test(username)) {
                 e.preventDefault();
                 Swal.fire({
                     icon: 'warning',
                     title: 'Formato inválido',
-                    text: 'Ingrese una cédula (V/E), RIF (J/G/P) o solo números. Ejemplos: V12345678, J123456789, 12345678.'
+                    text: 'Ingrese Nª cédula solo números, RIF personal (V/E) . Ejemplos: V12345678, E123456789, 12345678.'
                 });
                 $('#username').focus();
                 return false;

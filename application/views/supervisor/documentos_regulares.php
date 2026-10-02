@@ -17,7 +17,7 @@
   
   </script>
        <!-- Comienzo formulario -->
-          <form action="<?php echo base_url()?>dashboard05/documentos/<?Php echo $listado->id_usuario; ?>" method="POST" >
+          <form action="<?php echo base_url()?>dashboard05/documentos/<?Php echo $id_usuario; ?>" method="POST" >
 <tr  >
   <div class="card-body">
     <!-- Mensaje de Alerta-->
@@ -69,6 +69,7 @@
           <tr><td> <b>Lugar de Trabajo: </b></td><td> <?php echo ($trabajo->lugar_trabajo); ?> </td></tr>
  						                 
 	             </table>
+               $id_usuario = $listado->id_usuario;
 	        	 <?php endforeach;?>
                   <?php endif;?>  
 	        </div>
@@ -140,9 +141,9 @@
            
             <input type="button" name="btnSeguiente" value="Regresar" class="boton btn btn-info" onClick="anterior();">
 
-            <a href="<?php echo base_url()?>dashboard05/registro_materia_store/<?php echo $listado->id_usuario;?>" class="btn btn-success">APROBADO</a> 
+            <a href="<?php echo base_url()?>dashboard05/registro_materia_store/<?php echo $id_usuario;?>" class="btn btn-success">APROBADO</a> 
       
-            <a href="<?php  echo base_url()?>dashboard05/registro_materia_store2/<?php echo $listado->id_usuario;?>"" class="btn btn-danger">RECHAZADO</a>
+            <a href="<?php  echo base_url()?>dashboard05/registro_materia_store2/<?php echo $id_usuario;?>"" class="btn btn-danger">RECHAZADO</a>
           <!--   <div class="form-group">
                     <label for="observaciones">(*) Observaciones</label>
                       <input type="text" name="observaciones" id="observaciones"  placeholder="Debe indicar el motivo por el cual fue RECHAZADO" onkeyup="javascript:this.value=this.value.toUpperCase();">

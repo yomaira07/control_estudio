@@ -540,9 +540,9 @@ $conc=array(0, 1);
 		
 		$this->db->where("id_usuario",$id_usuario);
 		$this->db->where("id_periodo",$id_periodo);
+		$this->db->where("tramite",0);
 		
 		$resultados = $this->db->get("registro_pago");
-	
 
 		if ($resultados->num_rows() > 0) {
 			return true;
@@ -557,6 +557,7 @@ $conc=array(0, 1);
 		$this->db->where("id_periodo",$id_periodo);
 		$this->db->where("conciliado",1);
 		$this->db->where("tramite",0);
+		$this->db->where("status",1);
 		
 		$resultados = $this->db->get("registro_pago");
 	
@@ -569,7 +570,24 @@ $conc=array(0, 1);
 		}
 	}
 	
+	public function VerificarRegistro_exonerado($id_usuario,$id_periodo){ //inscripciones
+		
+		$this->db->where("id_usuario",$id_usuario);
+		$this->db->where("id_periodo",$id_periodo);
+		
+		$this->db->where("tramite",0);
+		$this->db->where("convenio_pago",2);
+		
+		$resultados = $this->db->get("registro_pago");
 	
+
+		if ($resultados->num_rows() > 0) {
+			return $resultados->row();
+		}
+		else{
+			return false;
+		}
+	}
 	
 	public function VerificarRegistro_pago($id_usuario,$id_periodo){
 
@@ -693,6 +711,7 @@ $conc=array(0, 1);
 		$this->db->where("id_periodo",$id_periodo);
 		$this->db->where("tramite",0);
 		$this->db->where("conciliado",1);
+		$this->db->where("status",1);
 		$resultados = $this->db->get("registro_pago");
 		if ($resultados->num_rows() > 0) {
 			return true;

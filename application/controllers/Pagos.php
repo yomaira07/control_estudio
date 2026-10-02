@@ -57,9 +57,10 @@ class Pagos extends CI_Controller {
         $id_usuario = $this->session->userdata('id');
         $periodo    = $this->Periodo_model->PeriodoActivo();
         $total_uc   = $this->input->post('total_uc');
-        $tipo_documento = $this->input->post('tipo_documento');  // V, E, J, G, P
+        $tipo_documento = $this->input->post('tipo_documento');  // V, E
         $cedula_rif     = $this->input->post('cedula_rif');      // Solo números
         $documento_pasarela = $tipo_documento . $cedula_rif;     // Ej: V12345678
+        $monto_exoneracion = $this->input->post('monto_exoneracion');
 
         // ✅ VALIDAR cédula/RIF del depositante (NUNCA puede llegar vacía)
         $validacion_doc = $this->validar_documento_depositante($tipo_documento, $cedula_rif);
@@ -97,7 +98,7 @@ class Pagos extends CI_Controller {
         $alumno = $this->Alumno_model->getListaAlumno($id_usuario);
         if (!$alumno || empty($alumno->id)) {
             $this->session->set_flashdata('error', 'No se encontraron datos del estudiante.');
-            redirect(base_url() . 'dashboard04/home');
+            redirect(base_url() . 'dashboard04/index');
         }
         
         // ✅ CORRECCIÓN CLAVE:
@@ -190,7 +191,8 @@ class Pagos extends CI_Controller {
                     'pago_bdv_cedula'        => $cedula_depositante, // ✅ CÉDULA del input
                     'pago_bdv_uc'            => $total_uc,
                     'pago_bdv_concepto'      => $concepto,
-                    'pago_bdv_id_solicitud'  => null
+                    'pago_bdv_id_solicitud'  => null,
+                    'pago_bdv_monto_exoneracion' => $monto_exoneracion
                 ));
                 
                 log_message('debug', 'iniciar(): datos guardados en sesión. Ref=' . $referencia 
@@ -234,8 +236,8 @@ class Pagos extends CI_Controller {
         $id_usuario = $this->session->userdata('id');
         $periodo    = $this->Periodo_model->PeriodoActivo();
         $tramite    = $this->input->post('tramite');
-        $total_uc   = 0;
-        $tipo_documento = $this->input->post('tipo_documento');  // V, E, J, G, P
+        $total_uc = (int)$this->input->post('total_uc');
+        $tipo_documento = $this->input->post('tipo_documento');  // V, E,
         $cedula_rif     = $this->input->post('cedula_rif');      // Solo números
         $documento_pasarela = $tipo_documento . $cedula_rif;     // Ej: V12345678
 
@@ -377,7 +379,8 @@ class Pagos extends CI_Controller {
                     'pago_bdv_cedula'        => $cedula_depositante, // ✅ CÉDULA del input
                     'pago_bdv_uc'            => $total_uc,
                     'pago_bdv_concepto'      => $concepto,
-                    'pago_bdv_id_solicitud'  => $id_solicitud_tramite
+                    'pago_bdv_id_solicitud'  => $id_solicitud_tramite,
+           
                 ));
                 
                 log_message('debug', 'iniciar_tramite_adm(): datos guardados en sesión. Ref=' . $referencia
@@ -444,6 +447,7 @@ class Pagos extends CI_Controller {
     $id_solicitud_sesion  = $this->session->userdata('pago_bdv_id_solicitud');
     $monto_sesion         = $this->session->userdata('pago_bdv_monto');
     $monto_usd_sesion     = $this->session->userdata('pago_bdv_monto_usd');
+    $monto_exoneracion_sesion = $this->session->userdata('pago_bdv_monto_exoneracion');
     
     // ✅ 2. Buscar registro existente por referencia
     $registro = null;
@@ -505,6 +509,9 @@ class Pagos extends CI_Controller {
                 'id_periodo'   => $id_periodo,
                 'tipo_pago'    => $tipo_pago,
                 'id_solicitud' => $id_solicitud,
+                'id_usuario'   => $id_usuario,
+                'monto_exoneracion' => $monto_exoneracion_sesion    
+
             ),
             $response,
             $id_usuario
@@ -547,7 +554,8 @@ class Pagos extends CI_Controller {
                     $tipo_pago_sesion,
                     $concepto_sesion,
                     $monto_usd_sesion,
-                    $cedula_sesion
+                    $cedula_sesion,
+                    $monto_exoneracion_sesion
                 );
                 
                 if (!$registrado) {
@@ -930,7 +938,9 @@ class Pagos extends CI_Controller {
         $tipo_pago, 
         $concepto,
         $monto_usdt, 
-        $cedula_depositante      // ✅ Cédula/RIF del input
+        $cedula_depositante,      // ✅ Cédula/RIF del input
+        $monto_exoneracion         // ✅ Monto exonerado
+
     ) {
 
         // ✅ Sanear id_estudiante para que NUNCA sea 0 (la FK lo rechazaría)
@@ -971,6 +981,8 @@ class Pagos extends CI_Controller {
             'metodo_pago'          => 'bdv',
             'tramite'              => (int) $tipo_pago,
             'id_solicitud_tramite' => !empty($id_solicitud_tramite) ? (int) $id_solicitud_tramite : null,
+            'monto_exoneracion'    => (float) $monto_exoneracion
+
         );
     
         log_message('debug', 'registrar_pago_pendiente DATA: ' . print_r($data, true));
@@ -1528,7 +1540,7 @@ class Pagos extends CI_Controller {
 private function validar_documento_depositante($tipo_documento, $cedula_rif) {
     
     // Lista blanca de tipos de documento
-    $tipos_validos = array('V', 'E', 'J', 'G', 'P');
+    $tipos_validos = array('V', 'E');
     
     // ✅ Normalizar entradas
     $tipo_documento = strtoupper(trim((string) $tipo_documento));
@@ -1538,7 +1550,7 @@ private function validar_documento_depositante($tipo_documento, $cedula_rif) {
     if (empty($tipo_documento)) {
         return array(
             'ok'      => false,
-            'mensaje' => 'Debe seleccionar el tipo de documento (V, E, J, G o P).',
+            'mensaje' => 'Debe seleccionar el tipo de documento (V, E).',
             'documento' => '',
             'tipo'    => '',
             'numero'  => ''
@@ -1548,7 +1560,7 @@ private function validar_documento_depositante($tipo_documento, $cedula_rif) {
     if (!in_array($tipo_documento, $tipos_validos, true)) {
         return array(
             'ok'      => false,
-            'mensaje' => 'Tipo de documento no válido. Debe ser V, E, J, G o P.',
+            'mensaje' => 'Tipo de documento no válido. Debe ser V o E.',
             'documento' => '',
             'tipo'    => '',
             'numero'  => ''
@@ -1559,7 +1571,7 @@ private function validar_documento_depositante($tipo_documento, $cedula_rif) {
     if ($cedula_rif === '') {
         return array(
             'ok'      => false,
-            'mensaje' => 'La cédula o RIF del depositante es obligatoria.',
+            'mensaje' => 'La cédula del depositante es obligatoria.',
             'documento' => '',
             'tipo'    => $tipo_documento,
             'numero'  => ''
@@ -1570,19 +1582,19 @@ private function validar_documento_depositante($tipo_documento, $cedula_rif) {
     if (!preg_match('/^[0-9]+$/', $cedula_rif)) {
         return array(
             'ok'      => false,
-            'mensaje' => 'La cédula o RIF solo debe contener números, sin guiones ni puntos.',
+            'mensaje' => 'La cédula del depositante solo debe contener números, sin guiones ni puntos.',
             'documento' => '',
             'tipo'    => $tipo_documento,
             'numero'  => ''
         );
     }
     
-    // ✅ 4. Validar longitud (6 a 12 dígitos)
+    // ✅ 4. Validar longitud (6 a 8 dígitos)
     $largo = strlen($cedula_rif);
-    if ($largo < 6 || $largo > 12) {
+    if ($largo < 6 || $largo > 8) {
         return array(
             'ok'      => false,
-            'mensaje' => 'La cédula o RIF debe tener entre 6 y 12 dígitos. Ingresó ' . $largo . '.',
+            'mensaje' => 'La cédula del depositante debe tener entre 6 y 8 dígitos. Ingresó ' . $largo . '.',
             'documento' => '',
             'tipo'    => $tipo_documento,
             'numero'  => ''
@@ -1593,7 +1605,7 @@ private function validar_documento_depositante($tipo_documento, $cedula_rif) {
     if (preg_match('/^0+$/', $cedula_rif)) {
         return array(
             'ok'      => false,
-            'mensaje' => 'La cédula o RIF no puede ser todo ceros.',
+            'mensaje' => 'La cédula del depositante no puede ser todo ceros.',
             'documento' => '',
             'tipo'    => $tipo_documento,
             'numero'  => ''

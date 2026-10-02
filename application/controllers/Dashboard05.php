@@ -610,16 +610,16 @@ public function cupos_materias_ocupadas($materia)
 	} 
 
 
-	 public function registro_materia_store($id_usuario)//aprobar materias preinscritas
+	  public function registro_materia_store($id_usuario)//aprobar materias preinscritas
 	{
-				$id_periodo = $this->Periodo_model->PeriodoActivo();
-				$fecha=date('Y-m-d_H-i');
-		$data  = array(
-			'rev_academica' => 1,
-			'quien_actualizo'=>$this->session->userdata("id"),
-			'fecha_actualizacion'=>$fecha
+		$id_periodo = $this->Periodo_model->PeriodoActivo();
+		$fecha=date('Y-m-d_H-i');
+			$data  = array(
+				'rev_academica' => 1,
+				'quien_actualizo'=>$this->session->userdata("id"),
+				'fecha_actualizacion'=>$fecha
 
-		);
+			);
 
 		if ($this->Materias_preinscrita_model->update_materia($id_usuario,$id_periodo->id,$data)) {
 			$data2  = array(
@@ -844,7 +844,7 @@ public function dExcel_inscritos_uc()
 	public function documentos($id,$aspirante)/*actualizado 06-04-2022*/
 	{
 		//var_dump($id);
-		$id_usuario = $this->session->userdata($id);
+		$id_usuario = $id;
 		$id_periodo = $this->Periodo_model->PeriodoActivo_asp();
 		$lugar_trabajo = $this->Trabajo_model->Lugar_trabajo($id);
 		$datos_aspirante=$this->Usuarios_model->buscar_usuario($id);
@@ -856,6 +856,8 @@ public function dExcel_inscritos_uc()
 			'programa' => $this->Programa_model->getProgramaAprobado($datos_aspirante->programa_id),
 			'trabajo' => $this->Lugar_trabajo_model->valor_unidad($lugar_trabajo->id_lugar_trabajo),
 			'postular' => $this->Trabajo_model->getListaTrabajo($id,1),
+			'id_usuario'=>$id,
+			'aspirante'=>$aspirante
 			
 			);
 			//var_dump($data);
@@ -870,7 +872,9 @@ public function dExcel_inscritos_uc()
 			'listado' => $this->Registro_pago_model->Revision_Academica2($id,$aspirante),
 			'materias_pre' => $this->Materias_preinscrita_model->mensaje_materias_preinscritas($id,$id_periodo->id),
 			'trabajo' => $this->Lugar_trabajo_model->valor_unidad($lugar_trabajo->id_lugar_trabajo),
-			'curso'=> $this->Control_requisitos_model->getControl_requisitos($id_periodo->id,20,$id)
+			'curso'=> $this->Control_requisitos_model->getControl_requisitos($id_periodo->id,20,$id),
+			'id_usuario'=>$id,
+			'aspirante'=>$aspirante
 			);
 			//var_dump($data);	 		
 			$this->load->view('layouts/header');

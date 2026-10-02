@@ -1713,7 +1713,7 @@ public function verificar_imagen_carnet()
     // ================================================
     // VERIFICAR SI YA REGISTRÓ PAGO
     // ================================================
-    $pago_existente = $this->Registro_pago_model->registro_pago($id_usuario);
+    $pago_existente = $this->Registro_pago_model->registro_pago($id_usuario); 
     
     if ($pago_existente === false) {
         // NO ha registrado pago → Mostrar cláusulas
@@ -1805,104 +1805,168 @@ public function verificar_imagen_carnet()
 	}
 
 
-public function registropago_store()
-	{
-		//$id_periodo = $this->Periodo_model->PeriodoActivo();
-		extract($_REQUEST);
-			$nombre_archivo = $_FILES['userfile']['name'];
-			$tipo_archivo = $_FILES['userfile']['type'];
-			$tamano_archivo = $_FILES['userfile']['size'];
-			//compruebo si las caracter�sticas del archivo son las que deseo
-			if (!((strpos($tipo_archivo, "gif") || strpos($tipo_archivo, "jpeg") || strpos($tipo_archivo, "png")  || strpos($tipo_archivo, "jpg") || strpos($tipo_archivo, "pdf") )))
-			{ // formato incorrecto
-				$mensaje = $nombre_archivo.' - '.$tipo_archivo.' - '.$tamano_archivo;
-				$mensaje.=$tipo_archivo." <strong>El formato del archivo es invalido. La imagen debe tener el formato: .gif, .jpg o .png, .pdf</strong>";
-			} else if (($tamano_archivo > 1048576)) { // excede el tama�o permitido
-				$mensaje="<strong>El archivo no puede exceder de 1 Mb, el archivo que intenta cargar tiene un tama&ntilde;o de: ".number_format($tamano_archivo/1048576,2)." Mb </strong><br/> Seleccione otra foto e intente de nuevo";
-			} else { // todo ok
-				if(strpos($tipo_archivo, "pdf")&& move_uploaded_file($_FILES['userfile']['tmp_name'], 'assets/transferencia/'. $this->session->userdata('id')."_transferencia.pdf")){
-				 	
-					$mensaje="";
-				}else{
-				
-					if ((strpos($tipo_archivo, "gif") || strpos($tipo_archivo, "jpeg") || strpos($tipo_archivo, "png") )&& move_uploaded_file($_FILES['userfile']['tmp_name'], 'assets/transferencia/'. $this->session->userdata('id')."_transferencia.jpg"))
-					{
-						$mensaje="";
-					} else {
-						$mensaje="Ocurrio algun error al subir el archivo. No pudo guardarse.";
-					}
-				}
-			}
-			if ($mensaje=="") {
-				
-					//// guardad la imagen de la transferencia
-				$id_usuario = $this->input->post("id_usuario");
-				$id_banco = $this->input->post("id_banco");
-				$id_estado_estudio = $this->input->post("id_estado_estudio");
-				$id_estudiante = $this->input->post("id_estudiante");
-				$cedula = $this->input->post("cod_nacionalidad").$this->input->post("cedula");
-				$nro_referencia = $this->input->post("nro_referencia");
-				$fecha_transferencia = $this->input->post("fecha_transferencia");
-				$monto_pagar = $this->input->post("total_pagar");
-				$monto_depositado = $this->input->post("monto");
-				$postgrado = $this->input->post("postgrado");
-				$unidad_credito = $this->input->post("total_ucredito");
-				$id_periodo = $this->input->post("id_periodo");
-				$fecha=date('Y-m-d H:m:s');
-				if($nro_referencia=='00187046' or $nro_referencia=='41052855 '){
-					$this->session->set_flashdata("error","El numero de referencia bancaria coincide con el número de cuenta de la FENFMP ");
-					redirect(base_url()."dashboard04/registro_pago/".$this->session->userdata('id'));
-				}else{
-					if($this->session->userdata("rol")==7)$aspirante='1';
-					if($this->session->userdata("rol")==5 or $this->session->userdata("rol")==8)$aspirante='0';
-					$data  = array(
-						'id_usuario' => $id_usuario, 
-						'id_banco' => $id_banco,
-						'cedula' => $cedula,
-						'id_estudiante' => $id_estudiante,
-						'id_estado_estudio' => $id_estado_estudio,
-						'nro_referencia' => $nro_referencia,
-						'fecha_transferencia' => $fecha_transferencia,
-						'monto_apagar' => $monto_pagar,
-						'monto_depositado' => $monto_depositado,
-						'postgrado' => $postgrado,
-						'uc' => $unidad_credito,
-						'id_periodo' => $id_periodo,
-						'status' => 1,
-						'aspirante'=>$aspirante,
-						'quien_registro'=>$id_usuario, 
+public function registropago_store() ///registro de pago para las exoneraciones totales
+{
+    extract($_REQUEST);
 
-					);
-					$data2  = array(
-						'reg_pago' => 1,
-						'quien_actualizo'=> $this->session->userdata("id"),
-						'fecha_actualizacion'=> $fecha
+    // ============================================================
+    // DETECTAR QUÉ ARCHIVO VIENE: avale_exoneracion o userfile
+    // ============================================================
+    $campo_archivo = '';
+    if (isset($_FILES['avale_exoneracion']) && !empty($_FILES['avale_exoneracion']['name'])) {
+        $campo_archivo = 'avale_exoneracion';
+    } elseif (isset($_FILES['userfile']) && !empty($_FILES['userfile']['name'])) {
+        $campo_archivo = 'userfile';
+    }
 
-					);
+    if ($campo_archivo === '') {
+        $this->session->set_flashdata("error", "Debes cargar el documento que avala la exoneración.");
+        redirect(base_url() . "dashboard04/registro_pago/" . $this->session->userdata('id'));
+    }
 
-			if (!$this->Registro_pago_model->VerificarRegistro($id_usuario,$id_periodo->id)) {
-						if($this->Registro_pago_model->save($data)){
-								$this->Materias_preinscrita_model->update_materia($id_usuario,$id_periodo,$data2);
-								?>
-								<script> alert ("Pago Registrado Exitosamente.");
-								location.assign("<?php echo base_url(); ?>dashboard04/proceso");   
-								</script>
-								<?php 
-							}else{
-								$this->session->set_flashdata("error","Error al guardar la información.");
-								redirect(base_url()."dashboard04/registro_pago/".$this->session->userdata('id'));
-						}
-					}else{
-						$this->session->set_flashdata("warning","El registro del pago ya fue registrado");
-						redirect(base_url()."dashboard04/proceso");
-					}			
-				}
-			}else{
-				$this->session->set_flashdata("error",$mensaje);
-					redirect(base_url()."dashboard04/registro_pago/".$this->session->userdata('id'));
-			}
-		
-	}
+    $nombre_archivo = $_FILES[$campo_archivo]['name'];
+    $tipo_archivo   = $_FILES[$campo_archivo]['type'];
+    $tamano_archivo = $_FILES[$campo_archivo]['size'];
+
+    $mensaje = "";
+
+    // ============================================================
+    // VALIDAR FORMATO
+    // ============================================================
+    $formatos_ok = (strpos($tipo_archivo, "gif")  !== false
+                 || strpos($tipo_archivo, "jpeg") !== false
+                 || strpos($tipo_archivo, "png")  !== false
+                 || strpos($tipo_archivo, "jpg")  !== false
+                 || strpos($tipo_archivo, "pdf")  !== false);
+
+    if (!$formatos_ok) {
+        $mensaje = $nombre_archivo . ' - ' . $tipo_archivo . ' - ' . $tamano_archivo;
+        $mensaje .= $tipo_archivo . " <strong>El formato del archivo es inválido. Debe ser: .gif, .jpg, .jpeg, .png o .pdf</strong>";
+    } elseif ($tamano_archivo > 5242880) { // 5 MB
+        $mensaje = "<strong>El archivo no puede exceder de 5 Mb. Tamaño actual: " 
+                 . number_format($tamano_archivo / 1048576, 2) . " Mb</strong><br/>"
+                 . "Seleccione otro archivo e intente de nuevo.";
+    } else {
+        // ============================================================
+        // GUARDAR EL ARCHIVO
+        // ============================================================
+        if (!is_dir('assets/exoneraciones/')) {
+            @mkdir('assets/exoneraciones/', 0777, true);
+        }
+
+        $id_usuario_sesion = $this->session->userdata('id');
+
+        if (strpos($tipo_archivo, "pdf") !== false) {
+            $ruta_destino = 'assets/exoneraciones/' . $id_usuario_sesion . "_exoneracion.pdf";
+            if (move_uploaded_file($_FILES[$campo_archivo]['tmp_name'], $ruta_destino)) {
+                $mensaje = "";
+            } else {
+                $mensaje = "Ocurrió algún error al subir el archivo PDF. No pudo guardarse.";
+            }
+        } else {
+            $ruta_destino = 'assets/exoneraciones/' . $id_usuario_sesion . "_exoneracion.jpg";
+            if (move_uploaded_file($_FILES[$campo_archivo]['tmp_name'], $ruta_destino)) {
+                $mensaje = "";
+            } else {
+                $mensaje = "Ocurrió algún error al subir el archivo. No pudo guardarse.";
+            }
+        }
+    }
+
+    // ============================================================
+    // SI TODO OK, GUARDAR REGISTRO
+    // ============================================================
+    if ($mensaje == "") {
+
+        $fecha = date('Y-m-d H:i:s');
+
+        $id_usuario        = $this->input->post("ex_id_usuario");
+        $id_banco          = $this->input->post("ex_id_banco");
+        $id_estado_estudio = $this->input->post("ex_id_estado_estudio");
+        $id_estudiante     = $this->input->post("ex_id_estudiante");
+        $cedula            = $this->input->post("ex_cod_nacionalidad") . $this->input->post("ex_cedula");
+        $nro_referencia    = 'OFICIO DE EXONERACION';
+		$postgrado 		   = $this->input->post("ex_postgrado");
+        $fecha_transferencia = $this->input->post("ex_fecha_transferencia");
+        $monto_pagar       = $this->input->post("ex_total_pagar");
+        $monto_depositado  = $this->input->post("ex_monto");
+        $unidad_credito    = $this->input->post("ex_total_ucredito");
+		$periodo_activo = $this->Periodo_model->PeriodoActivo();
+		$monto_exoneracion = $this->input->post("ex_monto_exoneracion");
+		$id_periodo = $periodo_activo->id;
+
+        // Si no vino id_banco desde el form de exoneración, dejar NULL o 0
+        if (empty($id_banco)) { $id_banco = 1; }
+
+        // Si no vino fecha_transferencia, usar la fecha actual
+        if (empty($fecha_transferencia)) { $fecha_transferencia = date('Y-m-d'); }
+
+        // Si no vino cedula, armarla desde el estudiante
+        if (empty($cedula) && !empty($id_estudiante)) {
+            $datos_alumno = $this->Alumno_model->getAlumno_cedula($id_usuario);
+            $cedula = $datos_alumno->cedula;
+        }
+
+        if ($this->session->userdata("rol") == 7) $aspirante = '1';
+        if ($this->session->userdata("rol") == 5 or $this->session->userdata("rol") == 8) $aspirante = '0';
+
+        // Ruta del archivo que se guardó
+        $avale_exoneracion = isset($ruta_destino) ? $ruta_destino : null;
+
+        $data = array(
+            'id_usuario'         => $id_usuario,
+            'id_banco'           => $id_banco,
+            'cedula'             => $cedula,
+            'id_estudiante'      => $id_estudiante,
+            'id_estado_estudio'  => $id_estado_estudio,
+            'nro_referencia'     => $nro_referencia,
+            'fecha_transferencia'=> $fecha_transferencia,
+            'monto_apagar'       => $monto_pagar,
+            'monto_depositado'   => $monto_depositado,
+            'postgrado'          => $postgrado,
+            'uc'                 => $unidad_credito,
+            'id_periodo'         => $id_periodo,
+            'status'             => 1,
+			'conciliado'         => 1,
+            'aspirante'          => $aspirante,
+            'quien_registro'     => $id_usuario,
+			'tramite'			=> 0,
+            'archivo_exoneracion'  => $avale_exoneracion,   // ← NUEVO CAMPO
+			'convenio_pago'		=> 2,
+			'monto_exoneracion'	=> $monto_exoneracion,
+			'observacion'		=> 'EXONERACION TOTAL',
+        );
+
+        $data2 = array(
+            'reg_pago'         => 1,
+            'quien_actualizo'  => $this->session->userdata("id"),
+            'fecha_actualizacion' => $fecha
+        );
+
+        // Verificar que no exista ya un registro
+        if (!$this->Registro_pago_model->VerificarRegistro($id_usuario, $id_periodo)) {
+            if ($this->Registro_pago_model->save($data)) {
+                $this->Materias_preinscrita_model->update_materia($id_usuario, $id_periodo, $data2);
+                ?>
+                <script>
+                    alert("Inscripciòn Registrada Exitosamente.");
+                    location.assign("<?php echo base_url(); ?>dashboard04/proceso");
+                </script>
+                <?php
+            } else {
+                $this->session->set_flashdata("error", "Error al guardar la información.");
+                redirect(base_url() . "dashboard04/registro_pago/" . $this->session->userdata('id'));
+            }
+        } else {
+            $this->session->set_flashdata("warning", "El registro de la inscripción ya fue registrado");
+          // redirect(base_url() . "dashboard04/proceso");
+        }
+    } else {
+        // Si hubo error en el archivo, regresar con el mensaje
+        $this->session->set_flashdata("error", $mensaje);
+        redirect(base_url() . "dashboard04/registro_pago/" . $this->session->userdata('id'));
+    }
+}
 	
 	public function materiaspdf()
 	{
@@ -2299,7 +2363,8 @@ public function registropago_store()
 				'reincorporaciones' => $this->Reincorporaciones_model->buscar_reincorporacion($id_usuario, $id_periodo->id),
 				'programa_preinscrito' => $this->Materias_preinscrita_model->lista_programas_preinscritas($id_usuario, $id_periodo->id),
 				'lapso' => $this->Tiempo_preinscripcion_model->gettiempo_preinscripcion(),
-				'exonerados' => $this->Exonerados_model->exonerados_todo_programa($id_usuario, $id_periodo->id),
+				'exonerado' => $this->Exonerados_model->exonerados_todo_programa($id_usuario, $id_periodo->id),
+				'datos_exoneracion' => $this->Registro_pago_model->VerificarRegistro_exonerado($id_usuario, $id_periodo->id),
 				'pago' => $this->Registro_pago_model->VerificarRegistro_pagotodos($id_usuario, $id_periodo->id),
 			);
 			

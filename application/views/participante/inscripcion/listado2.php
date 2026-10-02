@@ -121,7 +121,7 @@
                                                 <i class="fas fa-dollar-sign mr-1"></i>Valor UC
                                             </th>
                                             <th style="padding: 10px 15px; text-align: center; font-weight: 500; font-size: 0.8rem; letter-spacing: 0.5px; white-space: nowrap;">
-                                                <i class="fas fa-money-bill-wave mr-1"></i>Total a Pagar
+                                                <i class="fas fa-money-bill-wave mr-1"></i>Total a Pagar UC
                                             </th>
                                         </tr>
                                     </thead>
@@ -186,7 +186,7 @@
                                         <tr>
                                             <th colspan="5" style="padding: 10px 15px; font-size: 0.9rem; color: #2c3e50; font-weight: 600; text-align: right;">
                                                 <i class="fas fa-calculator" style="color: #003366; margin-right: 8px;"></i>
-                                                Total a Pagar por unidades curriculares
+                                                Sub-total a Pagar por concepto de unidades curriculares
                                             </th>
                                             <th style="padding: 10px 15px; text-align: center; font-size: 0.9rem; font-weight: 700; color: #003366; background: #e8f0fe;">
                                                 <?php echo number_format($Total_Pagar_uc, 2, ",", ".") . " Ref."; ?>

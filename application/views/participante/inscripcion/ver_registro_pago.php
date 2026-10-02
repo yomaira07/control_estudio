@@ -8,14 +8,18 @@
                     <h1 class="m-0" style="font-weight: 300; color: #003366;">
                         <i class="fas fa-receipt" style="color: #003366; margin-right: 8px;"></i>
                         <span style="color: #003366; font-weight: 600;">SCE-ENFMP</span>
-                        <span style="color: #2c3e50; font-weight: 300;"> - Comprobante de Pago</span>
+                        <span style="color: #2c3e50; font-weight: 300;"> - 
+                            <?php echo (isset($exonerado) && $exonerado) ? 'Comprobante de Exoneración' : 'Comprobante de Pago'; ?>
+                        </span>
                     </h1>
                 </div>
                 <div class="col-sm-6">
                     <ol class="breadcrumb float-sm-right" style="background: transparent;">
                         <li class="breadcrumb-item"><a href="<?php echo base_url(); ?>dashboard04/home" style="color: #6c757d;">Inicio</a></li>
                         <li class="breadcrumb-item"><a href="<?php echo base_url(); ?>dashboard04/inscripcion" style="color: #6c757d;">Inscripciones Posgrado</a></li>
-                        <li class="breadcrumb-item active" style="color: #003366; font-weight: 600;">Comprobante de Pago</li>
+                        <li class="breadcrumb-item active" style="color: #003366; font-weight: 600;">
+                            <?php echo (isset($exonerado) && $exonerado) ? 'Exoneración' : 'Comprobante de Pago'; ?>
+                        </li>
                     </ol>
                 </div>
             </div>
@@ -34,12 +38,12 @@
                     <div class="card-header py-3" style="border-bottom: 1px solid #e8e8e8; border-radius: 10px 10px 0 0; background: #fafafa;">
                         <div class="d-flex align-items-center justify-content-between flex-wrap">
                             <div class="d-flex align-items-center">
-                                <div class="mr-3" style="width: 42px; height: 42px; background: #28a745; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
-                                    <i class="fas fa-check-circle text-white" style="font-size: 1.1rem;"></i>
+                                <div class="mr-3" style="width: 42px; height: 42px; background: <?php echo (isset($exonerado) && $exonerado) ? '#17a2b8' : '#28a745'; ?>; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                                    <i class="fas <?php echo (isset($exonerado) && $exonerado) ? 'fa-file-signature' : 'fa-check-circle'; ?> text-white" style="font-size: 1.1rem;"></i>
                                 </div>
                                 <div>
                                     <h5 class="mb-0" style="font-weight: 600; color: #2c3e50;">
-                                        Detalle del Pago Registrado
+                                        <?php echo (isset($exonerado) && $exonerado) ? 'Detalle de la Exoneración' : 'Detalle del Pago Registrado'; ?>
                                     </h5>
                                     <small class="text-muted" style="font-size: 0.75rem;">
                                         <i class="fas fa-calendar-alt mr-1"></i>
@@ -48,9 +52,9 @@
                                 </div>
                             </div>
                             <div class="d-flex align-items-center flex-wrap">
-                                <span class="badge" style="font-size: 0.8rem; padding: 5px 16px; border-radius: 20px; font-weight: 500; background: #28a745; color: white;">
-                                    <i class="fas fa-check-circle mr-1"></i>
-                                    Pago Registrado
+                                <span class="badge" style="font-size: 0.8rem; padding: 5px 16px; border-radius: 20px; font-weight: 500; background: <?php echo (isset($exonerado) && $exonerado) ? '#17a2b8' : '#28a745'; ?>; color: white;">
+                                    <i class="fas <?php echo (isset($exonerado) && $exonerado) ? 'fa-file-signature' : 'fa-check-circle'; ?> mr-1"></i>
+                                    <?php echo (isset($exonerado) && $exonerado) ? 'Exonerado' : 'Pago Registrado'; ?>
                                 </span>
                             </div>
                         </div>
@@ -117,9 +121,15 @@
                                             <div class="col-md-2">
                                                 <small class="text-muted" style="font-size: 0.7rem;">ESTADO</small>
                                                 <p style="margin-bottom: 0;">
-                                                    <span class="badge" style="background: #28a745; color: white; padding: 4px 14px; border-radius: 20px; font-size: 0.75rem;">
-                                                        <i class="fas fa-check-circle"></i> Pagado
-                                                    </span>
+                                                    <?php if(isset($exonerado) && $exonerado): ?>
+                                                        <span class="badge" style="background: #17a2b8; color: white; padding: 4px 14px; border-radius: 20px; font-size: 0.75rem;">
+                                                            <i class="fas fa-file-signature"></i> Exonerado
+                                                        </span>
+                                                    <?php else: ?>
+                                                        <span class="badge" style="background: #28a745; color: white; padding: 4px 14px; border-radius: 20px; font-size: 0.75rem;">
+                                                            <i class="fas fa-check-circle"></i> Pagado
+                                                        </span>
+                                                    <?php endif; ?>
                                                 </p>
                                             </div>
                                         </div>
@@ -128,231 +138,389 @@
                             </div>
                         </div>
 
-                        <!-- ============================================================ -->
-                        <!-- DATOS BANCARIOS DEL PAGO                                     -->
-                        <!-- ============================================================ -->
-                        <div class="row mt-4">
-                            <div class="col-md-6">
-                                <div class="card card-secondary card-outline" style="border-radius: 8px; border-left: 4px solid #6c757d; border-top: none;">
-                                    <div class="card-header" style="background: #f8f9fa; border-bottom: 1px solid #e8e8e8; padding: 8px 15px; border-radius: 8px 8px 0 0;">
-                                        <h6 class="mb-0" style="font-weight: 600; color: #2c3e50;">
-                                            <i class="fas fa-university text-secondary mr-2"></i>
-                                            Datos Bancarios
-                                        </h6>
-                                    </div>
-                                    <div class="card-body p-3">
-                                        <?php if(!empty($pago)): ?>
-                                      
-                                            <table class="table table-sm" style="margin-bottom: 0;">
-                                            <?php 
-                                            foreach($pago as $item):
-                                            ?>
-                                            
-                                                <tbody>
-                                                    <tr  style="background-color: #f8f9fa; font-weight: 500; color: #2c3e50;">
-                                                        <td style="font-weight: 500; color: #2c3e50; width: 40%;"><strong>Tipo de pago</strong></td>
-                                                        <td style="color: #2c3e50;">
-                                                        <strong>
-                                                              <?php echo isset($item->pago_adicional) ? ($item->pago_adicional == 0 ? 'Primer pago' : 'Pago Adicional') : 'No especificado'; ?>
-                                                        </strong>
-                                                        </td>
-                                                    </tr>
-                                                    <tr>
-                                                        <td style="font-weight: 500; color: #2c3e50; width: 40%;">Unidades de Crédito pagadas</td>
-                                                        <td style="color: #2c3e50;">
-                                                            <?php echo isset($item->uc) ? $item->uc.' UC' : 'No especificado'; ?>       
-                                                            <?php if(isset($item->pago_adicional) && $item->pago_adicional == 1): ?>
-                                                                Pago de diferencia en Bs.
-                                                            <?php endif; ?>                                                  
-                                                        </td>
-                                                    </tr>
-                                                    <tr>
-                                                        <td style="font-weight: 500; color: #2c3e50; width: 40%;">Programas Inscritos</td>
-                                                        <td style="color: #2c3e50;">
-                                                        
-                                                            <?php echo isset($item->postgrado) ?  $item->postgrado : 'No especificado'; ?>
-                                                        </td>
-                                                    </tr>
-                                                    <tr>
-                                                        <td style="font-weight: 500; color: #2c3e50; width: 40%;">Banco receptor</td>
-                                                        <td style="color: #2c3e50;">
-                                                            <?php echo isset($item->nombre) ? $item->nombre : (isset($item->banco_nombre) ? $item->banco_nombre : 'No especificado'); ?>
-                                                        </td>
-                                                    </tr>
-                                                    <tr>
-                                                        <td style="font-weight: 500; color: #2c3e50;">Número de Cuenta receptor</td>
-                                                        <td style="color: #2c3e50;">
-                                                            <?php echo isset($item->nro_cuenta) ? $item->nro_cuenta : 'No especificado'; ?>
-                                                        </td>
-                                                    </tr>
-                                                    <tr>
-                                                        <td style="font-weight: 500; color: #2c3e50;">Fecha de Operación</td>
-                                                        <td style="color: #2c3e50;">
-                                                            <?php 
-                                                                $fecha = isset($item->fecha_transferencia) ? $item->fecha_transferencia : (isset($item->fecha_operacion) ? $item->fecha_operacion : null);
-                                                                echo $fecha ? date('d/m/Y', strtotime($fecha)) : 'No especificada'; 
-                                                            ?>
-                                                        </td>
-                                                    </tr>
-                                                    <tr>
-                                                        <td style="font-weight: 500; color: #2c3e50;">Nro. Transferencia</td>
-                                                        <td style="color: #2c3e50;">
-                                                            <?php echo isset($item->nro_referencia) ? $item->nro_referencia : 'No especificado'; ?>
-                                                        </td>
-                                                    </tr>
-                                                    <tr>
-                                                        <td style="font-weight: 500; color: #2c3e50;">Cédula/RIF depositante</td>
-                                                        <td style="color: #2c3e50;">
-                                                            <?php echo isset($item->cedula) ? $item->cedula : 'No especificado'; ?>
-                                                        </td>
-                                                    </tr>
-                                                    <?php if(isset($item->pago_adicional) && $item->pago_adicional == 0): ?>
-                                                    <tr>
-                                                        <td style="font-weight: 500; color: #2c3e50;">Monto Calculado Ref.</td>
-                                                        <td style="color: #28a745; font-weight: 600;">
-                                                            <?php echo isset($item->monto_apagar) ? number_format($item->monto_apagar, 2, ',', '.') . ' Ref.' : 'No especificado'; ?>
-                                                        </td>
-                                                    </tr>
-                                                    <?php endif;?>
-                                                    <tr>
-                                                        <td style="font-weight: 500; color: #2c3e50;">Monto Depositado en Bs.</td>
-                                                        <td style="color: #28a745; font-weight: 600;">
-                                                            <?php echo isset($item->monto_depositado) ? number_format($item->monto_depositado, 2, ',', '.') . ' Bs.' : 'No especificado'; ?>
-                                                        </td>
-                                                    </tr>
-                                                </tbody>
-                                                <?php endforeach; ?>
-                                            </table>
-                                          
-                                        <?php else: ?>
-                                            <p class="text-center text-muted py-3">
-                                                <i class="fas fa-info-circle"></i> No se encontraron datos bancarios del pago
-                                            </p>
-                                        <?php endif; ?>
+                        <?php if(isset($exonerado) && $exonerado): ?>
+                            <!-- ============================================================ -->
+                            <!-- SECCIÓN DE EXONERACIÓN                                       -->
+                            <!-- ============================================================ -->
+                            <div class="row mt-4">
+                                <div class="col-md-6">
+                                    <div class="card card-info card-outline" style="border-radius: 8px; border-left: 4px solid #17a2b8; border-top: none;">
+                                        <div class="card-header" style="background: #e8f4f8; border-bottom: 1px solid #e8e8e8; padding: 8px 15px; border-radius: 8px 8px 0 0;">
+                                            <h6 class="mb-0" style="font-weight: 600; color: #0c5460;">
+                                                <i class="fas fa-file-signature text-info mr-2"></i>
+                                                Datos de la Exoneración
+                                            </h6>
+                                        </div>
+                                        <div class="card-body p-3">
+                                            <?php if(!empty($datos_exoneracion)): ?>
+                                                <table class="table table-sm" style="margin-bottom: 0;">
+                                                    <tbody>
+                                                        <tr style="background-color: #f8f9fa; font-weight: 500; color: #2c3e50;">
+                                                            <td style="font-weight: 500; color: #2c3e50; width: 40%;"><strong>Tipo de Exoneración</strong></td>
+                                                            <td style="color: #2c3e50;">
+                                                                <strong><?php echo isset($datos_exoneracion->convenio_pago) ? $datos_exoneracion->convenio_pago : 'No especificado'; ?></strong>
+                                                            </td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td style="font-weight: 500; color: #2c3e50; width: 40%;">Motivo</td>
+                                                            <td style="color: #2c3e50;">
+                                                                <?php echo isset($datos_exoneracion->postgrado) ? $datos_exoneracion->postgrado : 'No especificado'; ?>
+                                                            </td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td style="font-weight: 500; color: #2c3e50; width: 40%;">Documento Aval</td>
+                                                            <td style="color: #2c3e50;">
+                                                                <?php echo isset($datos_exoneracion->nro_referencia) ? $datos_exoneracion->nro_referencia : 'No especificado'; ?>
+                                                            </td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td style="font-weight: 500; color: #2c3e50; width: 40%;">Fecha de Emisión</td>
+                                                            <td style="color: #2c3e50;">
+                                                                <?php 
+                                                                    $fecha_exo = isset($datos_exoneracion->fecha_registro) ? $datos_exoneracion->fecha_registro : null;
+                                                                    echo $fecha_exo ? date('d/m/Y', strtotime($fecha_exo)) : 'No especificada'; 
+                                                                ?>
+                                                            </td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td style="font-weight: 500; color: #2c3e50; width: 40%;">Porcentaje Exonerado</td>
+                                                            <td style="color: #28a745; font-weight: 600;">
+                                                                <?php echo '100 %'; ?>
+                                                            </td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td style="font-weight: 500; color: #2c3e50; width: 40%;">Monto Exonerado</td>
+                                                            <td style="color: #28a745; font-weight: 600;">
+                                                                <?php echo isset($datos_exoneracion->monto_exoneracion) ? number_format($datos_exoneracion->monto_exoneracion, 2, ',', '.') . ' Bs.' : 'No especificado'; ?>
+                                                            </td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td style="font-weight: 500; color: #2c3e50; width: 40%;">Observaciones</td>
+                                                            <td style="color: #2c3e50;">
+                                                                <?php echo isset($datos_exoneracion->observacion) ? $datos_exoneracion->observacion : 'Ninguna'; ?>
+                                                            </td>
+                                                        </tr>
+                                                    </tbody>
+                                                </table>
+                                            <?php else: ?>
+                                                <p class="text-center text-muted py-3">
+                                                    <i class="fas fa-info-circle"></i> No se encontraron datos de la exoneración
+                                                </p>
+                                            <?php endif; ?>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
 
-                            <div class="col-md-6">
-                                        <div class="card card-success card-outline" style="border-radius: 8px; border-left: 4px solid #28a745; border-top: none;">
-                                            <div class="card-header" style="background: #f0fff4; border-bottom: 1px solid #e8e8e8; padding: 8px 15px; border-radius: 8px 8px 0 0;">
-                                                <h6 class="mb-0" style="font-weight: 600; color: #1e7e34;">
-                                                    <i class="fas fa-paperclip text-success mr-2"></i>
-                                                    Comprobante del Primer Pago
-                                                </h6>
-                                            </div>
-                                            <div class="card-body p-3 text-center">
-                                                <?php 
-                                                $archivo_encontrado = false;
-                                                $ruta_final = '';
-                                                $extension = '';
-                                                $fecha_registro = '';
+                                <div class="col-md-6">
+                                    <div class="card card-info card-outline" style="border-radius: 8px; border-left: 4px solid #17a2b8; border-top: none;">
+                                        <div class="card-header" style="background: #e8f4f8; border-bottom: 1px solid #e8e8e8; padding: 8px 15px; border-radius: 8px 8px 0 0;">
+                                            <h6 class="mb-0" style="font-weight: 600; color: #0c5460;">
+                                                <i class="fas fa-paperclip text-info mr-2"></i>
+                                                Documento de Exoneración
+                                            </h6>
+                                        </div>
+                                        <div class="card-body p-3 text-center">
+                                            <?php 
+                                            $archivo_exo_encontrado = false;
+                                            $ruta_exo_final = '';
+                                            $extension_exo = '';
+                                            
+                                            if(!empty($datos_exoneracion)):
+                                                $id_usuario_exo = isset($datos_exoneracion->id_usuario) ? $datos_exoneracion->id_usuario : '';
                                                 
-                                                if(!empty($pago)):
-                                                    $primer_item = $pago[0];
-                                                    $id_usuario = isset($primer_item->id_usuario) ? $primer_item->id_usuario : '';
-                                                    $fecha_registro = isset($primer_item->dregistro) ? $primer_item->dregistro : '';
+                                                if(!empty($id_usuario_exo)):
+                                                    $nombre_base_exo = $id_usuario_exo . '_exoneracion';
+                                                    $extensiones_permitidas = ['jpg', 'jpeg', 'png', 'gif', 'pdf'];
+                                                    $rutas_busqueda = [
+                                                        './assets/exoneraciones/',
+                                                        './uploads/exoneraciones/',
+                                                        './assets/uploads/exoneraciones/'
+                                                    ];
                                                     
-                                                    if(!empty($id_usuario)):
-                                                        // Base del nombre del archivo
-                                                        $nombre_base = $id_usuario . '_transferencia';
-                                                        
-                                                        // Extensiones permitidas
-                                                        $extensiones_permitidas = ['jpg', 'jpeg', 'png', 'gif', 'pdf'];
-                                                        
-                                                        // Rutas donde buscar
-                                                        $rutas_busqueda = [
-                                                            './assets/transferencia/',
-                                                            './uploads/pagos/',
-                                                            './assets/uploads/pagos/'
-                                                        ];
-                                                        
-                                                        // Buscar el archivo en todas las rutas y extensiones
-                                                        foreach($rutas_busqueda as $ruta_base) {
-                                                            foreach($extensiones_permitidas as $ext) {
-                                                                $ruta_completa = $ruta_base . $nombre_base . '.' . $ext;
-                                                                if(file_exists($ruta_completa)) {
-                                                                    $archivo_encontrado = true;
-                                                                    $extension = $ext;
-                                                                    
-                                                                    // Determinar la URL base según la ruta
-                                                                    if(strpos($ruta_base, 'assets/transferencia/') !== false) {
-                                                                        $ruta_final = base_url('assets/transferencia/' . $nombre_base . '.' . $ext);
-                                                                    } elseif(strpos($ruta_base, 'uploads/pagos/') !== false) {
-                                                                        $ruta_final = base_url('uploads/pagos/' . $nombre_base . '.' . $ext);
-                                                                    } elseif(strpos($ruta_base, 'assets/uploads/pagos/') !== false) {
-                                                                        $ruta_final = base_url('assets/uploads/pagos/' . $nombre_base . '.' . $ext);
-                                                                    }
-                                                                    
-                                                                    break 2; // Salir de ambos bucles
+                                                    foreach($rutas_busqueda as $ruta_base) {
+                                                        foreach($extensiones_permitidas as $ext) {
+                                                            $ruta_completa = $ruta_base . $nombre_base_exo . '.' . $ext;
+                                                            if(file_exists($ruta_completa)) {
+                                                                $archivo_exo_encontrado = true;
+                                                                $extension_exo = $ext;
+                                                                
+                                                                if(strpos($ruta_base, 'assets/exoneraciones/') !== false) {
+                                                                    $ruta_exo_final = base_url('assets/exoneraciones/' . $nombre_base_exo . '.' . $ext);
+                                                                } elseif(strpos($ruta_base, 'uploads/exoneraciones/') !== false) {
+                                                                    $ruta_exo_final = base_url('uploads/exoneraciones/' . $nombre_base_exo . '.' . $ext);
+                                                                } elseif(strpos($ruta_base, 'assets/uploads/exoneraciones/') !== false) {
+                                                                    $ruta_exo_final = base_url('assets/uploads/exoneraciones/' . $nombre_base_exo . '.' . $ext);
                                                                 }
+                                                                
+                                                                break 2;
                                                             }
                                                         }
-                                                    endif;
+                                                    }
                                                 endif;
-                                                ?>
-                                                
-                                                <?php if($archivo_encontrado): ?>
-                                                    <?php if(in_array(strtolower($extension), ['jpg', 'jpeg', 'png', 'gif'])): ?>
-                                                        <!-- Mostrar imagen -->
-                                                        <a href="<?php echo $ruta_final; ?>" target="_blank" class="d-block mb-2">
-                                                            <img src="<?php echo $ruta_final; ?>" alt="Comprobante de Pago" class="img-fluid" style="max-height: 250px; border-radius: 8px; border: 1px solid #dee2e6; object-fit: contain;">
+                                            endif;
+                                            ?>
+                                            
+                                            <?php if($archivo_exo_encontrado): ?>
+                                                <?php if(in_array(strtolower($extension_exo), ['jpg', 'jpeg', 'png', 'gif'])): ?>
+                                                    <a href="<?php echo $ruta_exo_final; ?>" target="_blank" class="d-block mb-2">
+                                                        <img src="<?php echo $ruta_exo_final; ?>" alt="Documento de Exoneración" class="img-fluid" style="max-height: 250px; border-radius: 8px; border: 1px solid #dee2e6; object-fit: contain;">
+                                                    </a>
+                                                    <div class="btn-group" role="group">
+                                                        <a href="<?php echo $ruta_exo_final; ?>" target="_blank" class="btn btn-sm btn-info" style="border-radius: 20px;">
+                                                            <i class="fas fa-eye"></i> Ver imagen
                                                         </a>
-                                                        <div class="btn-group" role="group">
-                                                            <a href="<?php echo $ruta_final; ?>" target="_blank" class="btn btn-sm btn-primary" style="border-radius: 20px;">
-                                                                <i class="fas fa-eye"></i> Ver imagen
-                                                            </a>
-                                                            <a href="<?php echo $ruta_final; ?>" download class="btn btn-sm btn-success" style="border-radius: 20px;">
-                                                                <i class="fas fa-download"></i> Descargar
-                                                            </a>
-                                                        </div>
-                                                    <?php elseif(strtolower($extension) == 'pdf'): ?>
-                                                        <!-- Mostrar PDF -->
-                                                        <div style="padding: 20px 0;">
-                                                            <i class="fas fa-file-pdf" style="font-size: 80px; color: #dc3545;"></i>
-                                                            <p style="margin-top: 10px; font-weight: 500; color: #2c3e50; word-break: break-all;">
-                                                                <?php echo $id_usuario . '_transferencia.' . $extension; ?>
-                                                            </p>
-                                                        </div>
-                                                        <div class="btn-group" role="group">
-                                                            <a href="<?php echo $ruta_final; ?>" target="_blank" class="btn btn-sm btn-primary" style="border-radius: 20px;">
-                                                                <i class="fas fa-eye"></i> Ver PDF
-                                                            </a>
-                                                            <a href="<?php echo $ruta_final; ?>" download class="btn btn-sm btn-success" style="border-radius: 20px;">
-                                                                <i class="fas fa-download"></i> Descargar
-                                                            </a>
-                                                        </div>
-                                                    <?php else: ?>
-                                                        <!-- Otros archivos -->
-                                                        <div style="padding: 20px 0;">
-                                                            <i class="fas fa-file" style="font-size: 80px; color: #6c757d;"></i>
-                                                            <p style="margin-top: 10px; font-weight: 500; color: #2c3e50; word-break: break-all;">
-                                                                <?php echo $id_usuario . '_transferencia.' . $extension; ?>
-                                                            </p>
-                                                        </div>
-                                                        <a href="<?php echo $ruta_final; ?>" download class="btn btn-sm btn-success" style="border-radius: 20px;">
-                                                            <i class="fas fa-download"></i> Descargar archivo
+                                                        <a href="<?php echo $ruta_exo_final; ?>" download class="btn btn-sm btn-success" style="border-radius: 20px;">
+                                                            <i class="fas fa-download"></i> Descargar
                                                         </a>
-                                                    <?php endif; ?>
-                                                    
-                                                    <p style="margin-top: 8px; font-size: 0.75rem; color: #6c757d;">
-                                                        <i class="fas fa-info-circle"></i> 
-                                                        Archivo subido el: <?php echo $fecha_registro ? date('d/m/Y H:i', strtotime($fecha_registro)) : 'N/A'; ?>
-                                                    </p>
-                                                <?php else: ?>
-                                                    <div style="padding: 30px 0;">
-                                                        <i class="fas fa-file-upload" style="font-size: 60px; color: #dee2e6;"></i>
-                                                        <p style="margin-top: 10px; color: #6c757d;">
-                                                            No se encontró el comprobante de pago
+                                                    </div>
+                                                <?php elseif(strtolower($extension_exo) == 'pdf'): ?>
+                                                    <div style="padding: 20px 0;">
+                                                        <i class="fas fa-file-pdf" style="font-size: 80px; color: #dc3545;"></i>
+                                                        <p style="margin-top: 10px; font-weight: 500; color: #2c3e50; word-break: break-all;">
+                                                            <?php echo $id_usuario_exo . '_exoneracion.' . $extension_exo; ?>
                                                         </p>
                                                     </div>
+                                                    <div class="btn-group" role="group">
+                                                        <a href="<?php echo $ruta_exo_final; ?>" target="_blank" class="btn btn-sm btn-info" style="border-radius: 20px;">
+                                                            <i class="fas fa-eye"></i> Ver PDF
+                                                        </a>
+                                                        <a href="<?php echo $ruta_exo_final; ?>" download class="btn btn-sm btn-success" style="border-radius: 20px;">
+                                                            <i class="fas fa-download"></i> Descargar
+                                                        </a>
+                                                    </div>
+                                                <?php else: ?>
+                                                    <div style="padding: 20px 0;">
+                                                        <i class="fas fa-file" style="font-size: 80px; color: #6c757d;"></i>
+                                                        <p style="margin-top: 10px; font-weight: 500; color: #2c3e50; word-break: break-all;">
+                                                            <?php echo $id_usuario_exo . '_exoneracion.' . $extension_exo; ?>
+                                                        </p>
+                                                    </div>
+                                                    <a href="<?php echo $ruta_exo_final; ?>" download class="btn btn-sm btn-success" style="border-radius: 20px;">
+                                                        <i class="fas fa-download"></i> Descargar archivo
+                                                    </a>
                                                 <?php endif; ?>
-                                            </div>
+                                            <?php else: ?>
+                                                <div style="padding: 30px 0;">
+                                                    <i class="fas fa-file-upload" style="font-size: 60px; color: #dee2e6;"></i>
+                                                    <p style="margin-top: 10px; color: #6c757d;">
+                                                        No se encontró el documento de exoneración
+                                                    </p>
+                                                </div>
+                                            <?php endif; ?>
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
+
+                        <?php else: ?>
+                            <!-- ============================================================ -->
+                            <!-- SECCIÓN DE PAGO (ORIGINAL)                                   -->
+                            <!-- ============================================================ -->
+                            <div class="row mt-4">
+                                <div class="col-md-6">
+                                    <div class="card card-secondary card-outline" style="border-radius: 8px; border-left: 4px solid #6c757d; border-top: none;">
+                                        <div class="card-header" style="background: #f8f9fa; border-bottom: 1px solid #e8e8e8; padding: 8px 15px; border-radius: 8px 8px 0 0;">
+                                            <h6 class="mb-0" style="font-weight: 600; color: #2c3e50;">
+                                                <i class="fas fa-university text-secondary mr-2"></i>
+                                                Datos Bancarios
+                                            </h6>
+                                        </div>
+                                        <div class="card-body p-3">
+                                            <?php if(!empty($pago)): ?>
+                                                <table class="table table-sm" style="margin-bottom: 0;">
+                                                    <?php foreach($pago as $item): ?>
+                                                        <tbody>
+                                                            <tr style="background-color: #f8f9fa; font-weight: 500; color: #2c3e50;">
+                                                                <td style="font-weight: 500; color: #2c3e50; width: 40%;"><strong>Tipo de pago</strong></td>
+                                                                <td style="color: #2c3e50;">
+                                                                    <strong>
+                                                                        <?php echo isset($item->pago_adicional) ? ($item->pago_adicional == 0 ? 'Primer pago' : 'Pago Adicional') : 'No especificado'; ?>
+                                                                    </strong>
+                                                                </td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td style="font-weight: 500; color: #2c3e50; width: 40%;">Unidades de Crédito pagadas</td>
+                                                                <td style="color: #2c3e50;">
+                                                                    <?php echo isset($item->uc) ? $item->uc.' UC' : 'No especificado'; ?>       
+                                                                    <?php if(isset($item->pago_adicional) && $item->pago_adicional == 1): ?>
+                                                                        Pago de diferencia en Bs.
+                                                                    <?php endif; ?>                                                  
+                                                                </td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td style="font-weight: 500; color: #2c3e50; width: 40%;">Programas Inscritos</td>
+                                                                <td style="color: #2c3e50;">
+                                                                    <?php echo isset($item->postgrado) ?  $item->postgrado : 'No especificado'; ?>
+                                                                </td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td style="font-weight: 500; color: #2c3e50; width: 40%;">Banco receptor</td>
+                                                                <td style="color: #2c3e50;">
+                                                                    <?php echo isset($item->nombre) ? $item->nombre : (isset($item->banco_nombre) ? $item->banco_nombre : 'No especificado'); ?>
+                                                                </td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td style="font-weight: 500; color: #2c3e50;">Número de Cuenta receptor</td>
+                                                                <td style="color: #2c3e50;">
+                                                                    <?php echo isset($item->nro_cuenta) ? $item->nro_cuenta : 'No especificado'; ?>
+                                                                </td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td style="font-weight: 500; color: #2c3e50;">Fecha de Operación</td>
+                                                                <td style="color: #2c3e50;">
+                                                                    <?php 
+                                                                        $fecha = isset($item->fecha_transferencia) ? $item->fecha_transferencia : (isset($item->fecha_operacion) ? $item->fecha_operacion : null);
+                                                                        echo $fecha ? date('d/m/Y', strtotime($fecha)) : 'No especificada'; 
+                                                                    ?>
+                                                                </td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td style="font-weight: 500; color: #2c3e50;">Nro. Transferencia</td>
+                                                                <td style="color: #2c3e50;">
+                                                                    <?php echo isset($item->nro_referencia) ? $item->nro_referencia : 'No especificado'; ?>
+                                                                </td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td style="font-weight: 500; color: #2c3e50;">Cédula/RIF depositante</td>
+                                                                <td style="color: #2c3e50;">
+                                                                    <?php echo isset($item->cedula) ? $item->cedula : 'No especificado'; ?>
+                                                                </td>
+                                                            </tr>
+                                                            <?php if(isset($item->pago_adicional) && $item->pago_adicional == 0): ?>
+                                                            <tr>
+                                                                <td style="font-weight: 500; color: #2c3e50;">Monto Calculado Ref.</td>
+                                                                <td style="color: #28a745; font-weight: 600;">
+                                                                    <?php echo isset($item->monto_apagar) ? number_format($item->monto_apagar, 2, ',', '.') . ' Ref.' : 'No especificado'; ?>
+                                                                </td>
+                                                            </tr>
+                                                            <?php endif;?>
+                                                            <tr>
+                                                                <td style="font-weight: 500; color: #2c3e50;">Monto Depositado en Bs.</td>
+                                                                <td style="color: #28a745; font-weight: 600;">
+                                                                    <?php echo isset($item->monto_depositado) ? number_format($item->monto_depositado, 2, ',', '.') . ' Bs.' : 'No especificado'; ?>
+                                                                </td>
+                                                            </tr>
+                                                        </tbody>
+                                                    <?php endforeach; ?>
+                                                </table>
+                                            <?php else: ?>
+                                                <p class="text-center text-muted py-3">
+                                                    <i class="fas fa-info-circle"></i> No se encontraron datos bancarios del pago
+                                                </p>
+                                            <?php endif; ?>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <div class="card card-success card-outline" style="border-radius: 8px; border-left: 4px solid #28a745; border-top: none;">
+                                        <div class="card-header" style="background: #f0fff4; border-bottom: 1px solid #e8e8e8; padding: 8px 15px; border-radius: 8px 8px 0 0;">
+                                            <h6 class="mb-0" style="font-weight: 600; color: #1e7e34;">
+                                                <i class="fas fa-paperclip text-success mr-2"></i>
+                                                Comprobante del Primer Pago
+                                            </h6>
+                                        </div>
+                                        <div class="card-body p-3 text-center">
+                                            <?php 
+                                            $archivo_encontrado = false;
+                                            $ruta_final = '';
+                                            $extension = '';
+                                            $fecha_registro = '';
+                                            
+                                            if(!empty($pago)):
+                                                $primer_item = $pago[0];
+                                                $id_usuario = isset($primer_item->id_usuario) ? $primer_item->id_usuario : '';
+                                                $fecha_registro = isset($primer_item->dregistro) ? $primer_item->dregistro : '';
+                                                
+                                                if(!empty($id_usuario)):
+                                                    $nombre_base = $id_usuario . '_transferencia';
+                                                    $extensiones_permitidas = ['jpg', 'jpeg', 'png', 'gif', 'pdf'];
+                                                    $rutas_busqueda = [
+                                                        './assets/transferencia/',
+                                                        './uploads/pagos/',
+                                                        './assets/uploads/pagos/'
+                                                    ];
+                                                    
+                                                    foreach($rutas_busqueda as $ruta_base) {
+                                                        foreach($extensiones_permitidas as $ext) {
+                                                            $ruta_completa = $ruta_base . $nombre_base . '.' . $ext;
+                                                            if(file_exists($ruta_completa)) {
+                                                                $archivo_encontrado = true;
+                                                                $extension = $ext;
+                                                                
+                                                                if(strpos($ruta_base, 'assets/transferencia/') !== false) {
+                                                                    $ruta_final = base_url('assets/transferencia/' . $nombre_base . '.' . $ext);
+                                                                } elseif(strpos($ruta_base, 'uploads/pagos/') !== false) {
+                                                                    $ruta_final = base_url('uploads/pagos/' . $nombre_base . '.' . $ext);
+                                                                } elseif(strpos($ruta_base, 'assets/uploads/pagos/') !== false) {
+                                                                    $ruta_final = base_url('assets/uploads/pagos/' . $nombre_base . '.' . $ext);
+                                                                }
+                                                                
+                                                                break 2;
+                                                            }
+                                                        }
+                                                    }
+                                                endif;
+                                            endif;
+                                            ?>
+                                            
+                                            <?php if($archivo_encontrado): ?>
+                                                <?php if(in_array(strtolower($extension), ['jpg', 'jpeg', 'png', 'gif'])): ?>
+                                                    <a href="<?php echo $ruta_final; ?>" target="_blank" class="d-block mb-2">
+                                                        <img src="<?php echo $ruta_final; ?>" alt="Comprobante de Pago" class="img-fluid" style="max-height: 250px; border-radius: 8px; border: 1px solid #dee2e6; object-fit: contain;">
+                                                    </a>
+                                                    <div class="btn-group" role="group">
+                                                        <a href="<?php echo $ruta_final; ?>" target="_blank" class="btn btn-sm btn-primary" style="border-radius: 20px;">
+                                                            <i class="fas fa-eye"></i> Ver imagen
+                                                        </a>
+                                                        <a href="<?php echo $ruta_final; ?>" download class="btn btn-sm btn-success" style="border-radius: 20px;">
+                                                            <i class="fas fa-download"></i> Descargar
+                                                        </a>
+                                                    </div>
+                                                <?php elseif(strtolower($extension) == 'pdf'): ?>
+                                                    <div style="padding: 20px 0;">
+                                                        <i class="fas fa-file-pdf" style="font-size: 80px; color: #dc3545;"></i>
+                                                        <p style="margin-top: 10px; font-weight: 500; color: #2c3e50; word-break: break-all;">
+                                                            <?php echo $id_usuario . '_transferencia.' . $extension; ?>
+                                                        </p>
+                                                    </div>
+                                                    <div class="btn-group" role="group">
+                                                        <a href="<?php echo $ruta_final; ?>" target="_blank" class="btn btn-sm btn-primary" style="border-radius: 20px;">
+                                                            <i class="fas fa-eye"></i> Ver PDF
+                                                        </a>
+                                                        <a href="<?php echo $ruta_final; ?>" download class="btn btn-sm btn-success" style="border-radius: 20px;">
+                                                            <i class="fas fa-download"></i> Descargar
+                                                        </a>
+                                                    </div>
+                                                <?php else: ?>
+                                                    <div style="padding: 20px 0;">
+                                                        <i class="fas fa-file" style="font-size: 80px; color: #6c757d;"></i>
+                                                        <p style="margin-top: 10px; font-weight: 500; color: #2c3e50; word-break: break-all;">
+                                                            <?php echo $id_usuario . '_transferencia.' . $extension; ?>
+                                                        </p>
+                                                    </div>
+                                                    <a href="<?php echo $ruta_final; ?>" download class="btn btn-sm btn-success" style="border-radius: 20px;">
+                                                        <i class="fas fa-download"></i> Descargar archivo
+                                                    </a>
+                                                <?php endif; ?>
+                                                
+                                                <p style="margin-top: 8px; font-size: 0.75rem; color: #6c757d;">
+                                                    <i class="fas fa-info-circle"></i> 
+                                                    Archivo subido el: <?php echo $fecha_registro ? date('d/m/Y H:i', strtotime($fecha_registro)) : 'N/A'; ?>
+                                                </p>
+                                            <?php else: ?>
+                                                <div style="padding: 30px 0;">
+                                                    <i class="fas fa-file-upload" style="font-size: 60px; color: #dee2e6;"></i>
+                                                    <p style="margin-top: 10px; color: #6c757d;">
+                                                        No se encontró el comprobante de pago
+                                                    </p>
+                                                </div>
+                                            <?php endif; ?>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        <?php endif; ?>
 
                         <!-- Botones de Acción -->
                         <div class="row mt-4">
@@ -401,6 +569,20 @@
         background-color: #0069d9;
         border-color: #0062cc;
         box-shadow: 0 2px 8px rgba(0, 123, 255, 0.3);
+        transform: translateY(-2px);
+    }
+    
+    .btn-info {
+        background-color: #17a2b8;
+        border-color: #17a2b8;
+        color: #fff;
+        transition: all 0.2s ease;
+    }
+    
+    .btn-info:hover {
+        background-color: #138496;
+        border-color: #117a8b;
+        box-shadow: 0 2px 8px rgba(23, 162, 184, 0.3);
         transform: translateY(-2px);
     }
     

@@ -325,14 +325,22 @@ public function materias_inscritas_cedula($cedula){//materias inscritas por cedu
 
 	}
 
-	public function revicion_academica($id_usuario,$id_periodo){
+	public function Revicion_academica($id_usuario,$id_periodo){
 
 		$this->db->where("id_usuario",$id_usuario);
 		$this->db->where("id_periodo",$id_periodo);
+		$this->db->where("rev_academica",1);
+		$this->db->where("reg_pago",1);
+		$this->db->where("status",1);
 	
 		$resultados = $this->db->get("materias_preinscritas");
 		
-			return $resultados->row();
+			if ($resultados->num_rows() > 0) {
+			return true;
+		}
+		else{
+			return false;
+		}
 		
 		
 		}

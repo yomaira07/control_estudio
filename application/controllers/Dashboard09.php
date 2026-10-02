@@ -1510,25 +1510,257 @@ if ($mensaje=="") {
 
 }
 	public function registro_pago()
-	{
-	 	
-		$id_usuario = $this->session->userdata("id");
-		$id_solicitud= $this->uri->segment(3);
-		$data = array(
-			'list_solicitud' => $this->Solictudtramite_model->tramite_sinpago($id_usuario,$id_solicitud),	
-			'list_banco' => $this->Banco_model->getBanco(),	
-			'alumno_list'=> $this->Alumno_model->getListaAlumno1($id_usuario),
-			'datos_trabajo' => $this->Trabajo_model->getListaTrabajo($id_usuario,1),
-			'aranceles' =>  $this->Aranceltram_model->getArancelesTramite(),
-		);
-		//var_dump($data);
-		$this->load->view('layouts/header');
-		$this->load->view('layouts/sidebar_tramites');
-		$this->load->view('participante/tramites/registro_pago',$data);
-		$this->load->view('layouts/footer');
+{
+    $id_usuario   = $this->session->userdata("id");
+    $id_solicitud = $this->uri->segment(3);
+
+    // ============================================================
+    // 1. DATOS BASE
+    // ============================================================
+    $list_solicitud = $this->Solictudtramite_model->tramite_sinpago($id_usuario, $id_solicitud);
+    $datos_trabajo  = $this->Trabajo_model->getListaTrabajo($id_usuario, 1);
+    $alumno_list    = $this->Usuarios_model->buscar_usuario($id_usuario);
+    $aranceles      = $this->Aranceltram_model->getArancelesTramite();
 	
 
-	}	
+    // ✅ VALIDAR: si no hay solicitudes, renderizar vista vacía
+    if (empty($list_solicitud)) {
+        $data = array(
+            'list_solicitud'          => array(),
+            'list_banco'              => $this->Banco_model->getBanco(),
+            'alumno_list'             => $alumno_list,
+            'datos_trabajo'           => $datos_trabajo,
+            'aranceles'               => $aranceles,
+            'total_pagar'             => 0,
+            'total_pagar_fuera_lapso' => 0,
+            'total_pagar_gen'         => 0,
+        );
+
+        $this->load->view('layouts/header');
+        $this->load->view('layouts/sidebar_tramites');
+        $this->load->view('participante/tramites/registro_pago', $data);
+        $this->load->view('layouts/footer');
+        return;
+    }
+
+    // ✅ OBTENER id_programa de la PRIMERA solicitud
+    $primera_solicitud = reset($list_solicitud);
+    $id_programa = isset($primera_solicitud->id_programa) ? $primera_solicitud->id_programa : null;
+
+
+	$programa_solicitado = null;
+	if (!empty($id_programa)) {
+		$programa_resultado = $this->Programa_model->getProgramaAprobado1($id_programa);
+		
+		// ✅ Si devuelve array, tomar el primer elemento
+		if (is_array($programa_resultado) && !empty($programa_resultado)) {
+			$programa_solicitado = $programa_resultado[0];
+		} elseif (is_object($programa_resultado)) {
+			$programa_solicitado = $programa_resultado;
+		}
+	}
+
+$tipo_programa = isset($programa_solicitado->tipo_programa) 
+                    ? (int)$programa_solicitado->tipo_programa 
+                    : 0;
+
+
+
+
+    // ============================================================
+    // 2. CONFIGURACIÓN DE REGLAS FUERA DE LAPSO
+    // ============================================================
+    $tiene_descuento = (isset($datos_trabajo->descuento) && $datos_trabajo->descuento == "1") ? 1 : 0;
+
+    // Aranceles de fuera de lapso por tipo de programa
+    $ids_fuera_lapso_programa_1 = array(33);
+    $ids_fuera_lapso_programa_2 = array(34);
+
+    $tipo_programa = isset($programa_solicitado->tipo_programa) ? (int)$programa_solicitado->tipo_programa : 0;
+
+    $ids_fuera_lapso = array();
+    if ($tipo_programa == 1) {
+        $ids_fuera_lapso = $ids_fuera_lapso_programa_1;
+    } elseif ($tipo_programa == 2) {
+        $ids_fuera_lapso = $ids_fuera_lapso_programa_2;
+    }
+
+    // Solo estos trámites pueden cobrar fuera de lapso
+    $tramites_que_cobran_fuera_lapso = array(16, 17, 19, 28);
+
+    // Flags del usuario para excepciones
+    $sin_fuera_lapso_sol_ruc     = isset($alumno_list->sin_fuera_lapso_sol_ruc)     ? (int)$alumno_list->sin_fuera_lapso_sol_ruc     : 0;
+    $sin_fuera_lapso_ruc_apro    = isset($alumno_list->sin_fuera_lapso_ruc_apro)    ? (int)$alumno_list->sin_fuera_lapso_ruc_apro    : 0;
+    $fuera_lapso_reincorporacion = isset($alumno_list->fuera_lapso_reincorporacion) ? (int)$alumno_list->fuera_lapso_reincorporacion : 0;
+
+    // ============================================================
+    // 3. OBTENER EL MONTO DEL ARANCEL FUERA DE LAPSO (33 o 34)
+    // ============================================================
+    $monto_arancel_fuera_lapso = 0;
+    if (!empty($ids_fuera_lapso)) {
+        foreach ($aranceles as $a) {
+            if (in_array((int)$a->id_tramites, $ids_fuera_lapso)) {
+                $monto_arancel_fuera_lapso = ($tiene_descuento == 1) ? $a->monto_mp : $a->monto_gen;
+                break;
+            }
+        }
+    }
+
+    // ============================================================
+    // 4. PRECARGAR TRÁMITES (para validar fechas)
+    // ============================================================
+    $tramites_info = array();
+    $ids_tramites = array();
+    foreach ($list_solicitud as $s) {
+        if (isset($s->id_tramite)) {
+            $ids_tramites[] = (int)$s->id_tramite;
+        }
+    }
+    $ids_tramites = array_unique($ids_tramites);
+
+    if (!empty($ids_tramites)) {
+        $this->db->where_in('id', $ids_tramites);
+        $this->db->where('status', 1);
+        $query = $this->db->get('tramites');
+        foreach ($query->result() as $t) {
+            $tramites_info[$t->id] = $t;
+        }
+    }
+
+    // ============================================================
+    // 5. FUNCIÓN FUERA DE LAPSO
+    // ============================================================
+    $es_fuera_lapso = function($id_tramite) use (
+        $tramites_info,
+        $tramites_que_cobran_fuera_lapso,
+        $sin_fuera_lapso_sol_ruc,
+        $sin_fuera_lapso_ruc_apro,
+        $fuera_lapso_reincorporacion
+    ) {
+        $id_tramite = (int)$id_tramite;
+
+        // Solo estos trámites pueden cobrar fuera de lapso
+        if (!in_array($id_tramite, $tramites_que_cobran_fuera_lapso)) {
+            return false;
+        }
+
+        // Excepciones por flags del usuario
+        if ($id_tramite == 28 && $sin_fuera_lapso_sol_ruc == 1) return false;
+        if (in_array($id_tramite, array(17, 19)) && $sin_fuera_lapso_ruc_apro == 1) return false;
+        if ($id_tramite == 16 && $fuera_lapso_reincorporacion == 1) return false;
+
+        // Validación por fechas
+        if (!isset($tramites_info[$id_tramite])) return false;
+        $t = $tramites_info[$id_tramite];
+        if (empty($t->desde) || empty($t->hasta)) return false;
+
+        $hoy   = date('Y-m-d');
+        $desde = date('Y-m-d', strtotime($t->desde));
+        $hasta = date('Y-m-d', strtotime($t->hasta));
+
+        return ($hoy < $desde || $hoy > $hasta);
+    };
+
+    // ============================================================
+    // 6. CALCULAR TOTALES
+    // ============================================================
+    $total_pagar = 0;
+    $total_pagar_fuera_lapso = 0;
+    $detalle_solicitud = array();
+
+    foreach ($list_solicitud as $solicitud) {
+        $id_tram = (int)$solicitud->id_tramite;
+
+        // ✅ 1) Monto del arancel NORMAL del trámite (SIEMPRE se cobra)
+        $monto_base = ($tiene_descuento == 1) ? $solicitud->monto_mp : $solicitud->monto_gen;
+
+        if ($id_tram == 19 || $id_tram == 17) {
+            $uc = !empty($solicitud->uc) ? (int)$solicitud->uc : 0;
+            $monto_arancel_normal = $uc * $monto_base;
+			$total_uc += $uc; 
+        } else {
+            $monto_arancel_normal = $monto_base;
+        }
+
+        $total_pagar += $monto_arancel_normal;
+
+        // ✅ 2) Verificar si aplica recargo por fuera de lapso
+        $fuera_lapso = $es_fuera_lapso($id_tram);
+        $es_arancel_fuera_lapso = false;
+        $monto_recargo_fuera_lapso = 0;
+
+        if ($fuera_lapso && $monto_arancel_fuera_lapso > 0) {
+            $monto_recargo_fuera_lapso = $monto_arancel_fuera_lapso;
+            $total_pagar_fuera_lapso += $monto_recargo_fuera_lapso;
+            $es_arancel_fuera_lapso = true;
+        }
+
+        // ✅ 3) Guardar fila procesada para la vista
+        $nombre_tramite = isset($solicitud->nombre_tramite)
+                            ? $solicitud->nombre_tramite
+                            : (isset($solicitud->nombre) ? $solicitud->nombre : '');
+
+        $detalle_solicitud[] = array(
+            'id_solicitud'              => isset($solicitud->id_solicitud) ? $solicitud->id_solicitud : null,
+            'id_tramite'                => $id_tram,
+            'nombre'                    => $nombre_tramite,
+            'uc'                        => isset($solicitud->uc) ? (int)$solicitud->uc : 0,
+            'monto_arancel'             => $monto_arancel_normal,
+            'es_arancel_fuera_lapso'    => $es_arancel_fuera_lapso,
+            'monto_recargo_fuera_lapso' => $monto_recargo_fuera_lapso,
+        );
+    }
+
+    $total_pagar_gen = $total_pagar + $total_pagar_fuera_lapso;
+
+    // ============================================================
+    // 7. PREPARAR DATOS PARA LA VISTA
+    // ============================================================
+    $data = array(
+        'list_solicitud'          => $detalle_solicitud,
+        'list_banco'              => $this->Banco_model->getBanco(),
+        'alumno_list'             => $alumno_list,
+        'datos_trabajo'           => $datos_trabajo,
+        'aranceles'               => $aranceles,
+        'total_pagar'             => $total_pagar,
+        'total_pagar_fuera_lapso' => $total_pagar_fuera_lapso,
+        'total_pagar_gen'         => $total_pagar_gen,
+		'datos_alumno' => $this->Alumno_model->getListaAlumno($id_usuario),	
+		'total_uc'                => $total_uc, 
+    );
+/*echo "<pre style='background:#fff; padding:15px; border:2px solid #dc3545; font-size:14px;'>";
+echo "=== DIAGNÓSTICO ===\n\n";
+echo "Fecha hoy: " . date('Y-m-d') . "\n\n";
+echo "idprograma: [" . $primera_solicitud->id_programa . "]\n";
+echo "tipo_programa: [" . $tipo_programa . "]\n";
+echo "ids_fuera_lapso: ";
+print_r($ids_fuera_lapso);
+echo "\nmonto_arancel_fuera_lapso: [$monto_arancel_fuera_lapso]\n";
+echo "tiene_descuento: [$tiene_descuento]\n\n";
+echo "fuera_lapso_reincorporacion: [$fuera_lapso_reincorporacion]\n\n";
+
+echo "--- Trámites cargados en tramites_info ---\n";
+foreach ($tramites_info as $id => $t) {
+    echo "ID $id | desde: [{$t->desde}] | hasta: [{$t->hasta}] | status: [{$t->status}]\n";
+}
+
+echo "\n--- Solicitudes ---\n";
+foreach ($list_solicitud as $s) {
+    $id_tram = (int)$s->id_tramite;
+    echo "id_tramite: $id_tram\n";
+    echo "  monto_gen: {$s->monto_gen} | monto_mp: {$s->monto_mp}\n";
+    echo "  ¿existe en tramites_info?: " . (isset($tramites_info[$id_tram]) ? 'SÍ' : 'NO') . "\n";
+    echo "  es_fuera_lapso($id_tram): ";
+    var_dump($es_fuera_lapso($id_tram));
+    echo "\n";
+}
+echo "</pre>"; 
+exit;*/
+    $this->load->view('layouts/header');
+    $this->load->view('layouts/sidebar_tramites');
+    $this->load->view('participante/tramites/registro_pago', $data);
+    $this->load->view('layouts/footer');
+}
 	public function registro_pago_ruc()
 	{
  		
