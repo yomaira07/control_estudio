@@ -594,8 +594,9 @@ $conc=array(0, 1);
 		$this->db->join("banco","banco.id = registro_pago.id_banco");
 		$this->db->where("id_usuario",$id_usuario);
 		$this->db->where("id_periodo",$id_periodo);
+		$this->db->where("registro_pago.status",1);
 		$resultados = $this->db->get("registro_pago");
-		$this->db->where("status",1);
+		
 		//var_dump($this->db->queries);
 		if ($resultados->num_rows() > 0) {
 			return $resultados->row();
@@ -627,7 +628,7 @@ $conc=array(0, 1);
 		$this->db->where("id_usuario",$id_usuario);
 		$this->db->where("id_solicitud_tramite",$id_solicitud);
 		$this->db->where("tramite",1);
-		$this->db->where("status",1);
+		$this->db->where("registro_pago.status",1);
 		$resultados = $this->db->get("registro_pago");
 	
 		if ($resultados->num_rows() > 0) {
