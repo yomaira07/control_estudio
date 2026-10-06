@@ -361,107 +361,137 @@
 <!-- SCRIPT                                                         -->
 <!-- ============================================================ -->
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    
-    var btnPagoBDV = document.getElementById('btnPagoBDV');
-    if (btnPagoBDV) {
+(function() {
+    'use strict';
+
+    function initBotonBDV() {
+        var btnPagoBDV = document.getElementById('btnPagoBDV');
+
+        if (!btnPagoBDV) {
+            console.warn('[BDV] Botón #btnPagoBDV no encontrado en el DOM.');
+            return;
+        }
+
+        console.log('[BDV] Botón encontrado, enganchando listener...');
+
         btnPagoBDV.addEventListener('click', function(e) {
             e.preventDefault();
-            
+            console.log('[BDV] Click detectado.');
+
             var solicitud = this.getAttribute('data-solicitud');
             var tramite   = this.getAttribute('data-tramite');
-            var total     = parseFloat(this.getAttribute('data-total'));
-            var totalUc = parseInt(this.getAttribute('data-total-uc')) || 0;
-            
+            var totalRaw  = this.getAttribute('data-total');
+            var total     = parseFloat(String(totalRaw).replace(',', '.'));
+            var totalUc   = parseInt(this.getAttribute('data-total-uc'), 10) || 0;
+
+            console.log('[BDV] Datos:', { solicitud, tramite, totalRaw, total, totalUc });
+
             if (!solicitud || !tramite || isNaN(total) || total <= 0) {
                 alert('Error: no se pudieron obtener los datos del trámite. Recargue la página.');
                 return;
             }
-            
-            var cedulaInput = document.getElementById('cedula_rif_pago');
+
+            var cedulaInput   = document.getElementById('cedula_rif_pago');
             var tipoDocSelect = document.getElementById('tipo_documento_pago');
-            var cedulaValor = cedulaInput.value.trim();
+
+            if (!cedulaInput || !tipoDocSelect) {
+                alert('Error: no se encontraron los campos de documento. Recargue la página.');
+                return;
+            }
+
+            var cedulaValor  = cedulaInput.value.trim();
             var tipoDocValor = tipoDocSelect.value;
-            
+
             if (!cedulaValor) {
-                alert('⚠️ Debes ingresar la cédula del estudiante o el depositante antes de continuar.\n\n' +
-                      'Este dato es obligatorio para procesar el pago con BDV.');
+                alert('⚠️ Debes ingresar la cédula del estudiante o el depositante antes de continuar.');
                 cedulaInput.focus();
                 cedulaInput.style.borderColor = '#dc3545';
                 cedulaInput.style.borderWidth = '2px';
                 return;
             }
-            
+
             if (!/^[0-9]{6,8}$/.test(cedulaValor)) {
-                alert('⚠️ El documento ingresado no es válido.\n\n' +
-                      'Debe contener solo números, entre 6 - 8 dígitos.\n' +
-                      'Ejemplos válidos:\n' +
-                      '  • V-12345678 → ingresa: 12345678\n' +
-                        '  • E-1234567  → ingresa: 1234567\n' +                     
-                      'Sin guiones, sin puntos, sin letras.');
+                alert('⚠️ El documento ingresado no es válido.\nDebe contener solo números, entre 6 y 8 dígitos.');
                 cedulaInput.focus();
                 cedulaInput.style.borderColor = '#dc3545';
                 cedulaInput.style.borderWidth = '2px';
                 return;
             }
-            
+
             if (/^0+$/.test(cedulaValor)) {
-                alert('⚠️ El documento no puede ser todo ceros. Ingresa un número válido.');
+                alert('⚠️ El documento no puede ser todo ceros.');
                 cedulaInput.focus();
                 cedulaInput.style.borderColor = '#dc3545';
                 cedulaInput.style.borderWidth = '2px';
                 return;
             }
-            
+
             cedulaInput.style.borderColor = '';
             cedulaInput.style.borderWidth = '';
-            
+
             var documentoCompleto = tipoDocValor + '-' + cedulaValor;
-            var montoFormateado = total.toLocaleString('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-            
-                   var mensaje = "💳 PAGO CON BOTÓN DE PAGOBDV\n\n" +
+            var montoFormateado = total.toLocaleString('es-VE', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            });
+
+            var mensaje = "💳 PAGO CON BOTÓN DE PAGOBDV\n\n" +
                           "Serás redirigido al Botón de PagoBDV.\n\n" +
                           "📌 Documento: " + documentoCompleto + "\n" +
                           "📌 Monto a pagar: Ref. " + montoFormateado + "\n\n" +
-                           "⚠️ Antes de continuar, asegúrate de:\n" +
+                          "⚠️ Antes de continuar, asegúrate de:\n" +
                           "✅ Tener saldo suficiente en tu cuenta BDV\n" +
                           "✅ Tener a la mano los datos de tus productos y servicios del banco\n" +
                           "✅ Conexión estable a internet\n\n" +
                           "¿Continuar con el pago?";
-                          
-            
-            if (confirm(mensaje)) {
-                this.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Redirigiendo...';
-                this.disabled = true;
-                
-                var form = document.createElement('form');
-                form.method = 'POST';
-                form.action = "<?php echo base_url(); ?>pagos/iniciar_tramite_adm";
-                
-                var inputs = {
-                    'solicitud':        solicitud,
-                    'tramite':          tramite,
-                    'total_final':      total.toFixed(2),
-                    'tipo_documento':   tipoDocValor,
-                    'cedula_rif':       cedulaValor,
-                    'total_uc':         totalUc 
-                };
-                
-                for (var name in inputs) {
+
+            if (!confirm(mensaje)) {
+                console.log('[BDV] Usuario canceló.');
+                return;
+            }
+
+            this.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Redirigiendo...';
+            this.disabled = true;
+
+            var form = document.createElement('form');
+            form.method = 'POST';
+            form.action = "<?php echo base_url(); ?>pagos/iniciar_tramite_adm";
+            form.style.display = 'none';
+
+            var inputs = {
+                'solicitud':      solicitud,
+                'tramite':        tramite,
+                'total_final':    total.toFixed(2),
+                'tipo_documento': tipoDocValor,
+                'cedula_rif':     cedulaValor,
+                'total_uc':       totalUc
+            };
+
+            for (var name in inputs) {
+                if (inputs.hasOwnProperty(name)) {
                     var input = document.createElement('input');
-                    input.type = 'hidden';
-                    input.name = name;
+                    input.type  = 'hidden';
+                    input.name  = name;
                     input.value = inputs[name];
                     form.appendChild(input);
                 }
-                
-                document.body.appendChild(form);
-                form.submit();
             }
+
+            document.body.appendChild(form);
+
+            console.log('[BDV] Enviando form a:', form.action);
+            form.submit();
         });
+
+        console.log('[BDV] Listener enganchado correctamente.');
     }
-    
-});
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initBotonBDV);
+    } else {
+        initBotonBDV();
+    }
+})();
 </script>
 
 <!-- ============================================================ -->
