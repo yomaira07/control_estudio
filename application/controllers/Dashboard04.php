@@ -1959,7 +1959,7 @@ public function registropago_store() ///registro de pago para las exoneraciones 
             }
         } else {
             $this->session->set_flashdata("warning", "El registro de la inscripción ya fue registrado");
-          // redirect(base_url() . "dashboard04/proceso");
+           redirect(base_url() . "dashboard04/proceso");
         }
     } else {
         // Si hubo error en el archivo, regresar con el mensaje
