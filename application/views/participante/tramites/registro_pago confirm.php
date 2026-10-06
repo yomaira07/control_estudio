@@ -78,8 +78,10 @@
                         <?php endif; ?>
 
                         <?php if (!empty($list_solicitud)): 
+                            // ✅ La primera solicitud ya viene procesada desde el controlador
                             $solicitud_principal = $list_solicitud[0];
 
+                            // Preparar cédula/RIF por defecto
                             $cedula_default_raw = '';
                             if (isset($alumno_list->cedula)) {
                                 $cedula_default_raw = $alumno_list->cedula;
@@ -92,6 +94,7 @@
                             if (stripos($cedula_default_raw, 'E') === 0) {
                                 $tipo_doc_default = 'E';
                             }
+                           
                         ?>
 
                         <!-- ============================================================ -->
@@ -119,6 +122,8 @@
                                         </thead>
                                         <tbody>
                                             <?php foreach ($list_solicitud as $solicitud): ?>
+
+                                                <!-- ✅ Fila del arancel NORMAL (SIEMPRE) -->
                                                 <tr style="border-bottom: 1px solid #f0f0f0;">
                                                     <td style="padding: 10px 15px; font-size: 0.85rem; color: #2c3e50;">
                                                         <?php if ($solicitud['id_tramite'] == 16): ?>
@@ -136,6 +141,7 @@
                                                     </td>
                                                 </tr>
 
+                                                <!-- ✅ Fila del RECARGO por fuera de lapso (si aplica) -->
                                                 <?php if (!empty($solicitud['es_arancel_fuera_lapso']) && $solicitud['monto_recargo_fuera_lapso'] > 0): ?>
                                                 <tr style="border-bottom: 1px solid #f0f0f0; background: #fffbf0;">
                                                     <td style="padding: 10px 15px 10px 30px; font-size: 0.8rem; color: #856404; font-style: italic;">
@@ -150,6 +156,7 @@
                                                     </td>
                                                 </tr>
                                                 <?php endif; ?>
+
                                             <?php endforeach; ?>
                                         </tbody>
                                     </table>
@@ -243,24 +250,17 @@
                                                        id="cedula_rif_pago" 
                                                        name="cedula_rif_pago" 
                                                        placeholder="Ej: 12345678"
-                                                       pattern="[0-9]{6,8}"
-                                                       maxlength="8"
-                                                       minlength="6"
-                                                       inputmode="numeric"
+                                                        pattern="[0-9]{6,8}"
+                                                        maxlength="8"
+                                                        minlength="6"
+                                                        inputmode="numeric"
                                                        required
                                                        value="<?php echo htmlspecialchars($cedula_default_numeros); ?>"
                                                        style="border-radius: 0 8px 8px 0; font-weight: 500; letter-spacing: 0.5px;">
                                             </div>
-
-                                            <!-- ✅ NUEVO: contenedor de error inline (reemplaza alert()) -->
-                                            <div id="errorCedula" style="display:none; margin-top:8px; padding:8px 12px; background:#fdecea; border-left:3px solid #dc3545; border-radius:6px; color:#b71c1c; font-size:0.83rem;">
-                                                <i class="fas fa-exclamation-circle mr-1"></i>
-                                                <span id="errorCedulaTexto"></span>
-                                            </div>
-
-                                            <small class="form-text text-muted" style="font-size: 0.78rem; margin-top: 6px;">
+                                            <small class="form-text text-muted" style="font-size: 0.78rem;">
                                                 <i class="fas fa-info-circle text-info"></i>
-                                                Se ha precargado tu cédula, pero puedes <strong>modificarla</strong> si deseas usar otro documento (por ejemplo, la cédula de un tercero). Solo números, sin guiones ni puntos.
+                                               Se ha precargado tu cédula, pero puedes <strong>modificarla</strong> si deseas usar otro documento (por ejemplo, la cédula de un tercero). Solo números, sin guiones ni puntos.
                                             </small>
                                         </div>
                                     </div>
@@ -279,11 +279,11 @@
                                             id="btnPagoBDV"
                                             data-solicitud="<?php echo $solicitud_principal['id_solicitud']; ?>"
                                             data-tramite="<?php echo $solicitud_principal['id_tramite']; ?>"
-                                            data-total="<?php echo number_format((float)$total_pagar_gen, 2, '.', ''); ?>"
-                                            data-total-uc="<?php echo isset($total_uc) ? (int)$total_uc : 0; ?>"   
+                                            data-total="<?php echo number_format($total_pagar_gen, 2, '.', ''); ?>"
+                                            data-total-uc="<?php echo (int)$total_uc; ?>"   
                                             style="border-radius: 10px; padding: 12px 45px; font-weight: 600; transition: all 0.3s; min-width: 220px; font-size: 16px; background: #1a8a3f; border-color: #1a8a3f;">
                                         <i class="fas fa-credit-card mr-2"></i>
-                                        Pagar con Botón de PagoBDV
+                                        Pagar con Botòn de PagoBDV
                                     </button>
                                     <?php
                                         $tipo_solicitud = $solicitud_principal['id_tramite'];
@@ -340,64 +340,6 @@
 <!-- /.content-wrapper -->
 
 <!-- ============================================================ -->
-<!-- MODAL DE CONFIRMACIÓN BDV (reemplaza confirm())                -->
-<!-- ============================================================ -->
-<div id="modalConfirmBDV" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.55); z-index:99999; align-items:center; justify-content:center;">
-    <div style="background:#fff; border-radius:12px; max-width:500px; width:92%; padding:0; box-shadow:0 12px 48px rgba(0,0,0,0.35); overflow:hidden;">
-        
-        <div style="background: linear-gradient(135deg, #003366 0%, #1a5276 100%); color:#fff; padding:16px 22px;">
-            <h5 style="margin:0; font-weight:600; font-size:1.05rem;">
-                <i class="fas fa-credit-card mr-2"></i>
-                Confirmar pago con Botón de PagoBDV
-            </h5>
-        </div>
-
-        <div id="modalConfirmBDVContenido" style="padding:20px 22px; color:#2c3e50; font-size:0.92rem; line-height:1.7;"></div>
-
-        <div style="padding:14px 22px; background:#f8f9fa; border-top:1px solid #e8e8e8; display:flex; gap:10px; justify-content:flex-end;">
-            <button type="button" id="modalConfirmBDVCancelar"
-                    style="padding:10px 24px; border-radius:8px; border:1px solid #ced4da; background:#fff; color:#6c757d; font-weight:500; cursor:pointer; transition:all 0.2s;">
-                <i class="fas fa-times mr-1"></i> Cancelar
-            </button>
-            <button type="button" id="modalConfirmBDVAceptar"
-                    style="padding:10px 28px; border-radius:8px; border:none; background:#1a8a3f; color:#fff; font-weight:600; cursor:pointer; transition:all 0.2s;">
-                <i class="fas fa-check mr-1"></i> Continuar
-            </button>
-        </div>
-    </div>
-</div>
-
-<!-- ============================================================ -->
-<!-- OVERLAY DE PROCESAMIENTO                                       -->
-<!-- ============================================================ -->
-<div id="overlayProcesandoBDV" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(255,255,255,0.94); z-index:99998; align-items:center; justify-content:center; flex-direction:column;">
-    <i class="fas fa-spinner fa-spin" style="font-size:3rem; color:#003366;"></i>
-    <p style="margin-top:16px; color:#003366; font-weight:600; font-size:1rem;">Redirigiendo al Botón de PagoBDV...</p>
-    <p style="color:#6c757d; font-size:0.85rem;">Por favor no cierres esta ventana</p>
-</div>
-
-<!-- ============================================================ -->
-<!-- MODAL DE ERROR (reemplaza alert() de errores críticos)         -->
-<!-- ============================================================ -->
-<div id="modalErrorBDV" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.55); z-index:99999; align-items:center; justify-content:center;">
-    <div style="background:#fff; border-radius:12px; max-width:460px; width:92%; padding:0; box-shadow:0 12px 48px rgba(0,0,0,0.35); overflow:hidden;">
-        <div style="background:#dc3545; color:#fff; padding:14px 22px;">
-            <h5 style="margin:0; font-weight:600; font-size:1rem;">
-                <i class="fas fa-exclamation-triangle mr-2"></i>
-                No se pudo iniciar el pago
-            </h5>
-        </div>
-        <div id="modalErrorBDVContenido" style="padding:20px 22px; color:#2c3e50; font-size:0.92rem; line-height:1.6;"></div>
-        <div style="padding:12px 22px; background:#f8f9fa; border-top:1px solid #e8e8e8; text-align:right;">
-            <button type="button" id="modalErrorBDVCerrar"
-                    style="padding:9px 24px; border-radius:8px; border:none; background:#003366; color:#fff; font-weight:600; cursor:pointer;">
-                Entendido
-            </button>
-        </div>
-    </div>
-</div>
-
-<!-- ============================================================ -->
 <!-- ESTILOS                                                        -->
 <!-- ============================================================ -->
 <style>
@@ -407,10 +349,7 @@
     .btn-default { background-color: #fff; border: 1px solid #ced4da; color: #6c757d; transition: all 0.2s ease; }
     .btn-default:hover { background-color: #e9ecef; border-color: #ced4da; color: #343a40; transform: translateY(-2px); }
     .table-hover tbody tr:hover { background-color: #e8f0fe !important; transition: background 0.2s ease; }
-
-    #modalConfirmBDV button:hover,
-    #modalErrorBDV button:hover { filter: brightness(0.95); }
-
+    
     @media (max-width: 768px) {
         .btn { padding: 8px 20px !important; font-size: 0.85rem !important; width: 100%; margin-bottom: 5px; }
         .btn-default { margin-left: 0 !important; }
@@ -419,87 +358,25 @@
 </style>
 
 <!-- ============================================================ -->
-<!-- SCRIPT PRINCIPAL                                               -->
+<!-- SCRIPT                                                         -->
 <!-- ============================================================ -->
 <script>
 (function() {
     'use strict';
 
-    // =========================================================
-    // HELPERS
-    // =========================================================
-
-    function mostrarErrorCedula(msg) {
-        var box = document.getElementById('errorCedula');
-        var txt = document.getElementById('errorCedulaTexto');
-        var input = document.getElementById('cedula_rif_pago');
-        if (!box || !txt) return;
-        txt.textContent = msg;
-        box.style.display = 'block';
-        if (input) {
-            input.style.borderColor = '#dc3545';
-            input.style.borderWidth = '2px';
-            input.focus();
-        }
-    }
-
-    function limpiarErrorCedula() {
-        var box = document.getElementById('errorCedula');
-        var input = document.getElementById('cedula_rif_pago');
-        if (box) box.style.display = 'none';
-        if (input) {
-            input.style.borderColor = '';
-            input.style.borderWidth = '';
-        }
-    }
-
-    function mostrarModalError(msg) {
-        var modal = document.getElementById('modalErrorBDV');
-        var cont  = document.getElementById('modalErrorBDVContenido');
-        if (!modal || !cont) return;
-        cont.innerHTML = msg;
-        modal.style.display = 'flex';
-    }
-
-    function ocultarOverlay() {
-        var ov = document.getElementById('overlayProcesandoBDV');
-        if (ov) ov.style.display = 'none';
-    }
-
-    function mostrarOverlay() {
-        var ov = document.getElementById('overlayProcesandoBDV');
-        if (ov) ov.style.display = 'flex';
-    }
-
-    // =========================================================
-    // INICIALIZACIÓN
-    // =========================================================
-
     function initBotonBDV() {
         var btnPagoBDV = document.getElementById('btnPagoBDV');
+
         if (!btnPagoBDV) {
-            console.warn('[BDV] Botón #btnPagoBDV no encontrado.');
+            console.warn('[BDV] Botón #btnPagoBDV no encontrado en el DOM.');
             return;
         }
 
-        var modal       = document.getElementById('modalConfirmBDV');
-        var modalCont   = document.getElementById('modalConfirmBDVContenido');
-        var btnModalOk  = document.getElementById('modalConfirmBDVAceptar');
-        var btnModalNo  = document.getElementById('modalConfirmBDVCancelar');
+        console.log('[BDV] Botón encontrado, enganchando listener...');
 
-        var cedulaInput   = document.getElementById('cedula_rif_pago');
-        var tipoDocSelect = document.getElementById('tipo_documento_pago');
-
-        // Limpiar error al escribir
-        if (cedulaInput) {
-            cedulaInput.addEventListener('input', limpiarErrorCedula);
-        }
-
-        // -----------------------------------------------------
-        // CLICK EN EL BOTÓN PRINCIPAL
-        // -----------------------------------------------------
         btnPagoBDV.addEventListener('click', function(e) {
             e.preventDefault();
+            console.log('[BDV] Click detectado.');
 
             var solicitud = this.getAttribute('data-solicitud');
             var tramite   = this.getAttribute('data-tramite');
@@ -507,36 +384,50 @@
             var total     = parseFloat(String(totalRaw).replace(',', '.'));
             var totalUc   = parseInt(this.getAttribute('data-total-uc'), 10) || 0;
 
+            console.log('[BDV] Datos:', { solicitud, tramite, totalRaw, total, totalUc });
+
             if (!solicitud || !tramite || isNaN(total) || total <= 0) {
-                mostrarModalError('No se pudieron obtener los datos del trámite. Por favor recarga la página e intenta nuevamente.');
+                alert('Error: no se pudieron obtener los datos del trámite. Recargue la página.');
                 return;
             }
 
+            var cedulaInput   = document.getElementById('cedula_rif_pago');
+            var tipoDocSelect = document.getElementById('tipo_documento_pago');
+
             if (!cedulaInput || !tipoDocSelect) {
-                mostrarModalError('No se encontraron los campos de documento. Recarga la página.');
+                alert('Error: no se encontraron los campos de documento. Recargue la página.');
                 return;
             }
 
             var cedulaValor  = cedulaInput.value.trim();
             var tipoDocValor = tipoDocSelect.value;
 
-            // Validaciones inline (sin alert nativo)
             if (!cedulaValor) {
-                mostrarErrorCedula('Debes ingresar la cédula del estudiante o del depositante antes de continuar.');
+                alert('⚠️ Debes ingresar la cédula del estudiante o el depositante antes de continuar.');
+                cedulaInput.focus();
+                cedulaInput.style.borderColor = '#dc3545';
+                cedulaInput.style.borderWidth = '2px';
                 return;
             }
 
             if (!/^[0-9]{6,8}$/.test(cedulaValor)) {
-                mostrarErrorCedula('El documento no es válido. Solo números, entre 6 y 8 dígitos, sin guiones ni puntos.');
+                alert('⚠️ El documento ingresado no es válido.\nDebe contener solo números, entre 6 y 8 dígitos.');
+                cedulaInput.focus();
+                cedulaInput.style.borderColor = '#dc3545';
+                cedulaInput.style.borderWidth = '2px';
                 return;
             }
 
             if (/^0+$/.test(cedulaValor)) {
-                mostrarErrorCedula('El documento no puede ser todo ceros. Ingresa un número válido.');
+                alert('⚠️ El documento no puede ser todo ceros.');
+                cedulaInput.focus();
+                cedulaInput.style.borderColor = '#dc3545';
+                cedulaInput.style.borderWidth = '2px';
                 return;
             }
 
-            limpiarErrorCedula();
+            cedulaInput.style.borderColor = '';
+            cedulaInput.style.borderWidth = '';
 
             var documentoCompleto = tipoDocValor + '-' + cedulaValor;
             var montoFormateado = total.toLocaleString('es-VE', {
@@ -544,180 +435,57 @@
                 maximumFractionDigits: 2
             });
 
-            // Contenido del modal
-            modalCont.innerHTML =
-                '<p style="margin:0 0 12px;">Serás redirigido al <strong>Botón de PagoBDV</strong> para completar la transacción.</p>' +
-                '<div style="background:#f0f9ff; border-left:3px solid #003366; padding:10px 14px; border-radius:6px; margin-bottom:14px;">' +
-                    '<div><strong>Documento:</strong> ' + documentoCompleto + '</div>' +
-                    '<div><strong>Monto a pagar:</strong> Ref. ' + montoFormateado + '</div>' +
-                '</div>' +
-                '<p style="margin:0 0 6px;"><strong>Antes de continuar, asegúrate de:</strong></p>' +
-                '<ul style="margin:0; padding-left:20px; color:#495057;">' +
-                    '<li>Tener saldo suficiente en tu cuenta BDV</li>' +
-                    '<li>Tener a la mano los datos de tus productos y servicios del banco</li>' +
-                    '<li>Tener conexión estable a internet</li>' +
-                '</ul>';
+            var mensaje = "💳 PAGO CON BOTÓN DE PAGOBDV\n\n" +
+                          "Serás redirigido al Botón de PagoBDV.\n\n" +
+                          "📌 Documento: " + documentoCompleto + "\n" +
+                          "📌 Monto a pagar: Ref. " + montoFormateado + "\n\n" +
+                          "⚠️ Antes de continuar, asegúrate de:\n" +
+                          "✅ Tener saldo suficiente en tu cuenta BDV\n" +
+                          "✅ Tener a la mano los datos de tus productos y servicios del banco\n" +
+                          "✅ Conexión estable a internet\n\n" +
+                          "¿Continuar con el pago?";
 
-            modal.style.display = 'flex';
-
-            // Clonar botones para limpiar listeners previos
-            var okClone = btnModalOk.cloneNode(true);
-            var noClone = btnModalNo.cloneNode(true);
-            btnModalOk.parentNode.replaceChild(okClone, btnModalOk);
-            btnModalNo.parentNode.replaceChild(noClone, btnModalNo);
-            btnModalOk = okClone;
-            btnModalNo = noClone;
-
-            // Botón Continuar
-            okClone.addEventListener('click', function() {
-                modal.style.display = 'none';
-                mostrarOverlay();
-
-                // Deshabilitar botón principal
-                btnPagoBDV.disabled = true;
-                btnPagoBDV.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Redirigiendo...';
-
-                var urlAccion = "<?php echo base_url(); ?>pagos/iniciar_tramite_adm";
-
-                var inputs = {
-                    'solicitud':      solicitud,
-                    'tramite':        tramite,
-                    'total_final':    total.toFixed(2),
-                    'tipo_documento': tipoDocValor,
-                    'cedula_rif':     cedulaValor,
-                    'total_uc':       totalUc
-                };
-
-                console.log('[BDV] Enviando a:', urlAccion, inputs);
-
-                // -----------------------------------------------------
-                // INTENTO 1: fetch() — espera JSON con {success, url}
-                // -----------------------------------------------------
-                var bodyParams = new URLSearchParams();
-                for (var k in inputs) {
-                    if (inputs.hasOwnProperty(k)) bodyParams.append(k, inputs[k]);
-                }
-
-                fetch(urlAccion, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
-                        'X-Requested-With': 'XMLHttpRequest'
-                    },
-                    body: bodyParams.toString(),
-                    credentials: 'same-origin'
-                })
-                .then(function(response) {
-                    var contentType = response.headers.get('content-type') || '';
-
-                    // Si NO es JSON → fallback a submit tradicional (controlador antiguo)
-                    if (contentType.indexOf('application/json') === -1) {
-                        console.warn('[BDV] Respuesta no JSON. Fallback a form.submit() tradicional.');
-                        enviarFormularioTradicional(urlAccion, inputs);
-                        return null;
-                    }
-
-                    return response.json();
-                })
-                .then(function(data) {
-                    if (data === null) return; // ya se manejó el fallback
-
-                    if (data.success && data.url) {
-                        console.log('[BDV] Redirigiendo a pasarela:', data.url);
-                        window.location.href = data.url;
-                    } else {
-                        ocultarOverlay();
-                        btnPagoBDV.disabled = false;
-                        btnPagoBDV.innerHTML = '<i class="fas fa-credit-card mr-2"></i> Pagar con Botón de PagoBDV';
-                        mostrarModalError(data.mensaje || 'No se pudo iniciar el pago. Intenta nuevamente.');
-                    }
-                })
-                .catch(function(err) {
-                    console.error('[BDV] Error en fetch:', err);
-                    console.warn('[BDV] Fallback a form.submit() tradicional por error de red.');
-                    enviarFormularioTradicional(urlAccion, inputs);
-                });
-            });
-
-            // Botón Cancelar
-            noClone.addEventListener('click', function() {
-                modal.style.display = 'none';
+            if (!confirm(mensaje)) {
                 console.log('[BDV] Usuario canceló.');
-            });
-        });
-
-        // -----------------------------------------------------
-        // CERRAR MODAL: clic fuera
-        // -----------------------------------------------------
-        modal.addEventListener('click', function(e) {
-            if (e.target === modal) {
-                modal.style.display = 'none';
+                return;
             }
-        });
 
-        // -----------------------------------------------------
-        // CERRAR MODALES: tecla ESC
-        // -----------------------------------------------------
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape') {
-                if (modal && modal.style.display === 'flex') {
-                    modal.style.display = 'none';
-                }
-                var errModal = document.getElementById('modalErrorBDV');
-                if (errModal && errModal.style.display === 'flex') {
-                    errModal.style.display = 'none';
+            this.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Redirigiendo...';
+            this.disabled = true;
+
+            var form = document.createElement('form');
+            form.method = 'POST';
+            form.action = "<?php echo base_url(); ?>pagos/iniciar_tramite_adm";
+            form.style.display = 'none';
+
+            var inputs = {
+                'solicitud':      solicitud,
+                'tramite':        tramite,
+                'total_final':    total.toFixed(2),
+                'tipo_documento': tipoDocValor,
+                'cedula_rif':     cedulaValor,
+                'total_uc':       totalUc
+            };
+
+            for (var name in inputs) {
+                if (inputs.hasOwnProperty(name)) {
+                    var input = document.createElement('input');
+                    input.type  = 'hidden';
+                    input.name  = name;
+                    input.value = inputs[name];
+                    form.appendChild(input);
                 }
             }
+
+            document.body.appendChild(form);
+
+            console.log('[BDV] Enviando form a:', form.action);
+            form.submit();
         });
-
-        // -----------------------------------------------------
-        // Cerrar modal de error
-        // -----------------------------------------------------
-        var btnErrCerrar = document.getElementById('modalErrorBDVCerrar');
-        if (btnErrCerrar) {
-            btnErrCerrar.addEventListener('click', function() {
-                document.getElementById('modalErrorBDV').style.display = 'none';
-            });
-        }
-
-        var modalError = document.getElementById('modalErrorBDV');
-        if (modalError) {
-            modalError.addEventListener('click', function(e) {
-                if (e.target === modalError) {
-                    modalError.style.display = 'none';
-                }
-            });
-        }
 
         console.log('[BDV] Listener enganchado correctamente.');
     }
 
-    // =========================================================
-    // FALLBACK: envío tradicional (compatible con controlador antiguo)
-    // =========================================================
-    function enviarFormularioTradicional(urlAccion, inputs) {
-        var form = document.createElement('form');
-        form.method = 'POST';
-        form.action = urlAccion;
-        form.style.display = 'none';
-
-        for (var name in inputs) {
-            if (inputs.hasOwnProperty(name)) {
-                var input = document.createElement('input');
-                input.type  = 'hidden';
-                input.name  = name;
-                input.value = inputs[name];
-                form.appendChild(input);
-            }
-        }
-
-        document.body.appendChild(form);
-        form.submit();
-    }
-
-    // =========================================================
-    // ARRANQUE
-    // =========================================================
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', initBotonBDV);
     } else {

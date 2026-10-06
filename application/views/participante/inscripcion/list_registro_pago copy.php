@@ -112,6 +112,9 @@
                                         </thead>
                                         <tbody>
                                             <?php 
+                                            // ============================================================
+                                            // INICIALIZAR VARIABLES (siempre, aunque no haya UC)
+                                            // ============================================================
                                             $total_uc = 0;
                                             $total_ucredito_gen = 0;
                                             $valor_ucredito = 0;
@@ -120,16 +123,19 @@
                                             
                                             if(!empty($list_registro)): 
                                                 foreach($list_registro as $registro):
+                                                    // Obtener valor UC según descuento
                                                     if ($lista_trabajo->descuento > 0) {
                                                         $valor_ucredito = $registro->valorpubmp;
                                                     } else {
                                                         $valor_ucredito = $registro->valorpubgen;
                                                     }
                                                     
+                                                    // Agregar programa al array
                                                     if (!in_array($registro->programa, $programas_list)) {
                                                         $programas_list[] = $registro->programa;
                                                     }
                                                     
+                                                    // Sumar unidades de crédito
                                                     $total_uc += $registro->uc;
                                             ?>
                                             <tr style="border-bottom: 1px solid #f0f0f0;">
@@ -163,6 +169,7 @@
                                             </tr>
                                             <?php 
                                                 endforeach; 
+                                                // Convertir array de programas a string separado por comas
                                                 $nombre_programa = implode(', ', $programas_list);
                                             ?>
                                             <tr style="background: #f8f9fa; font-weight: 600; border-top: 2px solid #003366;">
@@ -231,6 +238,7 @@
                                                         $tipo_ex = isset($exonerado->tipo_exoneracion) ? (int)$exonerado->tipo_exoneracion : 0;
                                                         
                                                         if($tipo_ex === 0):
+                                                            // Exoneración PARCIAL: solo la UC de esa materia
                                                             $uc_fila = isset($exonerado->uc) ? (int)$exonerado->uc : 0;
                                                             $monto_fila = $uc_fila * $valor_ucredito;
                                                             $ucreditoE += $uc_fila;
@@ -260,6 +268,7 @@
                                                     
                                                     <?php 
                                                         elseif($tipo_ex === 1):
+                                                            // Exoneración TOTAL: todas las UC inscritas
                                                             $ucreditoE += $total_uc;
                                                             $total_ucredito_gen_exonerados += $total_ucredito_gen;
                                                     ?>
@@ -314,6 +323,7 @@
                         <!-- ============================================================ -->
                         <form action="#" method="POST" enctype="multipart/form-data">
                             
+                            <!-- Mensajes de Alerta -->
                             <?php if ($this->session->flashdata("error")): ?>
                             <div class="alert alert-danger alert-dismissible mt-3" style="border-radius: 8px; border-left: 4px solid #dc3545;">
                                 <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
@@ -330,7 +340,7 @@
 
                             <?php 
                             // ============================================================
-                            // CÁLCULO DE MONTOS (idéntico al original)
+                            // CÁLCULO DE MONTOS
                             // ============================================================
                             $arancel_ins = 0;
                             $arancel_insMaes = 0;
@@ -355,6 +365,7 @@
                                 }
                             }
 
+                            // Calcular fuera de lapso
                             if (!empty($lapso)) {
                                 if (($this->session->userdata("rol") == 5 || $this->session->userdata("rol") == 8) && 
                                     ($lapso->tipo_lapso == 2 || $this->session->userdata("tramite_fuera_lapso") == 1 || $this->session->userdata("tiempo_preinscripcion") <> 73)) {
@@ -362,6 +373,7 @@
                                 }
                             }
 
+                            // Calcular aranceles por programa
                             if (!empty($programa_preinscrito)) {
                                 foreach($programa_preinscrito as $programa) {
                                     if($programa->id_programa <> 27 && $programa->id_programa <> 28) {
@@ -387,6 +399,7 @@
                                 $total_arancel_ins = ($total_arancel_LineainsEsp + $total_arancel_LineainsMaes);
                             }
 
+                            // Calcular permanencia
                             if (!empty($reincorporaciones)) {
                                 foreach($reincorporaciones as $reinc) {
                                     $total_arancel_permanencia_gen += $total_arancel_permanencia;
@@ -396,6 +409,9 @@
                             $monto_uc = isset($total_ucredito_gen) ? $total_ucredito_gen : 0;
                             $total_pagar_gen = $monto_uc + $total_arancel_ins;
 
+                            // ============================================================
+                            // DETECTAR SI HAY EXONERACIÓN TOTAL (tipo_exoneracion == 1)
+                            // ============================================================
                             $exoneracion_total = false;
                             if (!empty($exonerados)) {
                                 foreach ($exonerados as $ex) {
@@ -406,28 +422,40 @@
                                 }
                             }
 
+                            // ============================================================
+                            // CÁLCULO DEL MONTO A EXONERAR
+                            // ============================================================
                             $monto_exonerar = 0;
 
+                            // Exoneración de UC (siempre que exista)
                             if (isset($total_ucredito_gen_exonerados) && $total_ucredito_gen_exonerados > 0) {
                                 $monto_exonerar += $total_ucredito_gen_exonerados;
                             }
 
+                            // Si es exoneración TOTAL, sumar también los aranceles
                             if ($exoneracion_total) {
                                 $monto_exonerar += $total_arancel_ins;
                                 $monto_exonerar += $total_arancel_permanencia_gen;
                                 $monto_exonerar += $arancel_fuera_lapso;
                             }
 
+                            // ============================================================
+                            // TOTAL FINAL
+                            // ============================================================
                             $total_final = $total_pagar_gen + $total_arancel_permanencia_gen + $arancel_fuera_lapso - $monto_exonerar;
 
                             if ($total_final < 0) {
                                 $total_final = 0;
                             }
 
+                            // ============================================================
+                            // PREPARAR CÉDULA/RIF POR DEFECTO PARA LA PASARELA
+                            // ============================================================
                             $cedula_default_raw = isset($datos_alumno->cedula) ? $datos_alumno->cedula : '';
                             $cedula_default_numeros = preg_replace('/[^0-9]/', '', $cedula_default_raw);
                             $tipo_doc_default = 'V';
                             if (stripos($cedula_default_raw, 'E') === 0) { $tipo_doc_default = 'E'; }
+                           
                             ?>
 
                             <!-- ============================================================ -->
@@ -459,6 +487,7 @@
                                             <div class="table-responsive">
                                                 <table class="table" style="margin-bottom: 0;">
                                                     <tbody>
+                                                        <!-- Reincorporaciones / Permanencia -->
                                                         <?php if(!empty($reincorporaciones)): ?>
                                                         <tr style="border-bottom: 1px solid #f0f0f0;">
                                                             <td style="padding: 8px 15px; font-weight: 500; color: #2c3e50; width: 50%; font-size: 0.85rem;">
@@ -470,6 +499,7 @@
                                                         </tr>
                                                         <?php endif; ?>
 
+                                                        <!-- Inscripción -->
                                                         <tr style="border-bottom: 1px solid #f0f0f0;">
                                                             <td style="padding: 8px 15px; font-weight: 500; color: #2c3e50; font-size: 0.85rem;">
                                                                 <i class="fas fa-file-signature" style="color: #003366; margin-right: 8px;"></i>Arancel de Inscripción
@@ -479,6 +509,7 @@
                                                             </td>
                                                         </tr>
 
+                                                        <!-- Fuera de Lapso -->
                                                         <?php if($arancel_fuera_lapso > 0): ?>
                                                         <tr style="border-bottom: 1px solid #f0f0f0;">
                                                             <td style="padding: 8px 15px; font-weight: 500; color: #2c3e50; font-size: 0.85rem;">
@@ -490,6 +521,7 @@
                                                         </tr>
                                                         <?php endif; ?>
 
+                                                        <!-- Unidades de Crédito -->
                                                         <tr style="border-bottom: 1px solid #f0f0f0;">
                                                             <td style="padding: 8px 15px; font-weight: 500; color: #2c3e50; font-size: 0.85rem;">
                                                                 <i class="fas fa-book-open text-success mr-2"></i>Unidades de Crédito
@@ -499,6 +531,7 @@
                                                             </td>
                                                         </tr>
 
+                                                        <!-- Exoneración -->
                                                         <?php if($monto_exonerar > 0): ?>
                                                         <tr style="border-bottom: 1px solid #f0f0f0; background: #fffbf0;">
                                                             <td style="padding: 8px 15px; font-weight: 500; color: #856404; font-size: 0.85rem;">
@@ -516,6 +549,7 @@
                                                         </tr>
                                                         <?php endif; ?>
 
+                                                        <!-- Total a Pagar -->
                                                         <tr style="background: #e8f5e9; border-top: 3px solid #28a745;">
                                                             <td style="padding: 12px 15px; font-weight: 700; color: #1e7e34; font-size: 1.05rem;">
                                                                 <i class="fas fa-money-bill-wave text-success mr-2"></i>
@@ -574,6 +608,7 @@
                                                     </span>
                                                 </div>
                                             </div>
+                                            
                                         </div>
                                     </div>
                                 </div>
@@ -601,6 +636,7 @@
                                                         <select name="tipo_documento_pago" id="tipo_documento_pago" class="form-control" style="border-radius: 8px 0 0 8px; font-weight: 500; background: #f8f9fa;">
                                                             <option value="V" <?php echo ($tipo_doc_default == 'V') ? 'selected' : ''; ?>>V</option>
                                                             <option value="E" <?php echo ($tipo_doc_default == 'E') ? 'selected' : ''; ?>>E</option>
+                                                            
                                                         </select>
                                                     </div>
                                                     <input type="text" 
@@ -608,22 +644,15 @@
                                                            id="cedula_rif_pago" 
                                                            name="cedula_rif_pago" 
                                                            placeholder="Ej: 12345678" 
-                                                           pattern="[0-9]{6,8}"
-                                                           maxlength="8"
-                                                           minlength="6"
-                                                           inputmode="numeric"
+                                                            pattern="[0-9]{6,8}"
+                                                            maxlength="8"
+                                                            minlength="6"
+                                                            inputmode="numeric"
                                                            required
                                                            value="<?php echo htmlspecialchars($cedula_default_numeros); ?>"
                                                            style="border-radius: 0 8px 8px 0; font-weight: 500; letter-spacing: 0.5px;">
                                                 </div>
-
-                                                <!-- ✅ NUEVO: error inline -->
-                                                <div id="errorCedula" style="display:none; margin-top:8px; padding:8px 12px; background:#fdecea; border-left:3px solid #dc3545; border-radius:6px; color:#b71c1c; font-size:0.83rem;">
-                                                    <i class="fas fa-exclamation-circle mr-1"></i>
-                                                    <span id="errorCedulaTexto"></span>
-                                                </div>
-
-                                                <small class="form-text text-muted" style="font-size: 0.78rem; margin-top: 6px;">
+                                                <small class="form-text text-muted" style="font-size: 0.78rem;">
                                                     <i class="fas fa-info-circle text-info"></i>
                                                     Se ha precargado tu cédula, pero puedes <strong>modificarla</strong> si deseas usar otro documento que posea cuenta en el Banco de Venezuela. Solo números, sin guiones ni puntos.
                                                 </small>
@@ -640,17 +669,19 @@
                                 <div class="col-md-12 text-center">
                                     <div class="d-flex justify-content-center flex-wrap" style="gap: 12px;">
                                         
-                                        <button type="button"
-                                                class="btn btn-success" 
-                                                id="btnPagoBDV" 
-                                                data-url="<?php echo base_url(); ?>pagos/iniciar"
-                                                data-uc="<?php echo $total_uc; ?>"
-                                                data-monto="<?php echo number_format((float)$total_final, 2, '.', ''); ?>"
-                                                style="border-radius: 10px; padding: 12px 45px; font-weight: 600; transition: all 0.3s; min-width: 220px; font-size: 16px; background: #1a8a3f; border-color: #1a8a3f;">
+                                        <!-- BOTÓN PAGO BDV - NUEVO -->
+                                        <a href="javascript:void(0);" 
+                                        class="btn btn-success" 
+                                        id="btnPagoBDV" 
+                                        data-url="<?php echo base_url(); ?>pagos/iniciar"
+                                        data-uc="<?php echo $total_uc; ?>"
+                                        data-monto="<?php echo $total_final; ?>"
+                                        style="border-radius: 10px; padding: 12px 45px; font-weight: 600; transition: all 0.3s; min-width: 220px; font-size: 16px; background: #1a8a3f; border-color: #1a8a3f;">
                                             <i class="fas fa-credit-card mr-2"></i>
                                             Pagar con Botón de PagoBDV
-                                        </button>
+                                        </a>
       
+                                        <!-- BOTÓN CANCELAR -->
                                         <a href="<?php echo base_url(); ?>dashboard04/proceso" 
                                         class="btn btn-default" 
                                         style="border-radius: 10px; padding: 12px 30px; font-weight: 500; transition: all 0.3s; min-width: 150px;">
@@ -699,109 +730,96 @@
                             <?php endif; ?>
 
                         </form>
-
-                        <?php if($exoneracion_total): ?>
-                        <!-- ============================================================ -->
-                        <!-- MENSAJE: EXONERACIÓN TOTAL - NO REQUIERE PAGO                -->
-                        <!-- ============================================================ -->
-                        <div class="row mt-4">
-                            <div class="col-md-12">
-                                <div class="alert alert-success" style="border-radius: 10px; border-left: 6px solid #1a8a3f; background: #f0fdf4; color: #2c3e50; box-shadow: 0 2px 10px rgba(0,0,0,0.08); padding: 20px 24px;">
-                                    <div class="d-flex align-items-start flex-wrap">
-                                        <div style="flex-shrink: 0; margin-right: 18px; margin-top: 2px;">
-                                            <i class="fas fa-check-circle" style="color: #1a8a3f; font-size: 38px;"></i>
-                                        </div>
-                                        <div style="flex-grow: 1;">
-                                            <h5 style="font-weight: 700; color: #1a8a3f; margin-bottom: 8px; font-size: 1.1rem;">
-                                                <i class="fas fa-star" style="margin-right: 8px;"></i>
-                                                ¡Felicidades! Tienes Exoneración Total
-                                            </h5>
-                                            <p style="margin-bottom: 8px; color: #2c3e50; font-size: 0.95rem;">
-                                                Has sido beneficiado con una <strong>exoneración del 100%</strong> de los conceptos 
-                                                de tu inscripción: <strong>Unidades de Crédito</strong>, <strong>Arancel de Inscripción</strong>, 
-                                                <strong>Arancel por Permanencia</strong> y <strong>Arancel Fuera de Lapso</strong> (si aplica).
-                                            </p>
-                                            <p style="margin-bottom: 8px; color: #2c3e50; font-size: 0.95rem;">
-                                                <i class="fas fa-info-circle" style="color: #1a8a3f;"></i>
-                                                <strong>No se requiere realizar ningún pago</strong> a través del Botón de Pago BDV.
-                                            </p>
-                                            <p style="margin-bottom: 0; color: #2c3e50; font-size: 0.9rem;">
-                                                Si tienes alguna duda, puedes consultar a la Dirección de Secretaría General.
-                                            </p>
-                                            <div style="margin-top: 16px;">
-                                                <form action="<?php echo base_url(); ?>dashboard04/registropago_store" 
-                                                      method="POST" 
-                                                      enctype="multipart/form-data" 
-                                                      id="formRegistroExoneracion">
-                                                    
-                                                    <input type="hidden" name="ex_id_estudiante" value="<?php echo $datos_alumno->id; ?>">
-                                                    <input type="hidden" name="ex_id_estado_estudio" value="<?php echo isset($estado_estudio->id_estado_inscribio) ? $estado_estudio->id_estado_inscribio : ''; ?>">
-                                                    <input type="hidden" name="ex_id_periodo" value="<?php echo $periodo->id; ?>">
-                                                    <input type="hidden" name="ex_id_usuario" value="<?php echo $this->session->userdata('id'); ?>">
-                                                    <input type="hidden" name="ex_postgrado" value="<?php echo isset($nombre_programa) ? $nombre_programa : ''; ?>">
-                                                    <input type="hidden" name="ex_total_ucredito" value="<?php echo isset($total_uc) ? $total_uc : 0; ?>">
-                                                    <input type="hidden" name="ex_total_pagar" value="<?php echo $total_final; ?>">
-                                                    <input type="hidden" name="ex_tipo_registro" value="exoneracion_total">
-                                                    <input type="hidden" name="ex_monto_exoneracion" value="<?php echo $monto_exonerar; ?>">
-
-                                                    <!-- Bloque de carga de archivo obligatorio -->
-                                                    <div class="card" style="border-radius: 10px; border: 2px dashed #1a8a3f; background: #ffffff; margin-bottom: 16px;">
-                                                        <div class="card-body p-3">
-                                                            <label for="avale_exoneracion" style="font-weight: 600; color: #1a8a3f; font-size: 0.95rem; display: block; margin-bottom: 8px;">
-                                                                <i class="fas fa-file-upload mr-2"></i>
-                                                                Documento que avala la exoneración <span class="text-danger">*</span>
-                                                            </label>
-                                                            <div class="custom-file">
-                                                                <input type="file" 
-                                                                       class="custom-file-input" 
-                                                                       id="avale_exoneracion" 
-                                                                       name="avale_exoneracion" 
-                                                                       accept=".pdf,.jpg,.jpeg,.png"
-                                                                       required>
-                                                                <label class="custom-file-label" for="avale_exoneracion" style="border-radius: 8px;">
-                                                                    Seleccionar archivo...
-                                                                </label>
-                                                            </div>
-
-                                                            <!-- ✅ NUEVO: error inline para el archivo -->
-                                                            <div id="errorArchivoExoneracion" style="display:none; margin-top:8px; padding:8px 12px; background:#fdecea; border-left:3px solid #dc3545; border-radius:6px; color:#b71c1c; font-size:0.83rem;">
-                                                                <i class="fas fa-exclamation-circle mr-1"></i>
-                                                                <span id="errorArchivoExoneracionTexto"></span>
-                                                            </div>
-
-                                                            <small class="form-text text-muted" style="font-size: 0.78rem; margin-top: 6px;">
-                                                                <i class="fas fa-info-circle text-info"></i>
-                                                                Formatos permitidos: PDF, JPG, JPEG, PNG. Tamaño máximo: 5 MB.
-                                                                Este documento es <strong>obligatorio</strong> para registrar tu inscripción con exoneración.
-                                                            </small>
-                                                        </div>
-                                                    </div>
-
-                                                    <!-- Botones -->
-                                                    <div class="d-flex flex-wrap" style="gap: 10px;">
-                                                        <button type="submit" 
-                                                                class="btn btn-success" 
-                                                                id="btnRegistrarExoneracion"
-                                                                style="border-radius: 20px; padding: 8px 26px; font-weight: 600; background: #1a8a3f; border-color: #1a8a3f; color: white;">
-                                                            <i class="fas fa-save mr-2"></i>
-                                                            Registrar Inscripción
-                                                        </button>
-                                                        <a href="<?php echo base_url(); ?>dashboard04/proceso" 
-                                                            class="btn btn-default" 
-                                                            style="border-radius: 20px; padding: 8px 24px; font-weight: 500;">
-                                                            <i class="fas fa-arrow-left mr-2"></i>
-                                                            Volver al proceso
-                                                        </a>
-                                                    </div>
-                                                </form>
+  <?php if($exoneracion_total): ?>
+                                  <!-- ============================================================ -->
+                            <!-- MENSAJE: EXONERACIÓN TOTAL - NO REQUIERE PAGO                -->
+                            <!-- ============================================================ -->
+                            <div class="row mt-4">
+                                <div class="col-md-12">
+                                    <div class="alert alert-success" style="border-radius: 10px; border-left: 6px solid #1a8a3f; background: #f0fdf4; color: #2c3e50; box-shadow: 0 2px 10px rgba(0,0,0,0.08); padding: 20px 24px;">
+                                        <div class="d-flex align-items-start flex-wrap">
+                                            <div style="flex-shrink: 0; margin-right: 18px; margin-top: 2px;">
+                                                <i class="fas fa-check-circle" style="color: #1a8a3f; font-size: 38px;"></i>
                                             </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <?php endif; ?>
+                                            <div style="flex-grow: 1;">
+                                                <h5 style="font-weight: 700; color: #1a8a3f; margin-bottom: 8px; font-size: 1.1rem;">
+                                                    <i class="fas fa-star" style="margin-right: 8px;"></i>
+                                                    ¡Felicidades! Tienes Exoneración Total
+                                                </h5>
+                                                <p style="margin-bottom: 8px; color: #2c3e50; font-size: 0.95rem;">
+                                                    Has sido beneficiado con una <strong>exoneración del 100%</strong> de los conceptos 
+                                                    de tu inscripción: <strong>Unidades de Crédito</strong>, <strong>Arancel de Inscripción</strong>, 
+                                                    <strong>Arancel por Permanencia</strong> y <strong>Arancel Fuera de Lapso</strong> (si aplica).
+                                                </p>
+                                                <p style="margin-bottom: 8px; color: #2c3e50; font-size: 0.95rem;">
+                                                    <i class="fas fa-info-circle" style="color: #1a8a3f;"></i>
+                                                    <strong>No se requiere realizar ningún pago</strong> a través del Botón de Pago BDV.
+                                                </p>
+                                                <p style="margin-bottom: 0; color: #2c3e50; font-size: 0.9rem;">
+                                                    Si tienes alguna duda, puedes consultar a la Dirección de Secretaría General.
+                                                </p>
+                                                <div style="margin-top: 16px;">
+    <form action="<?php echo base_url(); ?>dashboard04/registropago_store" 
+          method="POST" 
+          enctype="multipart/form-data" 
+          id="formRegistroExoneracion">
+        
+        <!-- Campos ocultos necesarios para el registro -->
+        <input type="hidden" name="ex_id_estudiante" value="<?php echo $datos_alumno->id; ?>">
+        <input type="hidden" name="ex_id_estado_estudio" value="<?php echo isset($estado_estudio->id_estado_inscribio) ? $estado_estudio->id_estado_inscribio : ''; ?>">
+        <input type="hidden" name="ex_id_periodo" value="<?php echo $periodo->id; ?>">
+        <input type="hidden" name="ex_id_usuario" value="<?php echo $this->session->userdata('id'); ?>">
+        <input type="hidden" name="ex_postgrado" value="<?php echo isset($nombre_programa) ? $nombre_programa : ''; ?>">
+        <input type="hidden" name="ex_total_ucredito" value="<?php echo isset($total_uc) ? $total_uc : 0; ?>">
+        <input type="hidden" name="ex_total_pagar" value="<?php echo $total_final; ?>">
+        <input type="hidden" name="ex_tipo_registro" value="exoneracion_total">
+        <input type="hidden" name="ex_monto_exoneracion" value="<?php echo $monto_exonerar; ?>">
 
+        <!-- Bloque de carga de archivo obligatorio -->
+        <div class="card" style="border-radius: 10px; border: 2px dashed #1a8a3f; background: #ffffff; margin-bottom: 16px;">
+            <div class="card-body p-3">
+                <label for="avale_exoneracion" style="font-weight: 600; color: #1a8a3f; font-size: 0.95rem; display: block; margin-bottom: 8px;">
+                    <i class="fas fa-file-upload mr-2"></i>
+                    Documento que avala la exoneración <span class="text-danger">*</span>
+                </label>
+                <div class="custom-file">
+                    <input type="file" 
+                           class="custom-file-input" 
+                           id="avale_exoneracion" 
+                           name="avale_exoneracion" 
+                           accept=".pdf,.jpg,.jpeg,.png"
+                           required>
+                    <label class="custom-file-label" for="avale_exoneracion" style="border-radius: 8px;">
+                        Seleccionar archivo...
+                    </label>
+                </div>
+                <small class="form-text text-muted" style="font-size: 0.78rem; margin-top: 6px;">
+                    <i class="fas fa-info-circle text-info"></i>
+                    Formatos permitidos: PDF, JPG, JPEG, PNG. Tamaño máximo: 5 MB.
+                    Este documento es <strong>obligatorio</strong> para registrar tu inscripción con exoneración.
+                </small>
+            </div>
+        </div>
+
+        <!-- Botones -->
+        <div class="d-flex flex-wrap" style="gap: 10px;">
+            <button type="submit" 
+                    class="btn btn-success" 
+                    id="btnRegistrarExoneracion"
+                    style="border-radius: 20px; padding: 8px 26px; font-weight: 600; background: #1a8a3f; border-color: #1a8a3f; color: white;">
+                <i class="fas fa-save mr-2"></i>
+                Registrar Inscripción
+            </button>
+            <a href="<?php echo base_url(); ?>dashboard04/proceso" 
+                class="btn btn-default" 
+                style="border-radius: 20px; padding: 8px 24px; font-weight: 500;">
+                <i class="fas fa-arrow-left mr-2"></i>
+                Volver al proceso
+            </a>
+        </div>
+        </form>
+        </div>
+          <?php endif; ?>
                     </div><!-- /.card-body -->
                 </div><!-- /.card -->
             </div><!-- /.card-body -->
@@ -811,493 +829,299 @@
 </div>
 <!-- /.content-wrapper -->
 
-<!-- ============================================================ -->
-<!-- MODAL DE CONFIRMACIÓN BDV (reemplaza confirm())                -->
-<!-- ============================================================ -->
-<div id="modalConfirmBDV" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.55); z-index:99999; align-items:center; justify-content:center;">
-    <div style="background:#fff; border-radius:12px; max-width:500px; width:92%; padding:0; box-shadow:0 12px 48px rgba(0,0,0,0.35); overflow:hidden;">
-        <div style="background: linear-gradient(135deg, #003366 0%, #1a5276 100%); color:#fff; padding:16px 22px;">
-            <h5 style="margin:0; font-weight:600; font-size:1.05rem;">
-                <i class="fas fa-credit-card mr-2"></i>
-                Confirmar pago con Botón de PagoBDV
-            </h5>
-        </div>
-        <div id="modalConfirmBDVContenido" style="padding:20px 22px; color:#2c3e50; font-size:0.92rem; line-height:1.7;"></div>
-        <div style="padding:14px 22px; background:#f8f9fa; border-top:1px solid #e8e8e8; display:flex; gap:10px; justify-content:flex-end;">
-            <button type="button" id="modalConfirmBDVCancelar"
-                    style="padding:10px 24px; border-radius:8px; border:1px solid #ced4da; background:#fff; color:#6c757d; font-weight:500; cursor:pointer; transition:all 0.2s;">
-                <i class="fas fa-times mr-1"></i> Cancelar
-            </button>
-            <button type="button" id="modalConfirmBDVAceptar"
-                    style="padding:10px 28px; border-radius:8px; border:none; background:#1a8a3f; color:#fff; font-weight:600; cursor:pointer; transition:all 0.2s;">
-                <i class="fas fa-check mr-1"></i> Continuar
-            </button>
-        </div>
-    </div>
-</div>
-
-<!-- ============================================================ -->
-<!-- MODAL DE CONFIRMACIÓN GENÉRICA (para exoneración total)        -->
-<!-- ============================================================ -->
-<div id="modalConfirmGenerico" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.55); z-index:99999; align-items:center; justify-content:center;">
-    <div style="background:#fff; border-radius:12px; max-width:500px; width:92%; padding:0; box-shadow:0 12px 48px rgba(0,0,0,0.35); overflow:hidden;">
-        <div id="modalConfirmGenericoHeader" style="background: linear-gradient(135deg, #003366 0%, #1a5276 100%); color:#fff; padding:16px 22px;">
-            <h5 id="modalConfirmGenericoTitulo" style="margin:0; font-weight:600; font-size:1.05rem;">
-                Confirmar acción
-            </h5>
-        </div>
-        <div id="modalConfirmGenericoContenido" style="padding:20px 22px; color:#2c3e50; font-size:0.92rem; line-height:1.7;"></div>
-        <div style="padding:14px 22px; background:#f8f9fa; border-top:1px solid #e8e8e8; display:flex; gap:10px; justify-content:flex-end;">
-            <button type="button" id="modalConfirmGenericoCancelar"
-                    style="padding:10px 24px; border-radius:8px; border:1px solid #ced4da; background:#fff; color:#6c757d; font-weight:500; cursor:pointer;">
-                Cancelar
-            </button>
-            <button type="button" id="modalConfirmGenericoAceptar"
-                    style="padding:10px 28px; border-radius:8px; border:none; background:#1a8a3f; color:#fff; font-weight:600; cursor:pointer;">
-                Continuar
-            </button>
-        </div>
-    </div>
-</div>
-
-<!-- ============================================================ -->
-<!-- OVERLAY DE PROCESAMIENTO                                       -->
-<!-- ============================================================ -->
-<div id="overlayProcesandoBDV" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(255,255,255,0.94); z-index:99998; align-items:center; justify-content:center; flex-direction:column;">
-    <i class="fas fa-spinner fa-spin" style="font-size:3rem; color:#003366;"></i>
-    <p style="margin-top:16px; color:#003366; font-weight:600; font-size:1rem;">Redirigiendo al Botón de PagoBDV...</p>
-    <p style="color:#6c757d; font-size:0.85rem;">Por favor no cierres esta ventana</p>
-</div>
-
-<!-- ============================================================ -->
-<!-- MODAL DE ERROR                                                 -->
-<!-- ============================================================ -->
-<div id="modalErrorBDV" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.55); z-index:99999; align-items:center; justify-content:center;">
-    <div style="background:#fff; border-radius:12px; max-width:460px; width:92%; padding:0; box-shadow:0 12px 48px rgba(0,0,0,0.35); overflow:hidden;">
-        <div style="background:#dc3545; color:#fff; padding:14px 22px;">
-            <h5 style="margin:0; font-weight:600; font-size:1rem;">
-                <i class="fas fa-exclamation-triangle mr-2"></i>
-                <span id="modalErrorBDVTitulo">Atención</span>
-            </h5>
-        </div>
-        <div id="modalErrorBDVContenido" style="padding:20px 22px; color:#2c3e50; font-size:0.92rem; line-height:1.6;"></div>
-        <div style="padding:12px 22px; background:#f8f9fa; border-top:1px solid #e8e8e8; text-align:right;">
-            <button type="button" id="modalErrorBDVCerrar"
-                    style="padding:9px 24px; border-radius:8px; border:none; background:#003366; color:#fff; font-weight:600; cursor:pointer;">
-                Entendido
-            </button>
-        </div>
-    </div>
-</div>
-
-<!-- ============================================================ -->
-<!-- ESTILOS                                                        -->
-<!-- ============================================================ -->
+<!-- Estilos adicionales -->
 <style>
-    .table-hover tbody tr:hover { background-color: #e8f0fe !important; transition: background 0.2s ease; }
-    .card { border-radius: 10px !important; overflow: hidden; }
-    .btn-primary { background-color: #007bff; border-color: #007bff; color: #fff; transition: all 0.2s ease; }
-    .btn-primary:hover { background-color: #0069d9; border-color: #0062cc; box-shadow: 0 2px 8px rgba(0, 123, 255, 0.3); transform: translateY(-2px); }
-    .btn-default { background-color: #fff; border: 1px solid #ced4da; color: #6c757d; transition: all 0.2s ease; }
-    .btn-default:hover { background-color: #e9ecef; border-color: #ced4da; color: #343a40; transform: translateY(-2px); }
-
-    #modalConfirmBDV button:hover,
-    #modalConfirmGenerico button:hover,
-    #modalErrorBDV button:hover { filter: brightness(0.95); }
-
+    /* Efectos hover en filas de tabla */
+    .table-hover tbody tr:hover {
+        background-color: #e8f0fe !important;
+        transition: background 0.2s ease;
+    }
+    
+    /* Sombras y bordes redondeados */
+    .card {
+        border-radius: 10px !important;
+        overflow: hidden;
+    }
+    
+    /* Efecto hover en botones AdminLTE */
+    .btn-primary {
+        background-color: #007bff;
+        border-color: #007bff;
+        color: #fff;
+        transition: all 0.2s ease;
+    }
+    
+    .btn-primary:hover {
+        background-color: #0069d9;
+        border-color: #0062cc;
+        box-shadow: 0 2px 8px rgba(0, 123, 255, 0.3);
+        transform: translateY(-2px);
+    }
+    
+    .btn-default {
+        background-color: #fff;
+        border: 1px solid #ced4da;
+        color: #6c757d;
+        transition: all 0.2s ease;
+    }
+    
+    .btn-default:hover {
+        background-color: #e9ecef;
+        border-color: #ced4da;
+        color: #343a40;
+        transform: translateY(-2px);
+    }
+    
+    /* Ajuste para móviles */
     @media (max-width: 768px) {
-        .card-title { font-size: 1rem !important; }
-        .table td, .table th { padding: 8px 10px !important; font-size: 0.75rem !important; }
-        .btn { padding: 8px 25px !important; font-size: 0.9rem !important; }
-        .form-group.row { margin-bottom: 10px; }
-        .col-form-label { text-align: left !important; padding-bottom: 2px; }
-        .btn-default { margin-left: 0 !important; }
+        .card-title {
+            font-size: 1rem !important;
+        }
+        .table td, .table th {
+            padding: 8px 10px !important;
+            font-size: 0.75rem !important;
+        }
+        .btn {
+            padding: 8px 25px !important;
+            font-size: 0.9rem !important;
+        }
+        .form-group.row {
+            margin-bottom: 10px;
+        }
+        .col-form-label {
+            text-align: left !important;
+            padding-bottom: 2px;
+        }
+        .btn-default {
+            margin-left: 0 !important;
+        }
     }
     
     @media (max-width: 576px) {
-        .table td, .table th { padding: 6px 8px !important; font-size: 0.7rem !important; }
-        .btn { padding: 6px 20px !important; font-size: 0.8rem !important; width: 100%; margin-bottom: 5px; }
+        .table td, .table th {
+            padding: 6px 8px !important;
+            font-size: 0.7rem !important;
+        }
+        .btn {
+            padding: 6px 20px !important;
+            font-size: 0.8rem !important;
+            width: 100%;
+            margin-bottom: 5px;
+        }
     }
 </style>
 
-<!-- ============================================================ -->
-<!-- SCRIPT PRINCIPAL                                               -->
-<!-- ============================================================ -->
+<!-- Script para mostrar nombre del archivo -->
 <script>
-(function() {
-    'use strict';
-
-    // =========================================================
-    // HELPERS GLOBALES
-    // =========================================================
-
-    function mostrarModalError(msg, titulo) {
-        var modal = document.getElementById('modalErrorBDV');
-        var cont  = document.getElementById('modalErrorBDVContenido');
-        var tit   = document.getElementById('modalErrorBDVTitulo');
-        if (!modal || !cont) return;
-        cont.innerHTML = msg;
-        if (tit && titulo) tit.textContent = titulo;
-        modal.style.display = 'flex';
-    }
-
-    function mostrarErrorCedula(msg) {
-        var box = document.getElementById('errorCedula');
-        var txt = document.getElementById('errorCedulaTexto');
-        var input = document.getElementById('cedula_rif_pago');
-        if (!box || !txt) return;
-        txt.textContent = msg;
-        box.style.display = 'block';
-        if (input) {
-            input.style.borderColor = '#dc3545';
-            input.style.borderWidth = '2px';
-            input.focus();
-        }
-    }
-
-    function limpiarErrorCedula() {
-        var box = document.getElementById('errorCedula');
-        var input = document.getElementById('cedula_rif_pago');
-        if (box) box.style.display = 'none';
-        if (input) {
-            input.style.borderColor = '';
-            input.style.borderWidth = '';
-        }
-    }
-
-    function mostrarErrorArchivo(msg) {
-        var box = document.getElementById('errorArchivoExoneracion');
-        var txt = document.getElementById('errorArchivoExoneracionTexto');
-        if (!box || !txt) return;
-        txt.textContent = msg;
-        box.style.display = 'block';
-    }
-
-    function limpiarErrorArchivo() {
-        var box = document.getElementById('errorArchivoExoneracion');
-        if (box) box.style.display = 'none';
-    }
-
-    function mostrarOverlay() {
-        var ov = document.getElementById('overlayProcesandoBDV');
-        if (ov) ov.style.display = 'flex';
-    }
-
-    function ocultarOverlay() {
-        var ov = document.getElementById('overlayProcesandoBDV');
-        if (ov) ov.style.display = 'none';
-    }
-
-    // =========================================================
-    // MODAL DE CONFIRMACIÓN GENÉRICA (reutilizable)
-    // =========================================================
-    function abrirModalConfirmacion(opciones, onAceptar) {
-        var modal   = document.getElementById('modalConfirmGenerico');
-        var cont    = document.getElementById('modalConfirmGenericoContenido');
-        var titulo  = document.getElementById('modalConfirmGenericoTitulo');
-        var header  = document.getElementById('modalConfirmGenericoHeader');
-        var btnOk   = document.getElementById('modalConfirmGenericoAceptar');
-        var btnNo   = document.getElementById('modalConfirmGenericoCancelar');
-
-        if (!modal || !cont) return;
-
-        if (opciones.titulo) titulo.textContent = opciones.titulo;
-        if (opciones.headerColor) header.style.background = opciones.headerColor;
-        if (opciones.botonAceptar) btnOk.innerHTML = opciones.botonAceptar;
-        if (opciones.botonCancelar) btnNo.innerHTML = opciones.botonCancelar;
-
-        cont.innerHTML = opciones.contenido || '';
-        modal.style.display = 'flex';
-
-        // Clonar para limpiar listeners
-        var okClone = btnOk.cloneNode(true);
-        var noClone = btnNo.cloneNode(true);
-        btnOk.parentNode.replaceChild(okClone, btnOk);
-        btnNo.parentNode.replaceChild(noClone, btnNo);
-
-        okClone.addEventListener('click', function() {
-            modal.style.display = 'none';
-            if (typeof onAceptar === 'function') onAceptar();
-        });
-
-        noClone.addEventListener('click', function() {
-            modal.style.display = 'none';
-        });
-    }
-
-    // =========================================================
-    // INICIALIZACIÓN
-    // =========================================================
-
-    function init() {
-
-        // -----------------------------------------------------
-        // 1. BOTÓN DE PAGO BDV
-        // -----------------------------------------------------
-        var btnPagoBDV = document.getElementById('btnPagoBDV');
-        var cedulaInput = document.getElementById('cedula_rif_pago');
-
-        if (cedulaInput) {
-            cedulaInput.addEventListener('input', limpiarErrorCedula);
-        }
-
-        if (btnPagoBDV) {
-            btnPagoBDV.addEventListener('click', function(e) {
-                e.preventDefault();
-
-                var urlAccion = this.getAttribute('data-url');
-                var totalUc   = this.getAttribute('data-uc');
-                var montoRaw  = this.getAttribute('data-monto');
-                var monto     = parseFloat(String(montoRaw).replace(',', '.'));
-
-                if (!cedulaInput) {
-                    mostrarModalError('No se encontró el campo de cédula. Recarga la página.');
-                    return;
-                }
-
-                var cedulaValor  = cedulaInput.value.trim();
-                var tipoDocSelect = document.getElementById('tipo_documento_pago');
-                var tipoDocValor = tipoDocSelect ? tipoDocSelect.value : 'V';
-
-                // Validaciones inline
-                if (!cedulaValor) {
-                    mostrarErrorCedula('Debes ingresar la cédula del estudiante o del depositante antes de continuar.');
-                    return;
-                }
-                if (!/^[0-9]{6,8}$/.test(cedulaValor)) {
-                    mostrarErrorCedula('El documento no es válido. Solo números, entre 6 y 8 dígitos, sin guiones ni puntos.');
-                    return;
-                }
-                if (/^0+$/.test(cedulaValor)) {
-                    mostrarErrorCedula('El documento no puede ser todo ceros. Ingresa un número válido.');
-                    return;
-                }
-                limpiarErrorCedula();
-
-                var documentoCompleto = tipoDocValor + '-' + cedulaValor;
-                var montoFormateado = monto.toLocaleString('es-VE', {
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2
-                });
-
-                // Contenido del modal de confirmación
-                var contenidoHTML =
-                    '<p style="margin:0 0 12px;">Serás redirigido al <strong>Botón de PagoBDV</strong> para completar la transacción.</p>' +
-                    '<div style="background:#f0f9ff; border-left:3px solid #003366; padding:10px 14px; border-radius:6px; margin-bottom:14px;">' +
-                        '<div><strong>Documento:</strong> ' + documentoCompleto + '</div>' +
-                        '<div><strong>Monto a pagar:</strong> Ref. ' + montoFormateado + '</div>' +
-                    '</div>' +
-                    '<p style="margin:0 0 6px;"><strong>Antes de continuar, asegúrate de:</strong></p>' +
-                    '<ul style="margin:0; padding-left:20px; color:#495057;">' +
-                        '<li>Tener saldo suficiente en tu cuenta BDV</li>' +
-                        '<li>Tener a la mano los datos de tus productos y servicios del banco</li>' +
-                        '<li>Tener conexión estable a internet</li>' +
-                    '</ul>';
-
-                abrirModalConfirmacion({
-                    titulo: 'Confirmar pago con Botón de PagoBDV',
-                    contenido: contenidoHTML,
-                    botonAceptar: '<i class="fas fa-check mr-1"></i> Continuar',
-                    botonCancelar: '<i class="fas fa-times mr-1"></i> Cancelar'
-                }, function() {
-                    // El usuario confirmó
-                    btnPagoBDV.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Redirigiendo...';
-                    btnPagoBDV.disabled = true;
-                    mostrarOverlay();
-
-                    var inputs = {
-                        'total_final':    monto.toFixed(2),
-                        'total_uc':       totalUc,
-                        'tipo_documento': tipoDocValor,
-                        'cedula_rif':     cedulaValor
-                    };
-
-                    var bodyParams = new URLSearchParams();
-                    for (var k in inputs) {
-                        if (inputs.hasOwnProperty(k)) bodyParams.append(k, inputs[k]);
+    document.querySelector('.custom-file-input')?.addEventListener('change', function(e) {
+        var fileName = e.target.files[0]?.name || 'Seleccionar archivo';
+        var label = e.target.nextElementSibling;
+        label.innerHTML = fileName;
+    });
+    
+    // Script de confirmación antes de enviar
+    document.addEventListener('DOMContentLoaded', function() {
+        var btnConfirmar = document.getElementById('btnConfirmarPago');
+        if (btnConfirmar) {
+            btnConfirmar.addEventListener('click', function(e) {
+                var form = this.closest('form');
+                var camposRequeridos = form.querySelectorAll('[required]');
+                var camposValidos = true;
+                
+                camposRequeridos.forEach(function(campo) {
+                    if (!campo.value.trim()) {
+                        camposValidos = false;
+                        campo.style.borderColor = '#dc3545';
+                        campo.style.borderWidth = '2px';
+                    } else {
+                        campo.style.borderColor = '';
+                        campo.style.borderWidth = '';
                     }
-
-                    console.log('[BDV] Enviando a:', urlAccion, inputs);
-
-                    // Intento con fetch (espera JSON)
-                    fetch(urlAccion, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
-                            'X-Requested-With': 'XMLHttpRequest'
-                        },
-                        body: bodyParams.toString(),
-                        credentials: 'same-origin'
-                    })
-                    .then(function(response) {
-                        var ct = response.headers.get('content-type') || '';
-                        if (ct.indexOf('application/json') === -1) {
-                            console.warn('[BDV] Respuesta no JSON. Fallback a form.submit().');
-                            enviarFormularioTradicional(urlAccion, inputs);
-                            return null;
-                        }
-                        return response.json();
-                    })
-                    .then(function(data) {
-                        if (data === null) return;
-                        if (data.success && data.url) {
-                            window.location.href = data.url;
-                        } else {
-                            ocultarOverlay();
-                            btnPagoBDV.disabled = false;
-                            btnPagoBDV.innerHTML = '<i class="fas fa-credit-card mr-2"></i> Pagar con Botón de PagoBDV';
-                            mostrarModalError(data.mensaje || 'No se pudo iniciar el pago. Intenta nuevamente.');
-                        }
-                    })
-                    .catch(function(err) {
-                        console.error('[BDV] Error fetch:', err);
-                        console.warn('[BDV] Fallback a form.submit() por error de red.');
-                        enviarFormularioTradicional(urlAccion, inputs);
-                    });
                 });
+                
+                if (!camposValidos) {
+                    e.preventDefault();
+                    alert('⚠️ Por favor, completa todos los campos requeridos antes de confirmar el pago.');
+                    return;
+                }
+                
+                var mensaje = "🔒 ¿CONFIRMAR PAGO?\n\n" +
+                              "Esta acción es irreversible.\n\n" +
+                              "Antes de confirmar, verifica:\n" +
+                              "✅ Unidades curriculares y pagos de aranceles correctas\n" +
+                              "✅ Monto adecuado\n" +
+                              "✅ Cèdula de Identidad del Depositante\n\n" +
+                              "⚠️ Una vez confirmado, NO podrás modificar tu inscripción.\n\n" +
+                              "¿Estás seguro de continuar?";
+                
+                if (!confirm(mensaje)) {
+                    e.preventDefault();
+                    alert('📋 Pago cancelado. Puedes revisar tu inscripción antes de confirmar.');
+                    return;
+                }
             });
         }
+    });
+   
 
-        // -----------------------------------------------------
-        // 2. FORMULARIO DE EXONERACIÓN TOTAL
-        // -----------------------------------------------------
-        var formExo = document.getElementById('formRegistroExoneracion');
-        var inputAval = document.getElementById('avale_exoneracion');
-
-        if (inputAval) {
-            inputAval.addEventListener('change', function(e) {
-                var fileName = e.target.files[0]?.name || 'Seleccionar archivo...';
-                var label = e.target.nextElementSibling;
-                if (label) label.innerHTML = fileName;
-                limpiarErrorArchivo();
-            });
+// Si hay un pago BDV pendiente, mostrar alerta
+<?php if ($this->session->userdata('pago_bdv_token')): ?>
+    setTimeout(function() {
+        var mensaje = "⚠️ Tienes un pago pendiente con Botón de PagoBDV.\n" +
+                      "¿Deseas verificar el estado del pago?";
+        if (confirm(mensaje)) {
+            window.location.href = '<?php echo base_url(); ?>pagos/confirmacion';
         }
+    }, 2000);
+<?php endif; ?>
 
-        if (formExo) {
-            formExo.addEventListener('submit', function(e) {
-                e.preventDefault();
 
-                var archivo = inputAval ? inputAval.files[0] : null;
+<!-- Script para manejar el botón BDV -->
 
-                if (!archivo) {
-                    mostrarErrorArchivo('Debes cargar el documento que avala la exoneración antes de registrar tu inscripción.');
-                    if (inputAval) inputAval.focus();
-                    return false;
-                }
-
-                var extensionesPermitidas = ['pdf', 'jpg', 'jpeg', 'png'];
-                var extension = archivo.name.split('.').pop().toLowerCase();
-                if (extensionesPermitidas.indexOf(extension) === -1) {
-                    mostrarErrorArchivo('Solo se permiten archivos PDF, JPG, JPEG o PNG.');
-                    return false;
-                }
-
-                var maxSize = 5 * 1024 * 1024;
-                if (archivo.size > maxSize) {
-                    mostrarErrorArchivo('El archivo no debe superar los 5 MB.');
-                    return false;
-                }
-
-                limpiarErrorArchivo();
-
-                abrirModalConfirmacion({
-                    titulo: 'Confirmar registro de inscripción',
-                    contenido: '<p style="margin:0 0 10px;">¿Confirmar el registro de tu inscripción con <strong>exoneración total</strong>?</p>' +
-                               '<p style="margin:0; color:#c0392b; font-size:0.88rem;">' +
-                               '<i class="fas fa-exclamation-circle mr-1"></i> ' +
-                               'Una vez registrado, <strong>no podrás modificar</strong> tu inscripción.</p>',
-                    botonAceptar: '<i class="fas fa-save mr-1"></i> Registrar',
-                    botonCancelar: '<i class="fas fa-times mr-1"></i> Cancelar'
-                }, function() {
-                    var btn = document.getElementById('btnRegistrarExoneracion');
-                    if (btn) {
-                        btn.disabled = true;
-                        btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Registrando...';
-                    }
-                    // Enviar el formulario nativo
-                    formExo.submit();
-                });
-            });
-        }
-
-        // -----------------------------------------------------
-        // 3. BANNER DE PAGO PENDIENTE (con modal, sin confirm nativo)
-        // -----------------------------------------------------
-        <?php if ($this->session->userdata('pago_bdv_token')): ?>
-        setTimeout(function() {
-            abrirModalConfirmacion({
-                titulo: 'Tienes un pago pendiente',
-                contenido: '<p style="margin:0 0 10px;">' +
-                           '<i class="fas fa-exclamation-triangle text-warning mr-2"></i>' +
-                           'Tienes un pago pendiente con el <strong>Botón de PagoBDV</strong>.</p>' +
-                           '<p style="margin:0;">¿Deseas verificar el estado del pago?</p>',
-                botonAceptar: '<i class="fas fa-check mr-1"></i> Verificar',
-                botonCancelar: '<i class="fas fa-times mr-1"></i> Cerrar'
-            }, function() {
-                window.location.href = '<?php echo base_url(); ?>pagos/confirmacion';
-            });
-        }, 2000);
-        <?php endif; ?>
-
-        console.log('[BDV] Script inicializado correctamente.');
-    }
-
-    // =========================================================
-    // FALLBACK: envío tradicional
-    // =========================================================
-    function enviarFormularioTradicional(urlAccion, inputs) {
-        var form = document.createElement('form');
-        form.method = 'POST';
-        form.action = urlAccion;
-        form.style.display = 'none';
-
-        for (var name in inputs) {
-            if (inputs.hasOwnProperty(name)) {
-                var input = document.createElement('input');
-                input.type  = 'hidden';
-                input.name  = name;
-                input.value = inputs[name];
-                form.appendChild(input);
+document.addEventListener('DOMContentLoaded', function() {
+    var btnPagoBDV = document.getElementById('btnPagoBDV');
+    if (btnPagoBDV) {
+        btnPagoBDV.addEventListener('click', function(e) {
+            e.preventDefault();
+            
+            // ============================================================
+            // VALIDACIÓN DE CÉDULA / RIF
+            // ============================================================
+            var cedulaInput = document.getElementById('cedula_rif_pago');
+            var cedulaValor = cedulaInput.value.trim();
+            
+             if (!/^[0-9]{6,8}$/.test(cedulaValor)) {
+                alert('⚠️ Debes ingresar una cédula válido antes de continuar.\n\n' +
+                      'Solo números, entre 6 y 8 dígitos.\n' +
+                      'Ejemplo: 12345678');
+                cedulaInput.focus();
+                cedulaInput.style.borderColor = '#dc3545';
+                cedulaInput.style.borderWidth = '2px';
+                return;
             }
-        }
+            // Limpiar el resaltado si ya es válido
+            cedulaInput.style.borderColor = '';
+            cedulaInput.style.borderWidth = '';
+            
+            var monto = '<?php echo number_format($total_final, 2, ",", "."); ?>';
+            var tipoDoc = document.getElementById('tipo_documento_pago').value;
+            var mensaje = "💳 PAGO CON BOTÓN DE PAGOBDV\n\n" +
+                          "Serás redirigido al Botón de PagoBDV.\n\n" +
+                          "📌 Documento: " + tipoDoc + "-" + cedulaValor + "\n" +
+                          "📌 Monto a pagar: Ref. " + monto + "\n\n" +
+                          "⚠️ Antes de continuar, asegúrate de:\n" +
+                          "✅ Tener saldo suficiente en tu cuenta BDV\n" +
+                          "✅ Tener a la mano los datos de tus productos y servicios del banco\n" +
+                          "✅ Conexión estable a internet\n\n" +
+                          "¿Continuar con el pago?";
+            
+            if (confirm(mensaje)) {
+                this.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Redirigiendo...';
+                this.disabled = true;
+                // 1. Crear un formulario temporal de manera oculta
+                var form = document.createElement('form');
+                form.method = 'POST';
+                form.action = "<?php echo base_url(); ?>pagos/iniciar";
 
-        document.body.appendChild(form);
-        form.submit();
+                // 2. Definir las variables que quieres enviar por POST
+                var total_final = document.createElement('input');
+                total_final.type = 'hidden';
+                total_final.name = 'total_final';
+                total_final.value = '<?php echo $total_final; ?>';
+                form.appendChild(total_final);
+
+                var total_uc = document.createElement('input');
+                total_uc.type = 'hidden';
+                total_uc.name = 'total_uc';
+                total_uc.value = '<?php echo $total_uc; ?>';
+                form.appendChild(total_uc);
+
+                // ============================================================
+                // NUEVOS CAMPOS: TIPO DE DOCUMENTO Y CÉDULA/RIF
+                // ============================================================
+                var tipo_documento = document.createElement('input');
+                tipo_documento.type = 'hidden';
+                tipo_documento.name = 'tipo_documento';
+                tipo_documento.value = tipoDoc;
+                form.appendChild(tipo_documento);
+
+                var cedula_rif = document.createElement('input');
+                cedula_rif.type = 'hidden';
+                cedula_rif.name = 'cedula_rif';
+                cedula_rif.value = cedulaValor;
+                form.appendChild(cedula_rif);
+
+                // 3. Añadir el formulario al documento y enviarlo
+                document.body.appendChild(form);
+                form.submit();
+            }
+        });
     }
-
-    // =========================================================
-    // CIERRE DE MODALES CON ESC Y CLIC FUERA
-    // =========================================================
-    document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape') {
-            ['modalConfirmBDV', 'modalConfirmGenerico', 'modalErrorBDV'].forEach(function(id) {
-                var m = document.getElementById(id);
-                if (m && m.style.display === 'flex') m.style.display = 'none';
-            });
-        }
-    });
-
-    ['modalConfirmBDV', 'modalConfirmGenerico', 'modalErrorBDV'].forEach(function(id) {
-        var m = document.getElementById(id);
-        if (m) {
-            m.addEventListener('click', function(e) {
-                if (e.target === m) m.style.display = 'none';
-            });
-        }
-    });
-
-    var btnErrCerrar = document.getElementById('modalErrorBDVCerrar');
-    if (btnErrCerrar) {
-        btnErrCerrar.addEventListener('click', function() {
-            document.getElementById('modalErrorBDV').style.display = 'none';
+});
+// ============================================================
+// MANEJO DEL FORMULARIO DE EXONERACIÓN TOTAL
+// ============================================================
+document.addEventListener('DOMContentLoaded', function() {
+    // Mostrar nombre del archivo seleccionado
+    var inputAval = document.getElementById('avale_exoneracion');
+    if (inputAval) {
+        inputAval.addEventListener('change', function(e) {
+            var fileName = e.target.files[0]?.name || 'Seleccionar archivo...';
+            var label = e.target.nextElementSibling;
+            if (label) label.innerHTML = fileName;
         });
     }
 
-    // Arranque
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', init);
-    } else {
-        init();
+    // Validación antes de enviar
+    var formExo = document.getElementById('formRegistroExoneracion');
+    if (formExo) {
+        formExo.addEventListener('submit', function(e) {
+            var inputAval = document.getElementById('avale_exoneracion');
+            var archivo = inputAval.files[0];
+
+            if (!archivo) {
+                e.preventDefault();
+                alert('⚠️ Debes cargar el documento que avala la exoneración antes de registrar tu inscripción.');
+                inputAval.focus();
+                inputAval.style.borderColor = '#dc3545';
+                return false;
+            }
+
+            // Validar extensión
+            var extensionesPermitidas = ['pdf', 'jpg', 'jpeg', 'png'];
+            var extension = archivo.name.split('.').pop().toLowerCase();
+            if (!extensionesPermitidas.includes(extension)) {
+                e.preventDefault();
+                alert('⚠️ Solo se permiten archivos PDF, JPG, JPEG o PNG.');
+                inputAval.value = '';
+                inputAval.nextElementSibling.innerHTML = 'Seleccionar archivo...';
+                return false;
+            }
+
+            // Validar tamaño (5 MB)
+            var maxSize = 5 * 1024 * 1024;
+            if (archivo.size > maxSize) {
+                e.preventDefault();
+                alert('⚠️ El archivo no debe superar los 5 MB.');
+                inputAval.value = '';
+                inputAval.nextElementSibling.innerHTML = 'Seleccionar archivo...';
+                return false;
+            }
+
+            // Confirmación final
+            if (!confirm('📄 ¿Confirmar el registro de tu inscripción con exoneración total?\n\n' +
+                         'Una vez registrado, no podrás modificar tu inscripción.')) {
+                e.preventDefault();
+                return false;
+            }
+
+            // Deshabilitar botón para evitar doble envío
+            var btn = document.getElementById('btnRegistrarExoneracion');
+            if (btn) {
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Registrando...';
+            }
+        });
     }
-})();
+});
 </script>
