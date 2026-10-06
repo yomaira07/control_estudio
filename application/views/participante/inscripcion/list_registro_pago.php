@@ -765,15 +765,15 @@
           id="formRegistroExoneracion">
         
         <!-- Campos ocultos necesarios para el registro -->
-        <input type="text" name="ex_id_estudiante" value="<?php echo $datos_alumno->id; ?>">
-        <input type="text" name="ex_id_estado_estudio" value="<?php echo isset($estado_estudio->id_estado_inscribio) ? $estado_estudio->id_estado_inscribio : ''; ?>">
-        <input type="text" name="ex_id_periodo" value="<?php echo $periodo->id; ?>">
-        <input type="text" name="ex_id_usuario" value="<?php echo $this->session->userdata('id'); ?>">
-        <input type="text" name="ex_postgrado" value="<?php echo isset($nombre_programa) ? $nombre_programa : ''; ?>">
-        <input type="text" name="ex_total_ucredito" value="<?php echo isset($total_uc) ? $total_uc : 0; ?>">
-        <input type="text" name="ex_total_pagar" value="<?php echo $total_final; ?>">
-        <input type="text" name="ex_tipo_registro" value="exoneracion_total">
-        <input type="text" name="ex_monto_exoneracion" value="<?php echo $monto_exonerar; ?>">
+        <input type="hidden" name="ex_id_estudiante" value="<?php echo $datos_alumno->id; ?>">
+        <input type="hidden" name="ex_id_estado_estudio" value="<?php echo isset($estado_estudio->id_estado_inscribio) ? $estado_estudio->id_estado_inscribio : ''; ?>">
+        <input type="hidden" name="ex_id_periodo" value="<?php echo $periodo->id; ?>">
+        <input type="hidden" name="ex_id_usuario" value="<?php echo $this->session->userdata('id'); ?>">
+        <input type="hidden" name="ex_postgrado" value="<?php echo isset($nombre_programa) ? $nombre_programa : ''; ?>">
+        <input type="hidden" name="ex_total_ucredito" value="<?php echo isset($total_uc) ? $total_uc : 0; ?>">
+        <input type="hidden" name="ex_total_pagar" value="<?php echo $total_final; ?>">
+        <input type="hidden" name="ex_tipo_registro" value="exoneracion_total">
+        <input type="hidden" name="ex_monto_exoneracion" value="<?php echo $monto_exonerar; ?>">
 
         <!-- Bloque de carga de archivo obligatorio -->
         <div class="card" style="border-radius: 10px; border: 2px dashed #1a8a3f; background: #ffffff; margin-bottom: 16px;">
