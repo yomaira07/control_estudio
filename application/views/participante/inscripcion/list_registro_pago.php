@@ -1005,8 +1005,8 @@ document.addEventListener('DOMContentLoaded', function() {
             
             var monto = '<?php echo number_format($total_final, 2, ",", "."); ?>';
             var tipoDoc = document.getElementById('tipo_documento_pago').value;
-            var mensaje = "💳 PAGO CON BOTON DE PagoBDV\n\n" +
-                          "Serás redirigido al botón de PagoBDV.\n\n" +
+            var mensaje = "💳 PAGO CON BOTÓN DE PAGOBDV\n\n" +
+                          "Serás redirigido al Botón de PagoBDV.\n\n" +
                           "📌 Documento: " + tipoDoc + "-" + cedulaValor + "\n" +
                           "📌 Monto a pagar: Ref. " + monto + "\n\n" +
                           "⚠️ Antes de continuar, asegúrate de:\n" +
