@@ -541,6 +541,7 @@ $conc=array(0, 1);
 		$this->db->where("id_usuario",$id_usuario);
 		$this->db->where("id_periodo",$id_periodo);
 		$this->db->where("tramite",0);
+		$this->db->where("status",1);
 		
 		$resultados = $this->db->get("registro_pago");
 
