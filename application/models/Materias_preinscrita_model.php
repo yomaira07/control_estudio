@@ -1135,6 +1135,74 @@ public function matricula_vigente($periodo){
 				//		var_dump($this->db->queries);
 				return $query->result();
 			}
+
+			public function estudiantes_inscritos_ano_uc_masivo($id_usuarios, $programas)
+{
+    // Esto se ejecuta UNA sola vez, no N veces
+    $this->db->query("SET SESSION group_concat_max_len = 1000000;");
+    $this->db->query("SET SESSION sql_mode=(SELECT REPLACE(@@sql_mode,'ONLY_FULL_GROUP_BY',''));");
+
+    if (empty($id_usuarios) || empty($programas)) {
+        return [];
+    }
+
+    // Escapamos los arrays para pasarlos al IN
+    $ids_usuarios_esc = array_map([$this->db, 'escape'], $id_usuarios);
+    $programas_esc    = array_map([$this->db, 'escape'], $programas);
+
+    $sql = "
+        SELECT
+            mp.id_usuario,
+            MAX(mp.fecha_actualizacion) AS fecha_actualizacion,
+            p.nombre AS programa,
+            p.id AS id_programa,
+            es.nombre_primer AS primer_nombre,
+            es.nombre_segundo AS segundo_nombre,
+            es.apellido_primer AS primer_apellido,
+            es.apellido_segundo AS segundo_apellido,
+            es.cedula,
+            es.fecha_nac,
+            es.correo,
+            es.nacionalidad,
+            es.id_sexo AS sexo,
+            lug.lugar_trabajo AS trabajo,
+            trab.cargo,
+            trab.circunscripcion,
+            est.estado AS residencia,
+            CONCAT(COALESCE(codigo_cel.descripcion,''), es.tel_celular) AS telefono_cel,
+            CONCAT(COALESCE(codigo_hab.descripcion,''), es.tel_habitacion) AS telefono_hab,
+            SUM(DISTINCT oa.unidades_creditos) AS uc,
+            GROUP_CONCAT(DISTINCT 
+                CASE 
+                    WHEN oa.modalidad = 2 THEN 'A distancia'
+                     WHEN oa.modalidad = 3 THEN 'Semi Presencial'
+                    WHEN oa.modalidad = 1 AND dc.id = 7 THEN 'Presencial - Sabatino'                    
+                    WHEN oa.modalidad = 1 AND dc.id <> 7 THEN 'Presencial - Semanal'
+                    ELSE 'Otra modalidad'
+                END SEPARATOR ', '
+            ) AS modalidad_estudio
+        FROM materias_preinscritas mp
+        INNER JOIN oferta_academica oa ON mp.id_oferta_academica = oa.id
+        INNER JOIN dia_clase dc ON oa.id_dia_clase = dc.id
+        INNER JOIN programa p ON oa.id_programa = p.id
+        INNER JOIN estudiante es ON mp.id_usuario = es.id_usuario
+        INNER JOIN periodo pe ON oa.id_periodo = pe.id
+        LEFT JOIN trabajo trab ON trab.id_usuario = mp.id_usuario AND trab.actual = 1
+        LEFT JOIN lugar_trabajo lug ON lug.id = trab.id_lugar_trabajo
+        LEFT JOIN direccion dir ON dir.id_usuario = mp.id_usuario
+        LEFT JOIN estado est ON est.id = dir.id_estado
+        LEFT JOIN codigo_cel ON codigo_cel.id = es.id_codigo_cel
+        LEFT JOIN codigo_hab ON codigo_hab.id = es.id_codigo_hab
+        WHERE mp.reg_pago = 1
+          AND mp.rev_academica = 1
+          AND mp.status = 1
+          AND oa.id_programa IN (" . implode(',', $programas_esc) . ")
+          AND mp.id_usuario IN (" . implode(',', $ids_usuarios_esc) . ")
+        GROUP BY mp.id_usuario, oa.id_programa
+    ";
+
+    return $this->db->query($sql)->result();
+}
 			
 }
 

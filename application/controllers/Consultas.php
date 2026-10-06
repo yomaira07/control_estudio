@@ -850,4 +850,146 @@ foreach ($registros_total as $registros_total){
 	  // var_dump($data);
 	   $this->load->view('supervisor/consultas/descarga_excel_anual',$data);	
 	}
+	public function dExcel_inscritos_anual_2025()
+{
+    // Evitar timeout y falta de memoria
+    ini_set('memory_limit', '512M');
+    ini_set('max_execution_time', 300);
+    error_reporting(E_ALL & ~E_NOTICE & ~E_DEPRECATED);
+
+    $id_periodo = [15, 17, 18];
+
+    // Traemos los datos base
+    $registros_total = $this->Materias_preinscrita_model
+        ->estudiantes_inscritos_ano($id_periodo);
+
+    if (empty($registros_total)) {
+        show_error('No hay registros para exportar');
+        return;
+    }
+
+    // Extraemos arrays únicos de usuarios y programas
+    $ids_usuarios = [];
+    $programas    = [];
+    foreach ($registros_total as $r) {
+        $ids_usuarios[$r->id_usuario]  = $r->id_usuario;
+        $programas[$r->id_programa]    = $r->id_programa;
+    }
+    $ids_usuarios = array_values($ids_usuarios);
+    $programas    = array_values($programas);
+
+    // *** UNA SOLA CONSULTA para todo ***
+    $valor_credito = $this->Materias_preinscrita_model
+        ->estudiantes_inscritos_ano_uc_masivo($ids_usuarios, $programas);
+
+    // Indexamos por id_usuario para búsqueda O(1)
+    $creditos_por_usuario = [];
+    foreach ($valor_credito as $vc) {
+        $creditos_por_usuario[$vc->id_usuario] = $vc;
+    }
+
+    // Construimos el listado
+    $data['registros'] = [];
+    foreach ($registros_total as $r) {
+        $vc = isset($creditos_por_usuario[$r->id_usuario])
+            ? $creditos_por_usuario[$r->id_usuario]
+            : null;
+
+        $data['registros'][] = [
+            'cedula'           => $r->cedula,
+            'nacionalidad'     => $r->nacionalidad,
+            'primer_nombre'    => $r->primer_nombre,
+            'primer_apellido'  => $r->primer_apellido,
+            'segundo_nombre'   => $r->segundo_nombre,
+            'segundo_apellido' => $r->segundo_apellido,
+            'sexo'             => $r->sexo,
+            'fecha_nac'        => $r->fecha_nac,
+            'correo'           => $r->correo,
+            'telefono_cel'     => $r->telefono_cel,
+            'telefono_hab'     => $r->telefono_hab,
+            'programa'         => $r->programa,
+            'uc'               => $vc ? $vc->uc : 0,
+            'modalidad_estudio'=> $vc ? $vc->modalidad_estudio : '',
+            'trabajo'          => $r->trabajo,
+            'circunscripcion'  => $r->circunscripcion,  // sin tilde
+            'cargo'            => $r->cargo,
+            'residencia'       => $r->residencia,
+        ];
+    }
+
+    $data['titulo'] = 'Inscritos Regulares Anual 2025';
+
+    $this->load->view('supervisor/consultas/descarga_excel_anual', $data);
+}
+public function dExcel_inscritos_anual_2026()
+{
+    // Evitar timeout y falta de memoria
+    ini_set('memory_limit', '512M');
+    ini_set('max_execution_time', 300);
+    error_reporting(E_ALL & ~E_NOTICE & ~E_DEPRECATED);
+
+    $id_periodo = [21,22,23];
+
+    // Traemos los datos base
+    $registros_total = $this->Materias_preinscrita_model
+        ->estudiantes_inscritos_ano($id_periodo);
+
+    if (empty($registros_total)) {
+        show_error('No hay registros para exportar');
+        return;
+    }
+
+    // Extraemos arrays únicos de usuarios y programas
+    $ids_usuarios = [];
+    $programas    = [];
+    foreach ($registros_total as $r) {
+        $ids_usuarios[$r->id_usuario]  = $r->id_usuario;
+        $programas[$r->id_programa]    = $r->id_programa;
+    }
+    $ids_usuarios = array_values($ids_usuarios);
+    $programas    = array_values($programas);
+
+    // *** UNA SOLA CONSULTA para todo ***
+    $valor_credito = $this->Materias_preinscrita_model
+        ->estudiantes_inscritos_ano_uc_masivo($ids_usuarios, $programas);
+
+    // Indexamos por id_usuario para búsqueda O(1)
+    $creditos_por_usuario = [];
+    foreach ($valor_credito as $vc) {
+        $creditos_por_usuario[$vc->id_usuario] = $vc;
+    }
+
+    // Construimos el listado
+    $data['registros'] = [];
+    foreach ($registros_total as $r) {
+        $vc = isset($creditos_por_usuario[$r->id_usuario])
+            ? $creditos_por_usuario[$r->id_usuario]
+            : null;
+
+        $data['registros'][] = [
+            'cedula'           => $r->cedula,
+            'nacionalidad'     => $r->nacionalidad,
+            'primer_nombre'    => $r->primer_nombre,
+            'primer_apellido'  => $r->primer_apellido,
+            'segundo_nombre'   => $r->segundo_nombre,
+            'segundo_apellido' => $r->segundo_apellido,
+            'sexo'             => $r->sexo,
+            'fecha_nac'        => $r->fecha_nac,
+            'correo'           => $r->correo,
+            'telefono_cel'     => $r->telefono_cel,
+            'telefono_hab'     => $r->telefono_hab,
+            'programa'         => $r->programa,
+            'uc'               => $vc ? $vc->uc : 0,
+            'modalidad_estudio'=> $vc ? $vc->modalidad_estudio : '',
+            'trabajo'          => $r->trabajo,
+            'circunscripcion'  => $r->circunscripcion,  // sin tilde
+            'cargo'            => $r->cargo,
+            'residencia'       => $r->residencia,
+        ];
+    }
+
+    $data['titulo'] = 'Inscritos Regulares Anual 2026';
+
+    $this->load->view('supervisor/consultas/descarga_excel_anual', $data);
+}
 }

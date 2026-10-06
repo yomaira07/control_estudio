@@ -61,14 +61,44 @@ jQuery(document).ready(function($) {
                  </div>
 
                 <div class="card-body">
-			<table>
-				<tr>
-					<td colspan="2" >
-					<img src="<?php echo base_url(); ?>assets/img/excel.jpg"  alt="Excel" style="width: 10mm; height: 10mm; margin: 0;" /><a href="<?php echo base_url()?>consultas/dExcel_inscritos_anual" title="2024">Año 2024</a>
-					</td>
-				</tr>
-			</table>  
-            	</div>
+    <div class="card card-outline" style="border-radius:8px; border-left:4px solid #1a8a3f; border-top:none; box-shadow:0 2px 8px rgba(0,0,0,0.05);">
+        <div class="card-header" style="background:#f0fdf4; border-bottom:1px solid #e8e8e8; padding:8px 15px; border-radius:8px 8px 0 0;">
+            <h6 class="mb-0" style="font-weight:600; color:#1a8a3f;">
+                <i class="fas fa-file-excel mr-2"></i>
+                Reportes anuales de inscritos
+            </h6>
+        </div>
+        <div class="card-body p-3">
+            <p class="mb-3" style="color:#6c757d; font-size:0.85rem;">
+                <i class="fas fa-info-circle text-info mr-1"></i>
+                Descarga los reportes en formato Excel por año.
+            </p>
+            <div class="d-flex flex-wrap" style="gap: 10px;">
+                <a href="<?php echo base_url(); ?>consultas/dExcel_inscritos_anual"
+                   class="btn btn-success"
+                   style="border-radius:8px; padding:8px 18px; font-weight:500; display:inline-flex; align-items:center; gap:8px; background:#1a8a3f; border-color:#1a8a3f;"
+                   title="Descargar reporte año 2024">
+                    <i class="fas fa-file-excel"></i>
+                    Año 2024
+                </a>
+                <a href="<?php echo base_url(); ?>consultas/dExcel_inscritos_anual_2025"
+                   class="btn btn-success"
+                   style="border-radius:8px; padding:8px 18px; font-weight:500; display:inline-flex; align-items:center; gap:8px; background:#1a8a3f; border-color:#1a8a3f;"
+                   title="Descargar reporte año 2025">
+                    <i class="fas fa-file-excel"></i>
+                    Año 2025
+                </a>
+                <a href="<?php echo base_url(); ?>consultas/dExcel_inscritos_anual_2026"
+                   class="btn btn-success"
+                   style="border-radius:8px; padding:8px 18px; font-weight:500; display:inline-flex; align-items:center; gap:8px; background:#1a8a3f; border-color:#1a8a3f;"
+                   title="Descargar reporte año 2026">
+                    <i class="fas fa-file-excel"></i>
+                    Año 2026
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
           </div>
                 </div><!-- /.card -->
 
